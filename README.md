@@ -3,6 +3,8 @@
 - Implement a database management system
 
 ## Details
+- Language:
+  - Python
 - Group Number:
   - 1
 - Group Members
