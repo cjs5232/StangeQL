@@ -16,12 +16,16 @@
 
 ## Phase 1
 During this phase you will implement a basic storage manager and some basic SQL parsing.
+- **Due 2/17/2023 11:59 PM**
 
 ## Phase 2
 During this phase you will finish implementing the DDL parser.
+- **Due 3/10/2023 11:59 PM**
 
 ## Phase 3
 Dring this phase you will finish implementing a DML parser.
+- **Due 4/7/2023 11:59 PM**
 
 ## Phase 4
 During this phase you will implement B+ Trees
+- **Due 4/28/2023 11:59 PM**
