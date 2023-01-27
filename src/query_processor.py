@@ -62,3 +62,9 @@ def display_info_cmd():
     :return:
     """
     return
+def main():
+    pass
+
+if __name__ == '__main__':
+    #Include testing here
+    pass
