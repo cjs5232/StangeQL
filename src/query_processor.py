@@ -12,20 +12,53 @@ Authors:
 
 
 def create_table_cmd():
+    """
+    This commmand will be used to create the schema for a table. This schema will
+    be added to the catalog. This schema will be used by the system to
+    store/access/update/delete data in the created table.
+
+    :param <>: description
+
+    :return: description
+    """
     return
 
 
 def select_cmd():
+    """
+
+    :param <>: description
+
+    :return:
+    """
     return
 
 
 def insert_cmd():
+    """
+
+    :param <>: description
+
+    :return:
+    """
     return
 
 
 def display_schema_cmd():
+    """
+
+    :param <>: description
+
+    :return:
+    """
     return
 
 
 def display_info_cmd():
+    """
+
+    :param <>: description
+
+    :return:
+    """
     return
