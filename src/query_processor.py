@@ -62,8 +62,14 @@ def display_info_cmd():
     :return:
     """
     return
+
 def main():
-    pass
+    go = True
+    while go:
+        readInput = input("> ")
+        if readInput == ";":
+            go = False
+        #process commands here
 
 if __name__ == '__main__':
     #Include testing here
