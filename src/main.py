@@ -9,3 +9,45 @@ Authors:
     - Cindy Donch (cad7046)
     - Connor Stange (cjs5232)
 """
+import sys
+import os
+import query_processor as qp
+
+class Driver:
+    def __init__(self, args) -> None:
+        self.args = args
+        self.processArgs()
+        self.handoff()
+
+    """
+    Process the passed sys.args from the command line and handle errors with bad commands
+    Params: args (array) - List of command line arguments
+    """
+    def processArgs(self):
+        self.dbloc = sys.argv[1]
+        try:
+            self.pageSize = eval(sys.argv[2])
+            self.bufferSize = eval(sys.argv[3])
+        except NameError as e:
+            print("PageSize and BufferSize must both be valid integers")
+            sys.exit(e)
+
+        if not os.path.exists(self.dbloc):
+            os.mkdir(self.dbloc)
+            #TODO: Create pages and buffers with given the buffer size
+
+    """
+    Hand off program to the query processor for user input handling.
+    TODO: Refactor after QP has been implemented to spit back error messages and exit gracefully (most likely includes backing up 
+    or saving the DB before a sys.exit())
+    """
+    def handoff(self):
+        qp.main()
+
+
+if __name__ == '__main__':
+    if len(sys.argv) == 4:
+        d = Driver(sys.argv)
+    else:
+        print("usage:\n\tmain.py db_loc pageSize bufferSize")
+        sys.exit(-1)
