@@ -76,6 +76,7 @@ NOTE: Carriage returns are ignored.
 """
 def main():
     go = True
+    returnCode = 0
     # readInput = input("> ")
     while go:        
         readInput = input("> ")
@@ -91,7 +92,7 @@ def main():
             readInput += " " + input()
         print(readInput)
 
-        
+    return returnCode
 
 
 if __name__ == '__main__':

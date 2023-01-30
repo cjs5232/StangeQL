@@ -42,7 +42,9 @@ class Driver:
     or saving the DB before a sys.exit())
     """
     def handoff(self):
-        qp.main()
+        returnCode = qp.main()
+        print(f"Process exited with a return code {returnCode}")
+        sys.exit(returnCode)
 
 
 if __name__ == '__main__':
