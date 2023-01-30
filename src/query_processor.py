@@ -63,14 +63,37 @@ def display_info_cmd():
     """
     return
 
+"""
+print a helpful message
+"""
+def help():
+    return "HELP:\n\t- CREATE: //insert create usage here\n\tSELECT: //insert select usage here\n\t-INSERT: //insert insert usage here\n\tDISPLAY [\n\t\tSCHEMA: //insert display schema usage here\n\t\tINFO - //insert display info usage here\n\t\t]"
+
+
+"""
+Kick start main text processing loop (while loop) that awaits for a ; to end a statement or an exit command.\
+NOTE: Carriage returns are ignored.
+"""
 def main():
     go = True
-    while go:
+    # readInput = input("> ")
+    while go:        
         readInput = input("> ")
-        if readInput == ";":
+        if readInput == "exit":
             go = False
-        #process commands here
+            continue
+
+        if readInput.lower() == "help":
+            print(help())
+            continue
+
+        while not ";" in readInput:
+            readInput += " " + input()
+        print(readInput)
+
+        
+
 
 if __name__ == '__main__':
-    #Include testing here
+    main()
     pass
