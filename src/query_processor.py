@@ -73,11 +73,11 @@ def help():
 """
 Kick start main text processing loop (while loop) that awaits for a ; to end a statement or an exit command.\
 NOTE: Carriage returns are ignored.
+NOTE: Still keeps things that come after the ; in the input (as long as it is on the same line) this can be changed.
 """
 def main():
     go = True
-    returnCode = 0
-    # readInput = input("> ")
+    returnCode = 0 # Good return
     while go:        
         readInput = input("> ")
         if readInput == "exit":
@@ -91,7 +91,6 @@ def main():
         while not ";" in readInput:
             readInput += " " + input()
         print(readInput)
-
     return returnCode
 
 
