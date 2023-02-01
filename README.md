@@ -16,4 +16,5 @@
 TODO
 
 ## Build Instructions
-TODO
+Project will execute in this way:
+python main.py <db_loc> <page_size> <buffer_size>
