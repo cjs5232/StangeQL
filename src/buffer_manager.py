@@ -11,10 +11,10 @@ Authors:
 """
 
 def get_disk_addr(block):
-    # if (block not in buffer)
-    #   if (buffer out of space)
-    #       if (LRU block modified)
-    #           block written back to disk
-    #       remove LRU block from buffer
-    #   allocate space in buffer for block
-    # return (block_addr from buffer)
+    #   if (block not in buffer)
+    #       if (buffer out of space)
+    #           if (LRU block modified)
+    #               LRU block written back to disk
+    #           remove LRU block from buffer
+    #       allocate space in buffer for block
+    #   return (disk_addr from buffer)
