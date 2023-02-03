@@ -13,8 +13,8 @@ Authors:
 def get_disk_addr(block):
     # if (block not in buffer)
     #   if (buffer out of space)
-    #       * need to make space by replacing other block (LRU)
-    #       if (allocated space modified)
-    #           update modified space in buffer
+    #       if (LRU block modified)
+    #           block written back to disk
+    #       remove LRU block from buffer
     #   allocate space in buffer for block
     # return (block_addr from buffer)
