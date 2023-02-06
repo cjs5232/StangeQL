@@ -76,10 +76,11 @@ NOTE: Carriage returns are ignored.
 NOTE: Still keeps things that come after the ; in the input (as long as it is on the same line) this can be changed.
 """
 def main():
+    print("\nPlease enter commands, enter <quit> to shutdown the db\n")
     go = True
     returnCode = 0 # Good return
     while go:        
-        readInput = input("> ")
+        readInput = input("JottQL> ")
         if readInput == "exit":
             go = False
             continue

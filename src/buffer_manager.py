@@ -2,6 +2,7 @@
 CSCI.421 - Database System Implementation
 
 File: buffer_manager.py
+Description: subsystem responsible for allocating buffer space in main memory
 Authors:
     - Gunnar Bachmann (ggb6130)
     - Aidan Mellin (atm3232)
