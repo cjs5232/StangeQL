@@ -35,7 +35,7 @@ class Driver:
         print(f"Welcome to JottQL\nLooking at {self.dbloc} for existing db....")
         if not os.path.exists(self.dbloc):
             print(f"No existing db found\nCreating new db at {self.dbloc}")
-            #os.mkdir(self.dbloc)
+            os.mkdir(self.dbloc)
             print(f"New db created successfully\nPage size: {self.pageSize}\nBuffer size: {self.bufferSize}")
             #TODO: Create pages and buffers with given the buffer size
 
