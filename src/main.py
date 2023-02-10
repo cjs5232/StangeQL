@@ -45,7 +45,7 @@ class Driver:
     or saving the DB before a sys.exit())
     """
     def handoff(self):
-        returnCode = qp.main()
+        returnCode = qp.main(self.dbloc, self.pageSize, self.bufferSize)
         print(f"Process exited with a return code {returnCode}")
         sys.exit(returnCode)
 

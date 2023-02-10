@@ -22,9 +22,12 @@ def select_cmd():
 def insert_cmd():
     return
 
-
 def display_schema_cmd():
-    return
+    # if no tables
+    print("No tables to display")
+    # else loop through tables printing
+    #   if fail return 1 implying ERROR
+    return 0 # implying SUCCESS
 
 
 def display_info_cmd():
@@ -42,7 +45,7 @@ Kick start main text processing loop (while loop) that awaits for a ; to end a s
 NOTE: Carriage returns are ignored.
 NOTE: Still keeps things that come after the ; in the input (as long as it is on the same line) this can be changed.
 """
-def main():
+def main(dbloc, pageSize, bufferSize):
     print("\nPlease enter commands, enter <quit> to shutdown the db\n")
     go = True
     returnCode = 0 # Good return
@@ -54,6 +57,14 @@ def main():
 
         if readInput.lower() == "help":
             print(help())
+            continue
+
+        if readInput.lower() == "display schema;":
+            print(f"DB location: {dbloc}\nPage Size: {pageSize}\nBuffer Size: {bufferSize}\n")
+            if display_schema_cmd() == 0:
+                print("SUCCESS\n")
+            else:
+                print("ERROR\n")
             continue
 
         while not ";" in readInput:
