@@ -19,3 +19,4 @@ def get_disk_addr(block):
     #           remove LRU block from buffer
     #       allocate space in buffer for block
     #   return (disk_addr from buffer)
+    pass
