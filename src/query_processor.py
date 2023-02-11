@@ -15,6 +15,8 @@ def create_table_cmd(query:list): #TODO
     
     return 1
 
+    def create_table_cmd(self):
+        return
 
 def select_cmd(attribute, tableName): #TODO
     # if table doesnt exist
@@ -24,6 +26,8 @@ def select_cmd(attribute, tableName): #TODO
         # if attribute = "*" print all
     # return 0  implying success
 
+    def insert_cmd(self):
+        return
 
 def insert_cmd(query:list): #TODO
     return 1
@@ -37,6 +41,9 @@ def display_schema_cmd(query:list, dbloc, pageSize, bufferSize): #TODO
     #   if fail return 1 implying ERROR
     return 0 # implying SUCCESS
 
+    """
+    print a helpful message
+    """
 
 def display_info_cmd(tableName): #TODO
     tableSchema = "schema"
@@ -115,6 +122,15 @@ def process_input(query:list, dbloc, pageSize, bufferSize):
         return create_table_cmd(query) # Return status code
     return 1 # Return failure if command is not valid
 
+    def getUserInput(self):
+        print("\nPlease enter commands, enter <quit> to shutdown the db\n")
+        go = True
+        returnCode = 0  # Good return
+        while go:
+            readInput = input("JottQL> ")
+            if readInput == "exit":
+                go = False
+                continue
 
 def main(dbloc, pageSize, bufferSize):
     """
@@ -145,5 +161,5 @@ def main(dbloc, pageSize, bufferSize):
 
 
 if __name__ == '__main__':
-    main()
-    pass
+    QP = QueryProcessor("testDB", "1024", "64")
+    print(f"Exit Code: {QP.getUserInput()}")
