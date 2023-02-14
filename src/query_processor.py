@@ -15,14 +15,19 @@ def create_table_cmd():
     return
 
 
-def select_cmd():
-    return
-
+def select_cmd(attribute, tableName):
+    # if table doesnt exist
+    print("No such table foo")
+    return 1 # implying error
+    # else loop through table printing the selected attribute
+        # if attribute = "*" print all
+    # return 0  implying success
 
 def insert_cmd():
     return
 
 def display_schema_cmd():
+    # TODO:
     # if no tables
     print("No tables to display")
     # else loop through tables printing
@@ -30,8 +35,15 @@ def display_schema_cmd():
     return 0 # implying SUCCESS
 
 
-def display_info_cmd():
-    return
+def display_info_cmd(tableName):
+    # TODO:
+    tableSchema = "schema"
+    tablePages = 0
+    tableRecords = 0
+    # if table exists
+    print(f"Table name: {tableName}\nTable schema:\n\t{tableSchema}\nPages: {tablePages}\nRecords: {tableRecords}")
+    # else return 1 implying ERROR
+    return 0 #implying SUCCESS
 
 """
 print a helpful message
@@ -49,27 +61,37 @@ def main(dbloc, pageSize, bufferSize):
     print("\nPlease enter commands, enter <quit> to shutdown the db\n")
     go = True
     returnCode = 0 # Good return
-    while go:        
+    while go:
+        status = 0
         readInput = input("JottQL> ")
-        if readInput == "exit":
+        if readInput == "<quit>":
             go = False
             continue
-
-        if readInput.lower() == "help":
-            print(help())
-            continue
-
-        if readInput.lower() == "display schema;":
-            print(f"DB location: {dbloc}\nPage Size: {pageSize}\nBuffer Size: {bufferSize}\n")
-            if display_schema_cmd() == 0:
-                print("SUCCESS\n")
-            else:
-                print("ERROR\n")
-            continue
-
         while not ";" in readInput:
-            readInput += " " + input()
-        print(readInput)
+            readInput += input()
+        readInput = readInput.lower()
+        inputs = readInput.split(" ")
+
+        if inputs[0] == "help":
+            print(help())
+        elif inputs[0] == "display":
+            if inputs[1] == "schema;":
+                print(f"DB location: {dbloc}\nPage Size: {pageSize}\nBuffer Size: {bufferSize}\n")
+                status = display_schema_cmd()
+            else:
+                status = display_info_cmd(inputs[2][:-1])
+        elif inputs[0] == "select" and inputs[2] == "from":
+            status = select_cmd(inputs[1], inputs[3])
+        elif inputs[0] == "insert": print("")
+            # TODO:
+        elif inputs[0].lower() == "create": print("")
+            # TODO:
+        else:
+            status = 1 # bad input
+        if status == 0:
+            print("SUCCESS\n")
+        else:
+            print("ERROR\n")
     return returnCode
 
 

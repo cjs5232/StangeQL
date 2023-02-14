@@ -46,7 +46,12 @@ class Driver:
     """
     def handoff(self):
         returnCode = qp.main(self.dbloc, self.pageSize, self.bufferSize)
-        print(f"Process exited with a return code {returnCode}")
+        print("\nSafely shutting down the database...")
+        print("Purging page buffer...)")
+        # TODO
+        print("Saving catalog...")
+        # TODO:
+        print("\nExiting the database...")
         sys.exit(returnCode)
 
 
