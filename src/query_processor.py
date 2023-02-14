@@ -70,16 +70,18 @@ def main(dbloc, pageSize, bufferSize):
         while not ";" in readInput:
             readInput += input()
         readInput = readInput.lower()
-        inputs = readInput.split(" ")
-
+        inputs = readInput.split(';')[0].split(" ")
+        print(inputs)
         if inputs[0] == "help":
             print(help())
         elif inputs[0] == "display":
-            if inputs[1] == "schema;":
+            if inputs[1] == "schema":
                 print(f"DB location: {dbloc}\nPage Size: {pageSize}\nBuffer Size: {bufferSize}\n")
                 status = display_schema_cmd()
+            elif inputs[1] == "info":
+                status = display_info_cmd(inputs[2])
             else:
-                status = display_info_cmd(inputs[2][:-1])
+                status = 1
         elif inputs[0] == "select" and inputs[2] == "from":
             status = select_cmd(inputs[1], inputs[3])
         elif inputs[0] == "insert": print("")
