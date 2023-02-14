@@ -71,6 +71,8 @@ def main(dbloc, pageSize, bufferSize):
             readInput += input()
         readInput = readInput.lower()
         inputs = readInput.split(';')[0].split(" ")
+        if inputs[-1] == "":
+            inputs.remove(inputs[-1])
         print(inputs)
         if inputs[0] == "help":
             print(help())
