@@ -49,18 +49,54 @@ def display_info_cmd(tableName): #TODO
     return 0 #implying SUCCESS
 
 
-def help(): #TODO
+def help():
     """
     Print the help message to the user.
     """
-    print("HELP:\n\t- CREATE: //insert create usage here\n\tSELECT: //insert select usage here\n\t-INSERT: //insert insert usage here\n\tDISPLAY [\n\t\tSCHEMA: //insert display schema usage here\n\t\tINFO - //insert display info usage here\n\t\t]")
+    helpMsg = """Help
+        - CREATE: This command will be used to create the schema for a table.
+                Structure: create table <name>(
+                            <attr_name1> <attr_type1> primarykey,
+                            <attr_name2> <attr_type2>,
+                            ....
+                            <attr_nameN> <attr_typeN>
+                            );
+
+                Examples:
+                    1. create table foo( num integer primarykey );
+                    2. create table foo( age char(10),
+                       num integer primarykey );
+        
+        - SELECT: This command will be used to access data in tables.
+                Structure: select * from <name>;
+        
+        - INSERT: This command will insert a new tuple into a table.
+                Structure: insert into <name> values <tuples>;
+
+                Examples:
+                    1. insert into foo values (1 "foo" true 2.1);
+                    2. insert into foo values (1 "foo bar" true 2.1),
+                                              (3 "baz" true 4.14),
+                                              (2 "bar" false 5.2),
+                                              (5 "true" true null);
+        
+        - DISPLAY [
+                
+                - SCHEMA: This command will display the catalog of the database in an easy to read format.
+                        Structure: display schema;
+
+                - INFO: This command will display the information about a table in an easy to read format.
+                        Structure: display info <name>;
+                  
+                ]"""
+    print(helpMsg)
     return 0
 
 
 def process_input(query:list, dbloc, pageSize, bufferSize):
     """
-    Process query after checking if valid input. Depending on the command entered,
-    call the necessary function to execute the query and then return.
+    Process query. Depending on the command entered, call the 
+    necessary function to execute the query and then return.
     Returns 0 if success and 1 if failure.
     """
     if query[0] == "help":
