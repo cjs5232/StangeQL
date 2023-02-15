@@ -136,6 +136,41 @@ def table_exists(table_name):
 def table_attributes():
     return
 
+def add_table():
+    f = open('sample.json')
+    data = json.load(f)
+
+    test_dict = {
+        "name": "tab3",
+        "attributes": [
+            {
+                "name": "att5",
+                "type": "varchar(10)",
+                "primary_key": False
+
+            },
+            {
+                "name": "att6",
+                "type": "char(20)",
+                "primary_key": False
+
+            }
+        ]
+    }
+
+    data["tables"].append(test_dict)
+
+    dumped_json = json.dumps(data)
+
+    bytes_data = bytes(dumped_json, encoding='utf-8')
+
+    # Open a binary file for writing
+    with open("sample.json", "wb") as write_file:
+        # Write the bytes data to the binary file
+        write_file.write(bytes_data)
+    f.close()
 
 create_catalog()
+add_table()
+
 print_catalog('sample.json')
