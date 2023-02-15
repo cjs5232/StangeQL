@@ -11,8 +11,9 @@ Authors:
 """
 
 
-def create_table_cmd(): #TODO
-    return
+def create_table_cmd(query:list): #TODO
+    
+    return 1
 
 
 def select_cmd(attribute, tableName): #TODO
@@ -24,13 +25,12 @@ def select_cmd(attribute, tableName): #TODO
     # return 0  implying success
 
 
-def insert_cmd(): #TODO
-    return
+def insert_cmd(query:list): #TODO
+    return 1
 
 
 def display_schema_cmd(query:list, dbloc, pageSize, bufferSize): #TODO
     print(f"DB location: {dbloc}\nPage Size: {pageSize}\nBuffer Size: {bufferSize}\n")
-    # TODO:
     # if no tables
     print("No tables to display")
     # else loop through tables printing
@@ -39,7 +39,6 @@ def display_schema_cmd(query:list, dbloc, pageSize, bufferSize): #TODO
 
 
 def display_info_cmd(tableName): #TODO
-    # TODO:
     tableSchema = "schema"
     tablePages = 0
     tableRecords = 0
@@ -111,11 +110,9 @@ def process_input(query:list, dbloc, pageSize, bufferSize):
     elif query[0] == "select" and query[2] == "from":
         return select_cmd(query[1], query[3]) # Return status code
     elif query[0] == "insert" and query[1] == "into":
-        print("TODO") #TODO
-        return 1 # TEMPORARY RETURN
+        return insert_cmd(query) # Return status code
     elif query[0] == "create" and query[1] == "table":
-        print("TODO") #TODO
-        return 1 # TEMPORARY RETURN
+        return create_table_cmd(query) # Return status code
     return 1 # Return failure if command is not valid
 
 
@@ -138,7 +135,7 @@ def main(dbloc, pageSize, bufferSize):
         readInput.lower() # Make input lowercase
         inputs = readInput.split(';')[0].split(" ") # Split input string and store in a list
         inputs = [x for x in inputs if x != ''] # Cleanup inputs list by removing all blank values
-        print(inputs) #TEMPORARY
+        print("INPUT LIST:", inputs) #TEMPORARY
         status = process_input(inputs, dbloc, pageSize, bufferSize) # Call process input and return status code
         if status == 0:
             print("SUCCESS\n") # Successfully completed query
