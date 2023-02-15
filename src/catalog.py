@@ -136,6 +136,28 @@ def table_exists(table_name):
 def table_attributes():
     return
 
+
+def delete_table(table_name):
+    f = open('sample.json')
+    data = json.load(f)
+
+    for i in data["tables"]:
+
+        if i["name"] == table_name:
+            data["tables"].remove(i)
+            dumped_json = json.dumps(data)
+            bytes_data = bytes(dumped_json, encoding='utf-8')
+
+            # Open a binary file for writing
+            with open("sample.json", "wb") as write_file:
+                # Write the bytes data to the binary file
+                write_file.write(bytes_data)
+            f.close()
+            return 0
+
+    print("Table - " + table_name + " not found in catalog")
+    return 1
+
 def add_table():
     f = open('sample.json')
     data = json.load(f)
@@ -161,7 +183,6 @@ def add_table():
     data["tables"].append(test_dict)
 
     dumped_json = json.dumps(data)
-
     bytes_data = bytes(dumped_json, encoding='utf-8')
 
     # Open a binary file for writing
@@ -172,5 +193,6 @@ def add_table():
 
 create_catalog()
 add_table()
-
+print_catalog('sample.json')
+delete_table("tab3")
 print_catalog('sample.json')
