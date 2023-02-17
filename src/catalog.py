@@ -18,7 +18,7 @@ import os
 """Gonna need some attributes like, name of DB, and attributes"""
 
 
-def create_catalog():
+def create_catalog(location, page_size, buffer_size):
     dict2 = {
         "name": "tab1",
         "attributes": [
@@ -54,7 +54,6 @@ def create_catalog():
     }
     dictionary = {
         "db": {
-            "name": "meatball",
             "location": "C:\\Users\\arcoo\\PycharmProjects\\DBMS-DSI-Project\\src",
             "page_size": 256,
             "buffer_size": 128
@@ -72,7 +71,7 @@ def create_catalog():
     bytes_data = bytes(dumped_json, encoding='utf-8')
 
     # Open a binary file for writing
-    with open("bintests", "wb") as write_file:
+    with open("catalog", "wb") as write_file:
         # Write the bytes data to the binary file
         write_file.write(bytes_data)
 
@@ -191,8 +190,9 @@ def add_table():
         write_file.write(bytes_data)
     f.close()
 
-create_catalog()
+"""""
 add_table()
 print_catalog('sample.json')
 delete_table("tab3")
 print_catalog('sample.json')
+"""

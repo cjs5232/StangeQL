@@ -12,6 +12,7 @@ Authors:
 import sys
 import os
 import query_processor as qp
+import catalog
 
 class Driver:
     def __init__(self, args) -> None:
@@ -35,7 +36,7 @@ class Driver:
         print(f"Welcome to JottQL\nLooking at {self.dbloc} for existing db....")
         if not os.path.exists(self.dbloc):
             print(f"No existing db found\nCreating new db at {self.dbloc}")
-            os.mkdir(self.dbloc)
+            catalog.create_catalog(self.dbloc, self.pageSize, self.bufferSize)
             print(f"New db created successfully\nPage size: {self.pageSize}\nBuffer size: {self.bufferSize}")
             #TODO: Create pages and buffers with given the buffer size
 
