@@ -34,12 +34,18 @@ class Driver:
             sys.exit(e)
 
         print(f"Welcome to JottQL\nLooking at {self.dbloc} for existing db....")
+        cat = catalog.Catalog(self.dbloc, self.pageSize, self.bufferSize)
 
         if not os.path.exists(self.dbloc):
             print(f"No existing db found\nCreating new db at {self.dbloc}")
+            cat.create_catalog()
+            # cat.add_table()
+            # cat.print_catalog()
+            os.mkdir(self.dbloc)
             print(f"New db created successfully\nPage size: {self.pageSize}\nBuffer size: {self.bufferSize}")
             #TODO: Create pages and buffers with given the buffer size
-
+        x = cat.table_attributes("tab3")
+        print(x)
     """
     Hand off program to the query processor for user input handling.
     TODO: Refactor after QP has been implemented to spit back error messages and exit gracefully (most likely includes backing up 

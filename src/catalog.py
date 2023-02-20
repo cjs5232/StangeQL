@@ -9,7 +9,7 @@ Authors:
     - Cindy Donch (cad7046)
     - Connor Stange (cjs5232)
 """
-
+import fileinput
 import json
 import io
 import os
@@ -43,7 +43,27 @@ class Catalog:
         with open(self.location + "\\DBCatalog", "wb") as write_file:
             # Write the bytes data to the binary file
             write_file.write(bytes_data)
+        return 0
 
+
+    """
+    Might not need
+    """
+    def load_catalog(self):
+        fileExist = os.path.exists(self.location + "\\DBCatalog")
+        if not fileExist:
+            print("No catalog file in path: " + self.location)
+            return 1
+
+        f = open(self.location + "\\DBCatalog")
+        data = json.load(f)
+
+        self.location = data["db"]["location"]
+        self.page_size = data["db"]["page_size"]
+        self.buffer_size = data["db"]["buffer_size"]
+
+        f.close()
+        return self
 
     def print_catalog(self):
         fileExist = os.path.exists(self.location + "\\DBCatalog")
@@ -71,6 +91,7 @@ class Catalog:
         if not tableFlag:
             print("There are no tables to display")
 
+        f.close()
         return 0
 
     def print_table(self, table_name):
@@ -112,9 +133,22 @@ class Catalog:
         f.close()
         return 1
 
-    def table_attributes(self, table_name, attribute_name):
-        return
+    def table_attributes(self, table_name):
+        fileExist = os.path.exists(self.location + "\\DBCatalog")
+        if not fileExist:
+            print("No catalog file in path: " + self.location)
+            return 1
 
+        f = open(self.location + "\\DBCatalog")
+        data = json.load(f)
+
+        for i in data["tables"]:
+            if i["name"] == table_name:
+                f.close()
+                return i["attributes"]
+
+        # Do we want this to return 1?
+        return 1
 
     def delete_table(self, table_name):
         fileExist = os.path.exists(self.location + "\\DBCatalog")
@@ -179,7 +213,7 @@ class Catalog:
             # Write the bytes data to the binary file
             write_file.write(bytes_data)
         f.close()
-
+        return 0
 
 
     """
