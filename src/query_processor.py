@@ -68,6 +68,7 @@ class QueryProcessor:
             print("\nTable of name foo already exists")
             return 1
         
+        # Loop through attributes
         i = startIdx
         while i < len(query):
             if query[i] == ")":
@@ -115,7 +116,8 @@ class QueryProcessor:
 
         print("Attributes:", attributes) # NOTE Temporary
 
-        # TODO Update Catalog 
+        # TODO Update Catalog
+        # Catalog.add_table(tblName, attributes)
 
 
         self.buildTableFile(tblName, attributes)
