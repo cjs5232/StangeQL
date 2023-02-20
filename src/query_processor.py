@@ -10,7 +10,6 @@ Authors:
     - Connor Stange (cjs5232)
 """
 import re
-import os.path
 import catalog
 
 class QueryProcessor:
@@ -19,15 +18,18 @@ class QueryProcessor:
         self.dbloc = dbloc
         self.pageSize = pageSize
         self.bufferSize = bufferSize
+        self.Catalog = catalog.Catalog(dbloc, pageSize, bufferSize)
 
 
     def checkDtype(self, dType):
-        if "," in dType: dType = dType[:-1]
+        if "," in dType: dType = dType.rstrip(',')
         dataTypes = ['integer', 'double', 'boolean'] # 'char(n)', 'varchar(n)'
         if "varchar" in dType:
             n = re.findall("^varchar\(\d+\)$", dType)
-            if len(n) == 1: return 0
-            else: return 1
+            if len(n) == 1: 
+                return 0
+            else: 
+                return 1
         elif "char" in dType:
             n = re.findall("^char\(\d+\)$", dType)
             if len(n) == 1: return 0
@@ -50,7 +52,6 @@ class QueryProcessor:
         startIdx = 3
         attributes = {} # Initialize dictionary to hold attributes (name, type) NOTE if key=primarykey value=column name
         tblName = query[2]
-        Catalog = catalog.Catalog(self.dbloc, self.pageSize, self.bufferSize)
 
         # Steup
         if "()" in tblName:
@@ -61,12 +62,9 @@ class QueryProcessor:
         elif query[startIdx] == "(":
             startIdx = 4
 
-        # if os.path.exists(self.dbloc + "/" + tblName + ".bin"):
+        # if self.Catalog.table_exists(tblName) == 1:
         #     print("\nTable of name foo already exists")
         #     return 1
-        if Catalog.table_exists(tblName) == 1:
-            print("\nTable of name foo already exists")
-            return 1
         
         # Loop through attributes
         i = startIdx
@@ -81,15 +79,15 @@ class QueryProcessor:
                 dType = dType[:-1]
 
             if name in attributes.keys():
-                print(f'Duplicate attribute name "{name}"')
+                print(f'\nDuplicate attribute name "{name}"')
                 return 1
-            
+
             if self.checkDtype(dType) == 1:
-                print(f'Invalid data type "{dType}"')
+                print(f'\nInvalid data type "{dType}"')
                 return 1
 
             if "," in dType:
-                dType.rstrip(',')
+                dType = dType.rstrip(',')
                 attributes[name] = dType
                 i += 2
                 continue
@@ -103,7 +101,7 @@ class QueryProcessor:
                 attributes["primarykey"] = name
                 i += 3
             elif "primarykey" in query[i+2] and "primarykey" in attributes.keys():
-                print("More than 1 primary key")
+                print("\nMore than 1 primary key")
                 return 1
             else:
                 attributes[name] = dType
