@@ -124,13 +124,15 @@ def process_input(query:list, dbloc, pageSize, bufferSize):
 
     def getUserInput(self):
         print("\nPlease enter commands, enter <quit> to shutdown the db\n")
-        go = True
         returnCode = 0  # Good return
-        while go:
+        while True:
+            if not returnCode == 0:
+                return returnCode
+
             readInput = input("JottQL> ")
+
             if readInput == "exit":
-                go = False
-                continue
+                return returnCode
 
 def main(dbloc, pageSize, bufferSize):
     """
