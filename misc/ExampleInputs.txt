@@ -1,0 +1,18 @@
+Test Inputs:
+- Run program
+python .\src\main.py db 4096 10
+
+- Create table command
+create table foo(num integer primarykey);
+
+- select command
+select * from foo;
+
+- display schema command
+display schema;
+
+- display info command
+display info foo;
+
+- Insert command
+insert into foo values (1),(2);

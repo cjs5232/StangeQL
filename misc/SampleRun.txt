@@ -1,0 +1,277 @@
+scj@ronin: /home/csci421/project/sol/$ ./main /home/csci421/project/db 4096 10
+Welcome to JottQL
+Looking at /home/csci421/project/db for existing db....
+No existing db found
+Creating new db at /home/csci421/project/db
+New db created successfully
+Page size: 4096
+Buffer size: 10
+
+Please enter commands, enter <quit> to shutdown the db
+
+JottQL> display schema;
+DB location: /home/csci421/project/db
+Page Size: 4096
+Buffer Size: 10
+
+No tables to display
+SUCCESS
+
+JottQL> display info foo;
+No such table foo
+ERROR
+
+JottQL> select * from foo;
+No such table foo
+ERROR
+
+JottQL> insert into foo values
+(1 "foo");
+No such table foo
+ERROR
+
+JottQL> create table foo(
+num integer);
+No primary key defined
+ERROR
+
+JottQL> create table foo(
+num integer primarykey);
+SUCCESS
+
+JottQL> display info foo;
+Table name: foo
+Table schema:
+    num:integer primarykey
+Pages: 0
+Records: 0
+SUCCESS
+
+JottQL> display schema;
+DB location: /home/csci421/project/db
+Page Size: 4096
+Buffer Size: 10
+
+Tables:
+
+Table name: foo
+Table schema:
+    num:integer primarykey
+Pages: 0
+Records: 0
+SUCCESS
+
+JottQL> select *
+from foo;
+
+-------
+| num |
+-------
+
+
+JottQL> insert into
+foo values
+(1),(2);
+SUCCESS
+
+JottQL> insert into foo values (3.2);
+
+row (3.2): Invalid data type: expected (integer) got (double).
+ERROR
+
+JottQL> insert into foo values (1 3.2);
+
+row (1 3.2): Too many attributes: expected (integer) got (integer double)
+ERROR
+
+JottQL> select *
+from foo;
+
+-------
+| num |
+-------
+|    1|
+|    2|
+
+SUCCESS
+
+JottQL> insert into foo
+values (3),(1),(4);
+
+row (1): Duplicate primary key for row (1)
+ERROR
+
+JottQL> select *
+from foo;
+
+-------
+| num |
+-------
+|    1|
+|    2|
+|    3|
+
+SUCCESS
+
+JottQL> display info foo;
+Table name: foo
+Table schema:
+    num:integer primarykey
+Pages: 1
+Records: 3
+SUCCESS
+
+JottQL> <quit>
+
+Safely shutting down the database...
+Purging page buffer...
+Saving catalog...
+
+Exiting the database...
+
+scj@ronin: /home/csci421/project/sol/$ ./main /home/csci421/project/db 800 25
+Welcome to JottQL
+Looking at /home/csci421/project/db for existing db....
+Database found...
+Restarting the database...
+    Ignoring provided pages size, using stored page size
+Page size: 4096
+Buffer size: 25
+
+Database restarted successfully
+
+Please enter commands, enter <quit> to shutdown the db
+
+JottQL> display schema;
+DB location: /home/csci421/project/db
+Page Size: 4096
+Buffer Size: 25
+
+Tables:
+
+Table name: foo
+Table schema:
+    num:integer primarykey
+Pages: 1
+Records: 3
+SUCCESS
+
+JottQL> select *
+from foo;
+
+-------
+| num |
+-------
+|    1|
+|    2|
+|    3|
+
+SUCCESS
+
+JottQL> create table foo(
+x double primarykey,
+y char(5));
+
+Table of name foo already exists
+ERROR
+
+JottQL> create table bar(
+x double primarykey,
+y char(5));
+
+SUCCESS
+
+JottQL> create table bar2(
+double x primarykey,
+y char(5));
+
+Invalid data type "x"
+ERROR
+
+JottQL> display schema;
+DB location: /home/csci421/project/db
+Page Size: 4096
+Buffer Size: 25
+
+Tables:
+
+Table name: foo
+Table schema:
+    num:integer primarykey
+Pages: 1
+Records: 3
+
+Table name: bar
+Table schema:
+    x:double primarykey
+    y:char(5)
+Pages: 0
+Records: 0
+SUCCESS
+
+JottQL> create table bar2(
+x double primarykey,
+x char(5));
+
+Dublicate attribute name "x"
+ERROR
+
+JottQL> create table bar2(
+x double primarykey,
+y char(5) primarykey);
+
+More than one primarykey
+ERROR
+
+JottQL> create table bar2();
+
+Table with no attributes
+ERROR
+
+JottQL> create table bar2(
+x double,
+y char(5) primarykey);
+
+SUCCESS
+
+JottQL> insert into bar values 
+(3.2 "helloworld");
+
+row (3.2 "helloworld"): char(5) can only accept 5 chars; "helloworld" is 10
+ERROR
+
+JottQL> insert into bar values 
+(3.2 "hello"),
+(14.5 "a23ab"),
+("hello" 3.2);
+
+row ("hello", 3.2): Invalid data types: expected (double char(5)) got (char(5) double)
+ERROR
+
+JottQL> select * from bar;
+
+--------------
+|  x  |   y  |
+--------------
+|  3.2| hello|
+| 14.5| a23ab|
+
+JottQL> insert into bar2 values 
+(3.2 "hello"),
+(14.5 "a23ab");
+
+JottQL> select * from bar2;
+
+--------------
+|  x  |   y  |
+--------------
+| 14.5| a23ab|
+|  3.2| hello|
+
+JottQL> <quit>
+
+Safely shutting down the database...
+Purging page buffer...
+Saving catalog...
+
+Exiting the database...
