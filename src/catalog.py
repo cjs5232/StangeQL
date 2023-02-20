@@ -13,186 +13,177 @@ Authors:
 import json
 import io
 import os
+import codecs
+
 
 """ Nested dictionary"""
 """Gonna need some attributes like, name of DB, and attributes"""
+class Catalog:
+    def __init__(self, location, page_size, buffer_size):
+        self.location = location
+        self.page_size = page_size
+        self.buffer_size = buffer_size
 
-
-def create_catalog(location, page_size, buffer_size):
-    dict2 = {
-        "name": "tab1",
-        "attributes": [
-            {
-                "name": "att1",
-                "type": "varchar(10)",
-                "primary_key": False
-
+    def create_catalog(self):
+        dictionary = {
+            "db": {
+                "location": self.location,
+                "page_size": self.page_size,
+                "buffer_size": self.buffer_size
             },
-            {
-                "name": "att2",
-                "type": "char(20)",
-                "primary_key": False
+            "tables": [
+            ]
+        }
 
-            }
-        ]
-    }
-    dict3 = {
-        "name": "tab2",
-        "attributes": [
-            {
-                "name": "att3",
-                "type": "test",
-                "primary_key": False
-            },
-            {
-                "name": "tab4",
-                "type": "testAgain",
-                "primary_key": False
+        dumped_json = json.dumps(dictionary)
 
-            }
-        ]
-    }
-    dictionary = {
-        "db": {
-            "location": "C:\\Users\\arcoo\\PycharmProjects\\DBMS-DSI-Project\\src",
-            "page_size": 256,
-            "buffer_size": 128
-        },
-        "tables": [
-            dict2,
-            dict3
-        ]
-    }
-    with open("sample.json", "w") as outfile:
-        json.dump(dictionary, outfile)
+        bytes_data = bytes(dumped_json, encoding='utf-8')
 
-    dumped_json = json.dumps(dictionary)
-
-    bytes_data = bytes(dumped_json, encoding='utf-8')
-
-    # Open a binary file for writing
-    with open("catalog", "wb") as write_file:
-        # Write the bytes data to the binary file
-        write_file.write(bytes_data)
+        # Open a binary file for writing
+        with open(self.location + "\\DBCatalog", "wb") as write_file:
+            # Write the bytes data to the binary file
+            write_file.write(bytes_data)
 
 
-def print_catalog(path):
-    fileExist = os.path.exists(path)
-    if not fileExist:
-        print("No catalog file in path: " + path)
-        return 1
+    def print_catalog(self):
+        fileExist = os.path.exists(self.location + "\\DBCatalog")
+        if not fileExist:
+            print("No catalog file in path: " + self.location)
+            return 1
 
-    f = open('sample.json')
-    data = json.load(f)
+        f = open(self.location + "\\DBCatalog")
+        data = json.load(f)
 
-    for i in data["db"]:
-        print(i, end=': ')
-        print(data["db"][i])
-    print()
-
-    tableFlag = False
-    for i in data["tables"]:
-        tableFlag = True
-        print("Table name: " + i["name"])
-        for x in i["attributes"]:
-            print(x)
+        print("\nPrinting database information: ")
+        for i in data["db"]:
+            print(i, end=': ')
+            print(data["db"][i])
         print()
 
-    if not tableFlag:
-        print("There are no tables to display")
-
-    return 0
-
-def print_table(table_name):
-    f = open('sample.json')
-    data = json.load(f)
-
-    for i in data["tables"]:
-
-        if i["name"] == table_name:
-            print("Schema for Table: " + table_name)
+        tableFlag = False
+        for i in data["tables"]:
+            tableFlag = True
+            print("Table name: " + i["name"])
             for x in i["attributes"]:
                 print(x)
-            f.close()
-            return 0
+            print()
 
-    print("No such table " + table_name)
-    f.close()
-    return 1
+        if not tableFlag:
+            print("There are no tables to display")
 
-def table_exists(table_name):
-    f = open('sample.json')
-    data = json.load(f)
+        return 0
 
-    for i in data["tables"]:
+    def print_table(self, table_name):
+        fileExist = os.path.exists(self.location + "\\DBCatalog")
+        if not fileExist:
+            print("No catalog file in path: " + self.location)
+            return 1
 
-        if i["name"] == table_name:
-            f.close()
-            return 0
-    f.close()
-    return 1
+        f = open(self.location + "\\DBCatalog")
+        data = json.load(f)
 
-def table_attributes():
-    return
+        for i in data["tables"]:
+
+            if i["name"] == table_name:
+                print("Schema for Table: " + table_name)
+                for x in i["attributes"]:
+                    print(x)
+                f.close()
+                return 0
+
+        print("No such table " + table_name)
+        f.close()
+        return 1
+
+    def table_exists(self, table_name):
+        fileExist = os.path.exists(self.location + "\\DBCatalog")
+        if not fileExist:
+            print("No catalog file in path: " + self.location)
+            return 1
+
+        f = open(self.location + "\\DBCatalog")
+        data = json.load(f)
+
+        for i in data["tables"]:
+
+            if i["name"] == table_name:
+                f.close()
+                return 0
+        f.close()
+        return 1
+
+    def table_attributes(self, table_name, attribute_name):
+        return
 
 
-def delete_table(table_name):
-    f = open('sample.json')
-    data = json.load(f)
+    def delete_table(self, table_name):
+        fileExist = os.path.exists(self.location + "\\DBCatalog")
+        if not fileExist:
+            print("No catalog file in path: " + self.location)
+            return 1
 
-    for i in data["tables"]:
+        f = open(self.location + "\\DBCatalog")
+        data = json.load(f)
 
-        if i["name"] == table_name:
-            data["tables"].remove(i)
-            dumped_json = json.dumps(data)
-            bytes_data = bytes(dumped_json, encoding='utf-8')
+        for i in data["tables"]:
 
-            # Open a binary file for writing
-            with open("sample.json", "wb") as write_file:
-                # Write the bytes data to the binary file
-                write_file.write(bytes_data)
-            f.close()
-            return 0
+            if i["name"] == table_name:
+                data["tables"].remove(i)
+                dumped_json = json.dumps(data)
+                bytes_data = bytes(dumped_json, encoding='utf-8')
 
-    print("Table - " + table_name + " not found in catalog")
-    return 1
+                # Open a binary file for writing
+                with open("sample.json", "wb") as write_file:
+                    # Write the bytes data to the binary file
+                    write_file.write(bytes_data)
+                f.close()
+                return 0
 
-def add_table():
-    f = open('sample.json')
-    data = json.load(f)
+        print("Table - " + table_name + " not found in catalog")
+        return 1
 
-    test_dict = {
-        "name": "tab3",
-        "attributes": [
-            {
-                "name": "att5",
-                "type": "varchar(10)",
-                "primary_key": False
+    def add_table(self):
+        fileExist = os.path.exists(self.location + "\\DBCatalog")
+        if not fileExist:
+            print("No catalog file in path: " + self.location)
+            return 1
 
-            },
-            {
-                "name": "att6",
-                "type": "char(20)",
-                "primary_key": False
+        f = open(self.location + "\\DBCatalog")
+        data = json.load(f)
 
-            }
-        ]
-    }
+        test_dict = {
+            "name": "tab3",
+            "attributes": [
+                {
+                    "name": "att5",
+                    "type": "varchar(10)",
+                    "primary_key": False
 
-    data["tables"].append(test_dict)
+                },
+                {
+                    "name": "att6",
+                    "type": "char(20)",
+                    "primary_key": False
 
-    dumped_json = json.dumps(data)
-    bytes_data = bytes(dumped_json, encoding='utf-8')
+                }
+            ]
+        }
 
-    # Open a binary file for writing
-    with open("sample.json", "wb") as write_file:
-        # Write the bytes data to the binary file
-        write_file.write(bytes_data)
-    f.close()
+        data["tables"].append(test_dict)
 
-"""""
-add_table()
-print_catalog('sample.json')
-delete_table("tab3")
-print_catalog('sample.json')
-"""
+        dumped_json = json.dumps(data)
+        bytes_data = bytes(dumped_json, encoding='utf-8')
+
+        # Open a binary file for writing
+        with open(self.location + "\\DBCatalog", "wb") as write_file:
+            # Write the bytes data to the binary file
+            write_file.write(bytes_data)
+        f.close()
+
+
+
+    """
+    add_table()
+    delete_table("tab3")
+    print_catalog('sample.json')
+    """
