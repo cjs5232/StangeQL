@@ -1,5 +1,7 @@
 .idea
 .vscode
+tmp.py
+testDb/
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
