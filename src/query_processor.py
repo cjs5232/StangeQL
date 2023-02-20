@@ -9,6 +9,9 @@ Authors:
     - Cindy Donch (cad7046)
     - Connor Stange (cjs5232)
 """
+import re
+import os.path
+import catalog
 
 class QueryProcessor:
 
@@ -17,9 +20,108 @@ class QueryProcessor:
         self.pageSize = pageSize
         self.bufferSize = bufferSize
 
+
+    def checkDtype(self, dType):
+        if "," in dType: dType = dType[:-1]
+        dataTypes = ['integer', 'double', 'boolean'] # 'char(n)', 'varchar(n)'
+        if "varchar" in dType:
+            n = re.findall("^varchar\(\d+\)$", dType)
+            if len(n) == 1: return 0
+            else: return 1
+        elif "char" in dType:
+            n = re.findall("^char\(\d+\)$", dType)
+            if len(n) == 1: return 0
+            else: return 1
+        elif dType in dataTypes:
+            return 0
+        else:
+            return 1
+
+
+    def buildTableFile(self, tableName, attributes):
+        filepath = self.dbloc + "/" + tableName + ".bin"
+        print("Table File path:", filepath)
+        with open(filepath, "wb+") as file:
+            file.write(b"<numPages></numPages>\n<page1>\n<numRecords></numRecords>\n</page1>")
+        return
+
+
     def create_table_cmd(self, query:list): #TODO
+        startIdx = 3
+        attributes = {} # Initialize dictionary to hold attributes (name, type) NOTE if key=primarykey value=column name
+        tblName = query[2]
+        Catalog = catalog.Catalog(self.dbloc, self.pageSize, self.bufferSize)
+
+        # Steup
+        if "()" in tblName:
+            print("\nTable with no attributes")
+            return 1
+        elif "(" in tblName:
+            tblName = tblName[:-1]
+        elif query[startIdx] == "(":
+            startIdx = 4
+
+        # if os.path.exists(self.dbloc + "/" + tblName + ".bin"):
+        #     print("\nTable of name foo already exists")
+        #     return 1
+        if Catalog.table_exists(tblName) == 1:
+            print("\nTable of name foo already exists")
+            return 1
         
-        return 1
+        i = startIdx
+        while i < len(query):
+            if query[i] == ")":
+                break
+
+            name = query[i]
+            dType = query[i+1]
+            
+            if "))" in dType:
+                dType = dType[:-1]
+
+            if name in attributes.keys():
+                print(f'Duplicate attribute name "{name}"')
+                return 1
+            
+            if self.checkDtype(dType) == 1:
+                print(f'Invalid data type "{dType}"')
+                return 1
+
+            if "," in dType:
+                dType.rstrip(',')
+                attributes[name] = dType
+                i += 2
+                continue
+            elif len(query) <= i+2:
+                attributes[name] = dType
+                break
+            
+            if "primarykey" in query[i+2] and "primarykey" not in attributes.keys():
+                query[i+2].rstrip(',')
+                attributes[name] = dType
+                attributes["primarykey"] = name
+                i += 3
+            elif "primarykey" in query[i+2] and "primarykey" in attributes.keys():
+                print("More than 1 primary key")
+                return 1
+            else:
+                attributes[name] = dType
+                i += 2
+        
+        if "primarykey" not in attributes.keys():
+            print("\nNo primary key defined")
+            return 1
+
+
+        print("Attributes:", attributes) # NOTE Temporary
+
+        # TODO Update Catalog 
+
+
+        self.buildTableFile(tblName, attributes)
+        
+        return 0
+
 
     def select_cmd(self, attribute, tableName): #TODO
         # if table doesnt exist
@@ -29,7 +131,9 @@ class QueryProcessor:
             # if attribute = "*" print all
         # return 0  implying success
 
+
     def insert_cmd(self, query:list): #TODO
+
         return 1
 
 
@@ -40,6 +144,7 @@ class QueryProcessor:
         # else loop through tables printing
         #   if fail return 1 implying ERROR
         return 0 # implying SUCCESS
+
 
     def display_info_cmd(self, tableName): #TODO
         tableSchema = "schema"
@@ -126,17 +231,6 @@ class QueryProcessor:
         status = 1 #Bad status
         return status
 
-    def getUserInput(self):
-        print("\nPlease enter commands, enter <quit> to shutdown the db\n")
-        status = 0  # Good return
-        while True:
-            if not status == 0:
-                return status
-
-            readInput = input("JottQL> ")
-
-            if readInput == "exit":
-                return status
 
     def main(self):
         """
@@ -160,7 +254,7 @@ class QueryProcessor:
 
             inputList = readInput.split(';')[0].split(" ")
             inputList = [input for input in inputList if input != blankString]
-            print("INPUT LIST:", inputList) #TEMPORARY
+            # print("INPUT LIST:", inputList) #TEMPORARY
             status = self.process_input(inputList)
             if status == 0:
                 print("SUCCESS\n")
@@ -170,4 +264,4 @@ class QueryProcessor:
 
 if __name__ == '__main__':
     QP = QueryProcessor("testDB", "1024", "64")
-    print(f"Exit Code: {QP.getUserInput()}")
+    print(f"Exit Code: {QP.main()}")
