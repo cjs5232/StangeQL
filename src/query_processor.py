@@ -137,7 +137,40 @@ class QueryProcessor:
 
 
     def insert_cmd(self, query:list): #TODO
+        attributes = []
+        tblName = query[2]
+        query = query[4:]
 
+        queryStr = ' '.join(query)
+
+        loop = True
+        while loop: # Each loop builds a tuple of row values and adds tuple to attributes list
+            vals = [] # list to hold each element in a row
+            curVal = "" # Current value being built
+            for i in range(len(queryStr)):
+                if queryStr[i] == "(" or queryStr[i] == ',':
+                    pass
+                elif queryStr[i] == ")":
+                    if i == len(queryStr) - 1:
+                        vals.append(curVal)
+                        loop = False
+                        queryStr = queryStr[i+1:]
+                        break
+                    else:
+                        vals.append(curVal)
+                        queryStr = queryStr[i+1:]
+                        break
+                elif queryStr[i] == ' ':
+                    vals.append(curVal)
+                    curVal = ""
+                else:
+                    curVal += queryStr[i]
+                    
+            attributes.append(tuple(vals))
+        
+        print("Table Name:", tblName)
+        print("Attributes:", attributes)
+        print("\n")
         return 1
 
 
@@ -225,7 +258,7 @@ class QueryProcessor:
         elif query[0] == "select" and query[2] == "from":
             status = self.select_cmd(query[1], query[3])
             return status
-        elif query[0] == "insert" and query[1] == "into":
+        elif query[0] == "insert" and query[1] == "into" and query[3] == "values":
             status = self.insert_cmd(query)
             return status
         elif query[0] == "create" and query[1] == "table":
@@ -258,7 +291,7 @@ class QueryProcessor:
 
             inputList = readInput.split(';')[0].split(" ")
             inputList = [input for input in inputList if input != blankString]
-            # print("INPUT LIST:", inputList) #TEMPORARY
+            print("INPUT LIST:", inputList) #TEMPORARY
             status = self.process_input(inputList)
             if status == 0:
                 print("SUCCESS\n")
