@@ -137,6 +137,14 @@ class QueryProcessor:
 
 
     def insert_cmd(self, query:list): #TODO
+        """ERROR Examples
+        [] No such table foo
+        [] row (3.2): Invalid data type: expected (integer) got (dobule).
+        [] row (1 3.2): Too many attributes: expected (integer) got (integer double)
+        [] Duplicate primary key for row (1)
+        [] row (3.2 "helloworld"): char(5) can only accept 5 chars; "helloworld" is 10
+        [] row ("hello", 3.2): Invalid data types: expected (double char(5)) got (char(5) double)
+        """
         attributes = []
         tblName = query[2]
         query = query[4:]
