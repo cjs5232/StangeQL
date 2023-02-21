@@ -11,6 +11,7 @@ Authors:
 """
 import re
 import catalog
+import os.path
 
 class QueryProcessor:
 
@@ -42,10 +43,12 @@ class QueryProcessor:
 
     def buildTableFile(self, tableName, attributes):
         filepath = self.dbloc + "/" + tableName + ".bin"
-        print("Table File path:", filepath)
+        if os.path.exists(filepath):
+            print(f'File "{filepath}" already exists')
+            return 1
         with open(filepath, "wb+") as file:
             file.write(b"<numPages></numPages>\n<page1>\n<numRecords></numRecords>\n</page1>")
-        return
+        return 0
 
 
     def create_table_cmd(self, query:list): #TODO
@@ -55,7 +58,7 @@ class QueryProcessor:
 
         # Steup
         if "()" in tblName:
-            print("\nTable with no attributes")
+            print("Table with no attributes")
             return 1
         elif "(" in tblName:
             tblName = tblName[:-1]
@@ -63,7 +66,7 @@ class QueryProcessor:
             startIdx = 4
 
         # if self.Catalog.table_exists(tblName) == 1:
-        #     print("\nTable of name foo already exists")
+        #     print("Table of name foo already exists")
         #     return 1
         
         # Loop through attributes
@@ -79,11 +82,11 @@ class QueryProcessor:
                 dType = dType[:-1]
 
             if name in attributes.keys():
-                print(f'\nDuplicate attribute name "{name}"')
+                print(f'Duplicate attribute name "{name}"')
                 return 1
 
             if self.checkDtype(dType) == 1:
-                print(f'\nInvalid data type "{dType}"')
+                print(f'Invalid data type "{dType}"')
                 return 1
 
             if "," in dType:
@@ -101,14 +104,14 @@ class QueryProcessor:
                 attributes["primarykey"] = name
                 i += 3
             elif "primarykey" in query[i+2] and "primarykey" in attributes.keys():
-                print("\nMore than 1 primary key")
+                print("More than 1 primary key")
                 return 1
             else:
                 attributes[name] = dType
                 i += 2
         
         if "primarykey" not in attributes.keys():
-            print("\nNo primary key defined")
+            print("No primary key defined")
             return 1
 
 
@@ -118,7 +121,8 @@ class QueryProcessor:
         # Catalog.add_table(tblName, attributes)
 
 
-        self.buildTableFile(tblName, attributes)
+        if self.buildTableFile(tblName, attributes) == 1:
+            return 1
         
         return 0
 
