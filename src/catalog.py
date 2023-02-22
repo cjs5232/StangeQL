@@ -188,11 +188,14 @@ class Catalog:
         for i in data["tables"]:
             tableFlag = True
             print("Table name: " + i["name"])
+            print("Table Schema:")
             for x in i["attributes"]:
-                print("\tName: " + x["name"], end=', ')
-                print("Type: " + x["type"], end=', ')
-                print("Primary Key: " + str(x["primary_key"]), end="\n")
-
+                if x["primary_key"] is True:
+                    print("\t" + x["name"] + ":" + x["type"] + " primarykey")
+                else:
+                    print("\t" + x["name"] + ":" + x["type"])
+            print("Pages: " + str(i["pageCount"]))
+            print("Records: " + str(i["recordCount"]))
             print()
 
         if not tableFlag:
@@ -220,6 +223,8 @@ class Catalog:
                         print("\t" + x["name"] + ":" + x["type"] + " primarykey")
                     else:
                         print("\t" + x["name"] + ":" + x["type"])
+                print("Pages: " + str(i["pageCount"]))
+                print("Records: " + str(i["recordCount"]))
                 f.close()
                 return 0
 
