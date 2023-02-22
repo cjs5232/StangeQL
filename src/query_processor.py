@@ -21,10 +21,11 @@ class QueryProcessor:
         self.Catalog = catalog.Catalog(dbloc, pageSize, bufferSize)
 
 
-    def check_data_type(self, d_type):
+    def check_data_type(self, d_type:str) -> int:
         """
         Helper function for create_table_cmd().
-        Checks if an attributes data type is valid.
+        Checks if an attributes data type is valid or not and
+        returns the status code.
         """
         if "," in d_type: d_type = d_type.rstrip(',')
         valid_types = ['integer', 'double', 'boolean'] # 'char(n)', 'varchar(n)'
@@ -44,8 +45,11 @@ class QueryProcessor:
             return 1
 
 
-    def create_table_cmd(self, query:list):
+    def create_table_cmd(self, query:list) -> int:
         """
+        Parse create table query and collect table name and attributes.
+        Use storage manager for creating the actual table file.
+
         Creates the schema for a table. The schema is added to the catalog.
         The schema will be used by the system to store/access/update/delete
         data in the table.
@@ -123,8 +127,10 @@ class QueryProcessor:
         return 0 # Update return based off storage manager
 
 
-    def select_cmd(self, query): #TODO
+    def select_cmd(self, query:list) -> int: #TODO
         """
+        Parse select query and use storage manager to access data.
+
         Access data in tables. Will display all of the data in the table in
         an easy to read format, including column names.
         """
@@ -145,7 +151,7 @@ class QueryProcessor:
         return 0 # NOTE update return based off storage manager
 
 
-    def insert_cmd(self, query:list): #TODO
+    def insert_cmd(self, query:list) -> int: #TODO
         """
         Insert tuple(s) of information into a table.
         """
@@ -189,7 +195,7 @@ class QueryProcessor:
         return 1 # update return based off storage manager
 
 
-    def display_schema_cmd(self): #TODO
+    def display_schema_cmd(self) -> int: #TODO
         """
         Displays the catalog of the database in an easy to read format.
         Including: Database location, page size, buffer size, table schema.
@@ -202,7 +208,7 @@ class QueryProcessor:
         return 0 # SUCCESS
 
 
-    def display_info_cmd(self, table_name): #TODO
+    def display_info_cmd(self, table_name:str) -> int: #TODO
         """
         Calls print_table from Catalog to print given Table Names information.
         Including: Table name, table schema, number of pages, number of records.
@@ -214,7 +220,7 @@ class QueryProcessor:
         return 0 # SUCCESS
 
 
-    def help(self):
+    def help(self) -> int:
         """
         Print the help message to the user.
         """
@@ -258,7 +264,7 @@ class QueryProcessor:
         return 0
 
 
-    def process_input(self, query:list):
+    def process_input(self, query:list) -> int:
         """
         Process query. Depending on the command entered, call the 
         necessary function to execute the query and then return.
