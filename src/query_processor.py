@@ -51,7 +51,7 @@ class QueryProcessor:
         return 0
 
 
-    def create_table_cmd(self, query:list): #TODO
+    def create_table_cmd(self, query:list):
         startIdx = 3
         attributes = {} # Initialize dictionary to hold attributes (name, type) NOTE if key=primarykey value=column name
         tblName = query[2]
@@ -65,9 +65,9 @@ class QueryProcessor:
         elif query[startIdx] == "(":
             startIdx = 4
 
-        # if self.Catalog.table_exists(tblName) == 1:
-        #     print("Table of name foo already exists")
-        #     return 1
+        if self.Catalog.table_exists(tblName) == 1:
+            print("Table of name foo already exists")
+            return 1
         
         # Loop through attributes
         i = startIdx
@@ -117,9 +117,7 @@ class QueryProcessor:
 
         print("Attributes:", attributes) # NOTE Temporary
 
-        # TODO Update Catalog
-        # Catalog.add_table(tblName, attributes)
-
+        self.Catalog.add_table(tblName, attributes)
 
         if self.buildTableFile(tblName, attributes) == 1:
             return 1
@@ -146,14 +144,6 @@ class QueryProcessor:
 
 
     def insert_cmd(self, query:list): #TODO
-        """ERROR Examples
-        [] No such table foo
-        [] row (3.2): Invalid data type: expected (integer) got (dobule).
-        [] row (1 3.2): Too many attributes: expected (integer) got (integer double)
-        [] Duplicate primary key for row (1)
-        [] row (3.2 "helloworld"): char(5) can only accept 5 chars; "helloworld" is 10
-        [] row ("hello", 3.2): Invalid data types: expected (double char(5)) got (char(5) double)
-        """
         attributes = []
         tblName = query[2]
         query = query[4:]
