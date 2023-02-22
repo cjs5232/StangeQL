@@ -200,14 +200,11 @@ class QueryProcessor:
         return 0 # implying SUCCESS
 
 
-    def display_info_cmd(self, tableName): #TODO
-        tableSchema = "schema"
-        tablePages = 0
-        tableRecords = 0
-        # if table exists
-        print(f"Table name: {tableName}\nTable schema:\n\t{tableSchema}\nPages: {tablePages}\nRecords: {tableRecords}")
-        # else return 1 implying ERROR
-        return 0 #implying SUCCESS
+    def display_info_cmd(self, tableName):
+        if self.Catalog.print_table(tableName) == 1:
+            return 1 # FAILURE
+
+        return 0 # SUCCESS
 
 
     def help(self):
