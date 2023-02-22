@@ -127,13 +127,22 @@ class QueryProcessor:
         return 0
 
 
-    def select_cmd(self, attribute, tableName): #TODO
-        # if table doesnt exist
-        print("No such table foo")
-        return 1 # implying error
+    def select_cmd(self, query): #TODO
+        attributes = []
+        for i in range(len(query)):
+            if query[i] == "from":
+                tableName = query[i+1]
+
+        if query[1] == "*":
+            attributes.append(query[1])
+
+        
+        # TODO check if table exists
+            # if doesn't exist: print("No such table foo")
+            # return 1 # implying error
         # else loop through table printing the selected attribute
             # if attribute = "*" print all
-        # return 0  implying success
+        return 0
 
 
     def insert_cmd(self, query:list): #TODO
@@ -266,8 +275,8 @@ class QueryProcessor:
                     return 1
             else:
                 return 1 # Return Failure
-        elif query[0] == "select" and query[2] == "from":
-            status = self.select_cmd(query[1], query[3])
+        elif query[0] == "select":
+            status = self.select_cmd(query)
             return status
         elif query[0] == "insert" and query[1] == "into" and query[3] == "values":
             status = self.insert_cmd(query)
