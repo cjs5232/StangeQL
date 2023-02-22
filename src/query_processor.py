@@ -22,24 +22,24 @@ class QueryProcessor:
         self.Catalog = catalog.Catalog(dbloc, pageSize, bufferSize)
 
 
-    def checkDtype(self, dType):
+    def check_data_type(self, d_type):
         """
         Helper function for create_table_cmd().
         Checks if an attributes data type is valid.
         """
-        if "," in dType: dType = dType.rstrip(',')
-        dataTypes = ['integer', 'double', 'boolean'] # 'char(n)', 'varchar(n)'
-        if "varchar" in dType:
-            n = re.findall("^varchar\(\d+\)$", dType)
+        if "," in d_type: d_type = d_type.rstrip(',')
+        valid_types = ['integer', 'double', 'boolean'] # 'char(n)', 'varchar(n)'
+        if "varchar" in d_type:
+            n = re.findall("^varchar\(\d+\)$", d_type)
             if len(n) == 1: 
                 return 0
             else: 
                 return 1
-        elif "char" in dType:
-            n = re.findall("^char\(\d+\)$", dType)
+        elif "char" in d_type:
+            n = re.findall("^char\(\d+\)$", d_type)
             if len(n) == 1: return 0
             else: return 1
-        elif dType in dataTypes:
+        elif d_type in valid_types:
             return 0
         else:
             return 1
@@ -51,63 +51,63 @@ class QueryProcessor:
         The schema will be used by the system to store/access/update/delete
         data in the table.
         """
-        startIdx = 3
+        start_idx = 3
         attributes = {} # Initialize dictionary to hold attributes (name, type) NOTE if key=primarykey value=column name
-        tblName = query[2]
+        table_name = query[2]
 
         # Steup
-        if "()" in tblName:
+        if "()" in table_name:
             print("Table with no attributes")
             return 1
-        elif "(" in tblName:
-            tblName = tblName[:-1]
-        elif query[startIdx] == "(":
-            startIdx = 4
+        elif "(" in table_name:
+            table_name = table_name[:-1]
+        elif query[start_idx] == "(":
+            start_idx = 4
 
         # Check catalog
-        if self.Catalog.table_exists(tblName) == 1:
+        if self.Catalog.table_exists(table_name) == 1:
             print("Table of name foo already exists")
             return 1
         
         # Loop through attributes
-        i = startIdx
+        i = start_idx
         while i < len(query):
             if query[i] == ")":
                 break
 
             name = query[i]
-            dType = query[i+1]
+            d_type = query[i+1]
             
-            if "))" in dType:
-                dType = dType[:-1]
+            if "))" in d_type:
+                d_type = d_type[:-1]
 
             if name in attributes.keys():
                 print(f'Duplicate attribute name "{name}"')
                 return 1
 
-            if self.checkDtype(dType) == 1:
-                print(f'Invalid data type "{dType}"')
+            if self.check_data_type(d_type) == 1:
+                print(f'Invalid data type "{d_type}"')
                 return 1
 
-            if "," in dType:
-                dType = dType.rstrip(',')
-                attributes[name] = dType
+            if "," in d_type:
+                d_type = d_type.rstrip(',')
+                attributes[name] = d_type
                 i += 2
                 continue
             elif len(query) <= i+2:
-                attributes[name] = dType
+                attributes[name] = d_type
                 break
             
             if "primarykey" in query[i+2] and "primarykey" not in attributes.keys():
                 query[i+2].rstrip(',')
-                attributes[name] = dType
+                attributes[name] = d_type
                 attributes["primarykey"] = name
                 i += 3
             elif "primarykey" in query[i+2] and "primarykey" in attributes.keys():
                 print("More than 1 primary key")
                 return 1
             else:
-                attributes[name] = dType
+                attributes[name] = d_type
                 i += 2
         
         if "primarykey" not in attributes.keys():
@@ -117,7 +117,7 @@ class QueryProcessor:
         print("Attributes:", attributes) # NOTE Temporary
 
         # Add the table to catalog
-        self.Catalog.add_table(tblName, attributes)
+        self.Catalog.add_table(table_name, attributes)
         
         return 0 # Update return based off storage manager
 
@@ -130,12 +130,12 @@ class QueryProcessor:
         attributes = []
         for i in range(len(query)):
             if query[i] == "from":
-                tableName = query[i+1]
+                table_name = query[i+1]
         
         if query[1] == "*": # NOTE Will need to update for later phases
             attributes.append(query[1])
         
-        print("Table Name:", tableName) # NOTE Temporary
+        print("Table Name:", table_name) # NOTE Temporary
         print("Attributes:", attributes) # NOTE Temporary
         print("\n") # NOTE Temporary
         
@@ -147,37 +147,37 @@ class QueryProcessor:
         Insert tuple(s) of information into a table.
         """
         attributes = []
-        tblName = query[2]
+        table_name = query[2]
         query = query[4:]
 
-        queryStr = ' '.join(query)
+        query_str = ' '.join(query)
 
         loop = True
         while loop: # Each loop builds a tuple of row values and adds tuple to attributes list
             vals = [] # list to hold each element in a row
-            curVal = "" # Current value being built
-            for i in range(len(queryStr)):
-                if queryStr[i] == "(" or queryStr[i] == ',':
+            cur_val = "" # Current value being built
+            for i in range(len(query_str)):
+                if query_str[i] == "(" or query_str[i] == ',':
                     pass
-                elif queryStr[i] == ")":
-                    if i == len(queryStr) - 1:
-                        vals.append(curVal)
+                elif query_str[i] == ")":
+                    if i == len(query_str) - 1:
+                        vals.append(cur_val)
                         loop = False
-                        queryStr = queryStr[i+1:]
+                        query_str = query_str[i+1:]
                         break
                     else:
-                        vals.append(curVal)
-                        queryStr = queryStr[i+1:]
+                        vals.append(cur_val)
+                        query_str = query_str[i+1:]
                         break
-                elif queryStr[i] == ' ':
-                    vals.append(curVal)
-                    curVal = ""
+                elif query_str[i] == ' ':
+                    vals.append(cur_val)
+                    cur_val = ""
                 else:
-                    curVal += queryStr[i]
+                    cur_val += query_str[i]
                     
             attributes.append(tuple(vals))
         
-        print("Table Name:", tblName) # NOTE TEMPORARY
+        print("Table Name:", table_name) # NOTE TEMPORARY
         print("Attributes:", attributes) # NOTE TEMPORARY
         print("\n") # NOTE TEMPORARY
         return 1 # update return based off storage manager
@@ -196,13 +196,13 @@ class QueryProcessor:
         return 0 # SUCCESS
 
 
-    def display_info_cmd(self, tableName): #TODO
+    def display_info_cmd(self, table_name): #TODO
         """
-        Calls print_table from Catalog to print given tableNames information.
+        Calls print_table from Catalog to print given Table Names information.
         Including: Table name, table schema, number of pages, number of records.
         All output comes from Catalog.print_table.
         """
-        if self.Catalog.print_table(tableName) == 1:
+        if self.Catalog.print_table(table_name) == 1:
             return 1 # FAILURE
 
         return 0 # SUCCESS
