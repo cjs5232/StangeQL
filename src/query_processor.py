@@ -23,6 +23,10 @@ class QueryProcessor:
 
 
     def checkDtype(self, dType):
+        """
+        Helper function for create_table_cmd().
+        Checks if an attributes data type is valid.
+        """
         if "," in dType: dType = dType.rstrip(',')
         dataTypes = ['integer', 'double', 'boolean'] # 'char(n)', 'varchar(n)'
         if "varchar" in dType:
@@ -42,6 +46,10 @@ class QueryProcessor:
 
 
     def buildTableFile(self, tableName, attributes):
+        """
+        Helper function for create_table_cmd().
+        Creates a table file if it does not already exist.
+        """
         filepath = self.dbloc + "/" + tableName + ".bin"
         if os.path.exists(filepath):
             print(f'File "{filepath}" already exists')
@@ -52,6 +60,11 @@ class QueryProcessor:
 
 
     def create_table_cmd(self, query:list):
+        """
+        Creates the schema for a table. The schema is added to the catalog.
+        The schema will be used by the system to store/access/update/delete
+        data in the table.
+        """
         startIdx = 3
         attributes = {} # Initialize dictionary to hold attributes (name, type) NOTE if key=primarykey value=column name
         tblName = query[2]
@@ -126,6 +139,10 @@ class QueryProcessor:
 
 
     def select_cmd(self, query): #TODO
+        """
+        Access data in tables. Will display all of the data in the table in
+        an easy to read format, including column names.
+        """
         attributes = []
         for i in range(len(query)):
             if query[i] == "from":
@@ -142,6 +159,9 @@ class QueryProcessor:
 
 
     def insert_cmd(self, query:list): #TODO
+        """
+        Insert tuple(s) of information into a table.
+        """
         attributes = []
         tblName = query[2]
         query = query[4:]
@@ -180,18 +200,22 @@ class QueryProcessor:
 
 
     def display_schema_cmd(self): #TODO
+        """
+        Displays the catalog of the database in an easy to read format.
+        Including: Database location, page size, buffer size, table schema.
+        """
         print(f"DB location: {self.dbloc}\nPage Size: {self.pageSize}\nBuffer Size: {self.bufferSize}\n")
         # Get schema info from catalog
         # if no tables print("No tables to display")
         # else loop through tables printing
         # if fail return 1 implying ERROR
-        return 0 # implying SUCCESS
+        return 0 # SUCCESS
 
 
     def display_info_cmd(self, tableName): #TODO
         """
-        Calls print_table from Catalog to print given tableNames information,
-        including: Table name, Table schema info (name, type, and primarykey if true).
+        Calls print_table from Catalog to print given tableNames information.
+        Including: Table name, table schema, number of pages, number of records.
         All output comes from Catalog.print_table.
         """
         if self.Catalog.print_table(tableName) == 1:
