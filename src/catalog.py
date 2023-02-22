@@ -168,6 +168,7 @@ class Catalog:
         f.close()
         return 0
 
+
     def print_table(self, table_name):
         fileExist = os.path.exists(self.location + "\\DBCatalog")
         if not fileExist:
@@ -180,11 +181,13 @@ class Catalog:
         for i in data["tables"]:
 
             if i["name"] == table_name:
-                print("Schema for Table: " + table_name)
+                print("Table name: " + table_name)
+                print("Table Schema:")
                 for x in i["attributes"]:
-                    print("\tName: " + x["name"], end=', ')
-                    print("Type: " + x["type"], end=', ')
-                    print("Primary Key: " + str(x["primary_key"]), end="\n")
+                    if x["primary_key"] is True:
+                        print("\t" + x["name"] + ":" + x["type"] + " primarykey")
+                    else:
+                        print("\t" + x["name"] + ":" + x["type"])
                 f.close()
                 return 0
 
