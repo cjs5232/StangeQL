@@ -84,7 +84,7 @@ class Catalog:
                 bytes_data = bytes(dumped_json, encoding='utf-8')
 
                 # Open a binary file for writing
-                with open("sample.json", "wb") as write_file:
+                with open(self.location + "\\DBCatalog", "wb") as write_file:
                     # Write the bytes data to the binary file
                     write_file.write(bytes_data)
                 f.close()
@@ -286,20 +286,20 @@ class Catalog:
     
     *This is how we want the dictionary to be setup*
     test_dict = {
-    "name": "tab3",
-    "attributes": [
-        {
-            "name": "att5",
-            "type": "varchar(10)",
-            "primary_key": False
-
-        },
-        {
-            "name": "att6",
-            "type": "char(20)",
-            "primary_key": False
-
-        }
-    ]
+        "name": "tab3",
+        "attributes": [
+            {
+                "name": "att5",
+                "type": "varchar(10)",
+                "primary_key": False
+    
+            },
+            {
+                "name": "att6",
+                "type": "char(20)",
+                "primary_key": False
+    
+            }
+        ]
     }
     """
