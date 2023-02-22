@@ -117,6 +117,8 @@ class QueryProcessor:
 
         # Add the table to catalog
         self.Catalog.add_table(table_name, attributes)
+
+        # TODO Make call to storage manager and return status code
         
         return 0 # Update return based off storage manager
 
@@ -133,6 +135,8 @@ class QueryProcessor:
         
         if query[1] == "*": # NOTE Will need to update for later phases
             attributes.append(query[1])
+        
+        # TODO Make call to storage manager and return status code
         
         print("Table Name:", table_name) # NOTE Temporary
         print("Attributes:", attributes) # NOTE Temporary
@@ -176,9 +180,12 @@ class QueryProcessor:
                     
             attributes.append(tuple(vals))
         
+        #TODO Make call to storage manager passing in table name and attributes + return status code
+        
         print("Table Name:", table_name) # NOTE TEMPORARY
         print("Attributes:", attributes) # NOTE TEMPORARY
         print("\n") # NOTE TEMPORARY
+
         return 1 # update return based off storage manager
 
 
