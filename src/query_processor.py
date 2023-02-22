@@ -200,11 +200,26 @@ class QueryProcessor:
         Displays the catalog of the database in an easy to read format.
         Including: Database location, page size, buffer size, table schema.
         """
+        tables = []
         print(f"DB location: {self.dbloc}\nPage Size: {self.pageSize}\nBuffer Size: {self.bufferSize}\n")
-        # Get schema info from catalog
-        # if no tables print("No tables to display")
-        # else loop through tables printing
-        # if fail return 1 implying ERROR
+        
+        catalog = self.Catalog.get_catalog()
+
+        if catalog == 1:
+            return 1 # Failed to get catalog
+        
+        for i in catalog['tables']: #TODO Test if this works
+            tables.append(i['name'])
+        
+        if len(tables) == 0:
+            print("\nNo tables to display")
+            return 0
+        
+        print("\nTables:\n")
+        
+        for i in tables:
+            self.Catalog.print_table(i)
+        
         return 0 # SUCCESS
 
 
