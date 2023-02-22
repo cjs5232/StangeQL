@@ -266,6 +266,20 @@ class Catalog:
         return 1
 
     """
+    Returns the entire catalog as a json
+    """
+    def get_catalog(self):
+        fileExist = os.path.exists(self.location + "\\DBCatalog")
+        if not fileExist:
+            print("No catalog file in path: " + self.location)
+            return 1
+
+        f = open(self.location + "\\DBCatalog")
+        data = json.load(f)
+
+        return data
+
+    """
     add_table()
     delete_table("tab3")
     print_catalog('sample.json')
