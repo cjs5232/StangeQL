@@ -127,7 +127,6 @@ class Catalog:
 
         dumped_json = json.dumps(data)
         bytes_data = bytes(dumped_json, encoding='utf-8')
-
         # Open a binary file for writing
         with open(self.location + "\\DBCatalog", "wb") as write_file:
             # Write the bytes data to the binary file
@@ -135,6 +134,39 @@ class Catalog:
         f.close()
         return 0
 
+    def update_record_count(self, table_name, val):
+        self.update_count(table_name, val, "recordCount")
+
+    def update_page_count(self, table_name, val):
+        self.update_count(table_name, val, "pageCount")
+
+    """
+    I wanted to save some space but keep it easy so I made this function more generic
+    for page/record updates
+    """
+    def update_count(self, table_name, val, type):
+        fileExist = os.path.exists(self.location + "\\DBCatalog")
+        if not fileExist:
+            print("No catalog file in path: " + self.location)
+            return 1
+
+        f = open(self.location + "\\DBCatalog")
+        data = json.load(f)
+
+        for i in data["tables"]:
+            if i["name"] == table_name:
+                i[type] += val
+                dumped_json = json.dumps(data)
+                bytes_data = bytes(dumped_json, encoding='utf-8')
+                with open(self.location + "\\DBCatalog", "wb") as write_file:
+                    # Write the bytes data to the binary file
+                    write_file.write(bytes_data)
+                f.close()
+                return 0
+
+        print("Table " + table_name + " not found")
+        f.close()
+        return 1
 
     def print_catalog(self):
         fileExist = os.path.exists(self.location + "\\DBCatalog")
@@ -273,6 +305,8 @@ class Catalog:
     *This is how we want the dictionary to be setup*
     test_dict = {
     "name": "tab3",
+    "pageCount": 1,
+    "recordCount": 1,
     "attributes": [
         {
             "name": "att5",
