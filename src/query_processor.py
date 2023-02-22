@@ -130,15 +130,13 @@ class QueryProcessor:
         for i in range(len(query)):
             if query[i] == "from":
                 tableName = query[i+1]
-
-        # TODO check if table exists
-            # if doesn't exist: print("No such table foo")
-            # return 1 # implying error
-        # else loop through table printing the selected attribute
-            # if attribute = "*" print all
         
-        if query[1] == "*": # TODO Will need to update for later phases
+        if query[1] == "*": # NOTE Will need to update for later phases
             attributes.append(query[1])
+        
+        print("Table Name:", tableName) # NOTE Temporary
+        print("Attributes:", attributes) # NOTE Temporary
+        print("\n") # NOTE Temporary
         
         return 0
 
