@@ -84,7 +84,7 @@ class Catalog:
                 bytes_data = bytes(dumped_json, encoding='utf-8')
 
                 # Open a binary file for writing
-                with open("sample.json", "wb") as write_file:
+                with open(self.location + "\\DBCatalog", "wb") as write_file:
                     # Write the bytes data to the binary file
                     write_file.write(bytes_data)
                 f.close()
@@ -127,6 +127,7 @@ class Catalog:
 
         dumped_json = json.dumps(data)
         bytes_data = bytes(dumped_json, encoding='utf-8')
+
         # Open a binary file for writing
         with open(self.location + "\\DBCatalog", "wb") as write_file:
             # Write the bytes data to the binary file
@@ -212,11 +213,13 @@ class Catalog:
         for i in data["tables"]:
 
             if i["name"] == table_name:
-                print("Schema for Table: " + table_name)
+                print("Table name: " + table_name)
+                print("Table Schema:")
                 for x in i["attributes"]:
-                    print("\tName: " + x["name"], end=', ')
-                    print("Type: " + x["type"], end=', ')
-                    print("Primary Key: " + str(x["primary_key"]), end="\n")
+                    if x["primary_key"] is True:
+                        print("\t" + x["name"] + ":" + x["type"] + " primarykey")
+                    else:
+                        print("\t" + x["name"] + ":" + x["type"])
                 f.close()
                 return 0
 
@@ -296,6 +299,20 @@ class Catalog:
 
         # Do we want this to return 1?
         return 1
+
+    """
+    Returns the entire catalog as a json
+    """
+    def get_catalog(self):
+        fileExist = os.path.exists(self.location + "\\DBCatalog")
+        if not fileExist:
+            print("No catalog file in path: " + self.location)
+            return 1
+
+        f = open(self.location + "\\DBCatalog")
+        data = json.load(f)
+
+        return data
 
     """
     add_table()
