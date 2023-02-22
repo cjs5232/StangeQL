@@ -182,12 +182,12 @@ class QueryProcessor:
         return 1
 
 
-    def display_schema_cmd(self, query:list): #TODO
+    def display_schema_cmd(self): #TODO
         print(f"DB location: {self.dbloc}\nPage Size: {self.pageSize}\nBuffer Size: {self.bufferSize}\n")
-        # if no tables
-        print("No tables to display")
+        # Get schema info from catalog
+        # if no tables print("No tables to display")
         # else loop through tables printing
-        #   if fail return 1 implying ERROR
+        # if fail return 1 implying ERROR
         return 0 # implying SUCCESS
 
 
@@ -256,11 +256,14 @@ class QueryProcessor:
             return help()
         elif query[0] == "display":
             if query[1] == "schema":
-                status = self.display_schema_cmd(query)
+                status = self.display_schema_cmd()
                 return  status
             elif query[1] == "info":
-                status = self.display_info_cmd(query[2])
-                return  status
+                try:
+                    status = self.display_info_cmd(query[2])
+                    return  status
+                except IndexError:
+                    return 1
             else:
                 return 1 # Return Failure
         elif query[0] == "select" and query[2] == "from":
