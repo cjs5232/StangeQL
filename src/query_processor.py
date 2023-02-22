@@ -11,7 +11,6 @@ Authors:
 """
 import re
 import catalog
-import os.path
 
 class QueryProcessor:
 
