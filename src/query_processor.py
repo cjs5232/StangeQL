@@ -45,20 +45,6 @@ class QueryProcessor:
             return 1
 
 
-    def buildTableFile(self, tableName, attributes):
-        """
-        Helper function for create_table_cmd().
-        Creates a table file if it does not already exist.
-        """
-        filepath = self.dbloc + "/" + tableName + ".bin"
-        if os.path.exists(filepath):
-            print(f'File "{filepath}" already exists')
-            return 1
-        with open(filepath, "wb+") as file:
-            file.write(b"<numPages></numPages>\n<page1>\n<numRecords></numRecords>\n</page1>")
-        return 0
-
-
     def create_table_cmd(self, query:list):
         """
         Creates the schema for a table. The schema is added to the catalog.
@@ -78,6 +64,7 @@ class QueryProcessor:
         elif query[startIdx] == "(":
             startIdx = 4
 
+        # Check catalog
         if self.Catalog.table_exists(tblName) == 1:
             print("Table of name foo already exists")
             return 1
@@ -127,15 +114,12 @@ class QueryProcessor:
             print("No primary key defined")
             return 1
 
-
         print("Attributes:", attributes) # NOTE Temporary
 
+        # Add the table to catalog
         self.Catalog.add_table(tblName, attributes)
-
-        if self.buildTableFile(tblName, attributes) == 1:
-            return 1
         
-        return 0
+        return 0 # Update return based off storage manager
 
 
     def select_cmd(self, query): #TODO
@@ -155,7 +139,7 @@ class QueryProcessor:
         print("Attributes:", attributes) # NOTE Temporary
         print("\n") # NOTE Temporary
         
-        return 0
+        return 0 # NOTE update return based off storage manager
 
 
     def insert_cmd(self, query:list): #TODO
@@ -193,10 +177,10 @@ class QueryProcessor:
                     
             attributes.append(tuple(vals))
         
-        print("Table Name:", tblName)
-        print("Attributes:", attributes)
-        print("\n")
-        return 1
+        print("Table Name:", tblName) # NOTE TEMPORARY
+        print("Attributes:", attributes) # NOTE TEMPORARY
+        print("\n") # NOTE TEMPORARY
+        return 1 # update return based off storage manager
 
 
     def display_schema_cmd(self): #TODO
