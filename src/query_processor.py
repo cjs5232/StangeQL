@@ -200,7 +200,12 @@ class QueryProcessor:
         return 0 # implying SUCCESS
 
 
-    def display_info_cmd(self, tableName):
+    def display_info_cmd(self, tableName): #TODO
+        """
+        Calls print_table from Catalog to print given tableNames information,
+        including: Table name, Table schema info (name, type, and primarykey if true).
+        All output comes from Catalog.print_table.
+        """
         if self.Catalog.print_table(tableName) == 1:
             return 1 # FAILURE
 
@@ -271,7 +276,7 @@ class QueryProcessor:
                 except IndexError:
                     return 1
             else:
-                return 1 # Return Failure
+                return 1
         elif query[0] == "select":
             status = self.select_cmd(query)
             return status
@@ -291,8 +296,8 @@ class QueryProcessor:
         Kick start main text processing loop (while loop) that awaits for a ; to end a statement or an exit command.
         NOTE: Carriage returns are ignored.
 
-        Good status = 0
-        Bad status = !0
+        Good status = 0 (Prints SUCCESS)
+        Bad status = !0 (Prints ERROR)
         """
         print("\nPlease enter commands, enter <quit> to shutdown the db\n")
 
