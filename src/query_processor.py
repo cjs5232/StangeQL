@@ -366,6 +366,9 @@ class QueryProcessor:
             readInput = input("JottQL> ").lower()
             if readInput == "<quit>":
                 return status
+            if readInput == "<help>": #This is a placeholder
+                self.help()
+                continue
             while not ";" in readInput:
                 readInput += " " + input().lower()
 
