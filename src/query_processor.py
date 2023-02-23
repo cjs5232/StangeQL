@@ -217,7 +217,7 @@ class QueryProcessor:
         
         print("\nTables:\n")
         
-        for i in range(len(tables)):
+        for i in range(len(tables)): #TODO Test if this works and output is correct
             self.Catalog.print_table(tables[i])
             if i < len(tables) - 1:
                 print("\n")
