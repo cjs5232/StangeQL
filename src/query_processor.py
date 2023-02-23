@@ -45,7 +45,7 @@ class QueryProcessor:
             return 1
 
 
-    def create_table_cmd(self, query:list) -> int:
+    def create_table_cmd(self, query:list) -> int: #TODO add buffer manager stuff 
         """
         Parse create table query and collect table name and attributes.
         Use storage manager for creating the actual table file.
@@ -68,8 +68,8 @@ class QueryProcessor:
             start_idx = 4
 
         # Check catalog
-        if self.Catalog.table_exists(table_name) == 1:
-            print("Table of name foo already exists")
+        if self.Catalog.table_exists(table_name) == 0:
+            print(f"Table of name {table_name} already exists")
             return 1
         
         # Loop through attributes
@@ -117,8 +117,6 @@ class QueryProcessor:
             print("No primary key defined")
             return 1
 
-        print("Attributes:", attributes) # NOTE Temporary
-
         # Add the table to catalog
         self.Catalog.add_table(table_name, attributes)
 
@@ -127,32 +125,71 @@ class QueryProcessor:
         return 0 # Update return based off storage manager
 
 
-    def select_cmd(self, query:list) -> int: #TODO
+    def select_cmd(self, query:list) -> int: #TODO add buffer manager stuff
         """
         Parse select query and use storage manager to access data.
+        Once data is returned from storage manager, get the table column
+        names from the catalog and output the table in a clean/formatted
+        way.
 
         Access data in tables. Will display all of the data in the table in
         an easy to read format, including column names.
         """
         attributes = []
+
+        if "from" not in query:
+            print('"from" keyword missing in select query')
+            return 1
+
         for i in range(len(query)):
             if query[i] == "from":
                 table_name = query[i+1]
         
-        if query[1] == "*": # NOTE Will need to update for later phases
+        # Check catalog
+        if self.Catalog.table_exists(table_name) == 1:
+            print(f"No such table {table_name}")
+            return 1
+        
+        if query[1] == "*":
             attributes.append(query[1])
+        else:
+            print(f"Invalid selection: {query[1]}")
+            return 1
         
-        # TODO Make call to storage manager and return status code
         
-        print("Table Name:", table_name) # NOTE Temporary
-        print("Attributes:", attributes) # NOTE Temporary
-        print("\n") # NOTE Temporary
+        data = [(), (), ()] # TODO Make call to storage manager and return status code / data
+        columns = ["", "", ""] # TODO Get column names from catalog
+
+        # Find necessary padding for columns and store in column_width
+        length_list = [len(element) for row in data for element in row]
+        for i in columns:
+            length_list.append(len(i))
+        column_width = max(length_list)
+
+        # Format columns and barriers
+        columns_formatted = "|".join(element.center(column_width +2) for element in columns)
+        columns_formatted = "|" + columns_formatted + "|"
+        horizontal_lines = "-" * (len(columns_formatted))
+
+        # Print column section
+        print(horizontal_lines)
+        print(columns_formatted)
+        print(horizontal_lines)
+
+        # Print rows
+        for row in data:
+            row = "|".join(element.center(column_width + 2) for element in row)
+            row = "|" + row + "|"
+            print(row)
         
-        return 0 # NOTE update return based off storage manager
+        return 0
 
 
-    def insert_cmd(self, query:list) -> int: #TODO
+    def insert_cmd(self, query:list) -> int: #TODO add buffer manager stuff
         """
+        Parse the insert into query and store attributes. Use the
+        buffer manager to physically add the tuples of data into the table.
+
         Insert tuple(s) of information into a table.
         """
         attributes = []
@@ -187,15 +224,11 @@ class QueryProcessor:
             attributes.append(tuple(vals))
         
         #TODO Make call to storage manager passing in table name and attributes + return status code
-        
-        print("Table Name:", table_name) # NOTE TEMPORARY
-        print("Attributes:", attributes) # NOTE TEMPORARY
-        print("\n") # NOTE TEMPORARY
 
-        return 1 # update return based off storage manager
+        return 0 # update return based off storage manager
 
 
-    def display_schema_cmd(self) -> int: #TODO
+    def display_schema_cmd(self) -> int: #TODO test
         """
         Displays the catalog of the database in an easy to read format.
         Including: Database location, page size, buffer size, table schema.
@@ -206,7 +239,7 @@ class QueryProcessor:
         catalog = self.Catalog.get_catalog()
 
         if catalog == 1:
-            return 1 # Failed to get catalog
+            return 1
         
         for i in catalog['tables']: #TODO Test if this works
             tables.append(i['name'])
@@ -225,7 +258,7 @@ class QueryProcessor:
         return 0 # SUCCESS
 
 
-    def display_info_cmd(self, table_name:str) -> int: #TODO
+    def display_info_cmd(self, table_name:str) -> int: #TODO test
         """
         Calls print_table from Catalog to print given Table Names information.
         Including: Table name, table schema, number of pages, number of records.
