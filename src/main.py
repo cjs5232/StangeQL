@@ -52,7 +52,8 @@ class Driver:
     or saving the DB before a sys.exit())
     """
     def handoff(self):
-        returnCode = qp.main(self.dbloc, self.pageSize, self.bufferSize)
+        QP = qp.QueryProcessor(self.dbloc, self.pageSize, self.bufferSize)
+        returnCode = QP.main()
         print("\nSafely shutting down the database...")
         print("Purging page buffer...)")
         # TODO
