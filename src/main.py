@@ -45,7 +45,7 @@ class Driver:
             print(f"New db created successfully\nPage size: {self.pageSize}\nBuffer size: {self.bufferSize}")
             #TODO: Create pages and buffers with given the buffer size
         x = cat.table_attributes("tab3")
-        print(f"cat.TableAttributes {x}")
+
     """
     Hand off program to the query processor for user input handling.
     TODO: Refactor after QP has been implemented to spit back error messages and exit gracefully (most likely includes backing up 

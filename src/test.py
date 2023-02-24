@@ -99,8 +99,6 @@ def write_string(string):
         for i in encodedValues:
             f.write(i)
 
-    pass
-
 def write_and_read_string_from_file():
     with open("test.bin", "wb+") as f:
         valuesWeWantToAdd = (1199, "hi", True) # values we want to figure out how to write to file
@@ -109,28 +107,6 @@ def write_and_read_string_from_file():
         encodedLength = get_encoded_value_len(stringEncoded)
         encodedValues = [value_to_encoded_type(valuesWeWantToAdd[1]), encodedLength, stringEncoded]
         write_binary_to_file(encodedValues)
-
-    with open("test.bin", "rb") as f:
-        type = f.read(TYPE_LEN)
-        print(type)
-        print(binToType[type])
-        knownInt = f.read(INT_BYTE_MAX_LEN)
-        knownInt = int.from_bytes(knownInt, INT_BYTE_TYPE)
-        print(knownInt)
-        knownString = f.read(knownInt)
-        print(knownString.decode())
-
-def write_and_read_bool_from_file():
-    with open("test.bin", "wb+") as f:
-        valuesWeWantToAdd = (1199, "hi", True) # values we want to figure out how to write to file
-        
-        stringEncoded = str(valuesWeWantToAdd[2]).encode() #Encode the String
-
-        encodedLength = len(stringEncoded).to_bytes(INT_BYTE_MAX_LEN, INT_BYTE_TYPE)
-
-        encodedValues = [typeToBin[str(type(valuesWeWantToAdd[2]))], encodedLength, stringEncoded]
-        for i in encodedValues:
-            f.write(i)
 
     with open("test.bin", "rb") as f:
         type = f.read(TYPE_LEN)

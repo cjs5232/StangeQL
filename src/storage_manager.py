@@ -121,16 +121,17 @@ class StorageManager:
         #open the filepath
         with open(filepath, "rb") as f:
             #read in the number of pages
-            num_pages = f.read(self.INT_BYTE_MAX_LEN)
+            num_pages = f.read(self.INT_BYTE_MAX_LEN) #TODO: Convert to actual int
             #for each page, read in the number of records, then read each record
             for i in range(num_pages):
-                num_records = f.read(self.INT_BYTE_MAX_LEN)
+                num_records = f.read(self.INT_BYTE_MAX_LEN) #TODO: Convert to actual int
                 #for each record in the page, read each attribute
                 for j in range(num_records):
                     record = []
                     #for each attribute in the record
                     for j in attributes:
                         attribute_type = j["type"]
+                        print(attribute_type)
                         #if int
                             #value = f.read(self.INT_BYTE_MAX_LEN)
                             #value = int.from_bytes(value, self.INT_BYTE_TYPE)
