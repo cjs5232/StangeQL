@@ -11,6 +11,7 @@ Authors:
 """
 import re
 import catalog
+import storage_manager
 
 class QueryProcessor:
 
@@ -19,6 +20,7 @@ class QueryProcessor:
         self.pageSize = pageSize
         self.bufferSize = bufferSize
         self.Catalog = catalog.Catalog(dbloc, pageSize, bufferSize)
+        self.StorageM = storage_manager.StorageManager(dbloc, pageSize, bufferSize)
 
 
     def check_data_type(self, d_type:str) -> int:
@@ -45,7 +47,7 @@ class QueryProcessor:
             return 1
 
 
-    def create_table_cmd(self, query:list) -> int: #TODO add buffer manager stuff 
+    def create_table_cmd(self, query:list) -> int:
         """
         Parse create table query and collect table name and attributes.
         Use storage manager for creating the actual table file.
@@ -117,12 +119,11 @@ class QueryProcessor:
             print("No primary key defined")
             return 1
 
-        # Add the table to catalog
         self.Catalog.add_table(table_name, attributes)
 
-        # TODO Make call to storage manager and return status code
+        status = self.StorageM.create_table(table_name)
         
-        return 0 # Update return based off storage manager
+        return status
 
 
     def select_cmd(self, query:list) -> int: #TODO add buffer manager stuff
