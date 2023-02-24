@@ -58,6 +58,10 @@ class StorageManager:
         
         return 1
 
+    def parse_record(record, primary_key, attributes):
+        
+        return
+
 
     # phase 1
     def get_record(self, primary_key):
@@ -81,9 +85,10 @@ class StorageManager:
             for i in range(num_pages) - 1:
                 records = table_file[i].split("</record>")
                 for j in range(len(records)):
-                    records[j]
-
-        return
+                    record = records[j].split(",")
+                    if(primary_key == record[primary_index]):
+                        return tuple(record)
+        return 0
 
     def get_page(self, table_number, page_number):
         return
