@@ -114,6 +114,23 @@ class Catalog:
         f.close()
         return 1
 
+    """
+    Adds table to the catalog where the table is a dictionary in the form of
+    {
+    "name": "x",
+    "pageCount": x,
+    "recordCount": x,
+    "attributes": [
+        {
+            "name": "x",
+            "type": "x",
+            "primary_key": bool
+
+        },
+        ...
+        ]
+    }
+    """
     def add_table(self, table):
         fileExist = os.path.exists(self.location + "\\DBCatalog")
         if not fileExist:
@@ -135,9 +152,19 @@ class Catalog:
         f.close()
         return 0
 
+    """
+    Adds the record count - val -  of the given table name
+    to the record count
+    recordCount += val (deletions will be negative numbers)
+    """
     def update_record_count(self, table_name, val):
         self.update_count(table_name, val, "recordCount")
 
+    """
+    Adds the page count - val -  of the given table name
+    to the page count
+    pageCount += val (deletions will be negative numbers)
+    """
     def update_page_count(self, table_name, val):
         self.update_count(table_name, val, "pageCount")
 
