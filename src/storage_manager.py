@@ -15,6 +15,8 @@ import catalog
 
 class StorageManager:
 
+
+
     def __init__(self, dbloc, pageSize, bufferSize) -> None:
         self.dbloc = dbloc
         self.pageSize = pageSize
@@ -107,6 +109,9 @@ class StorageManager:
 
     def get_page(self, table_number, page_number):
         return
+    
+    def bytes_to_int(self, byteRepresentation):
+        return int.from_bytes(byteRepresentation, self.INT_BYTE_TYPE)
 
     #phase 1
     #returns a list of tuples ex: [(), (), ()][(), (), ()]
@@ -121,16 +126,16 @@ class StorageManager:
         #open the filepath
         with open(filepath, "rb") as f:
             #read in the number of pages
-            num_pages = f.read(self.INT_BYTE_MAX_LEN) #TODO: Convert to actual int
+            num_pages = self.bytes_to_int(f.read(self.INT_BYTE_MAX_LEN))
             #for each page, read in the number of records, then read each record
             for i in range(num_pages):
-                num_records = f.read(self.INT_BYTE_MAX_LEN) #TODO: Convert to actual int
+                num_records = self.bytes_to_int(f.read(self.INT_BYTE_MAX_LEN))
                 #for each record in the page, read each attribute
                 for j in range(num_records):
                     record = []
                     #for each attribute in the record
-                    for j in attributes:
-                        attribute_type = j["type"]
+                    for k in attributes:
+                        attribute_type = k["type"]
                         print(attribute_type)
                         #if int
                             #value = f.read(self.INT_BYTE_MAX_LEN)
