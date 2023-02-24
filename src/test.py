@@ -39,10 +39,6 @@ with open("test.bin", "wb+") as f:
     encodedValues = []
 
     encodedValues.append()
-
-    
-    
-    
     encodedLength = len(floatEncoded).to_bytes(INT_BYTE_MAX_LEN, INT_BYTE_TYPE)
 
     encodedValues = [typeToBin[str(type(valuesWeWantToAdd[3]))], encodedLength, floatEncoded]
@@ -60,6 +56,16 @@ with open("test.bin", "rb") as f:
     print(knownString.decode())
 
 
+def write_binary_to_file(arrayToBeWritten):
+    for i in arrayToBeWritten:
+            f.write(i)
+
+def get_encoded_value_len(var):
+    return len(var).to_bytes(INT_BYTE_MAX_LEN, INT_BYTE_TYPE)
+
+def value_to_encoded_type(var):
+    return typeToBin[str(type(var))].encode()
+
 def write_and_read_int_from_file():
     with open("test.bin", "wb+") as f:
         valuesWeWantToAdd = (1199, "hi", True) # values we want to figure out how to write to file
@@ -69,9 +75,8 @@ def write_and_read_int_from_file():
         print(f"int Encoded: {intEncoded}")
         # print(f"int decoded: {int.from_bytes(intEncoded,INT_BYTE_TYPE)}")
 
-        encodedValues = [typeToBin[str(type(valuesWeWantToAdd[0]))], intEncoded]
-        for i in encodedValues:
-            f.write(i)
+        encodedValues = [value_to_encoded_type(valuesWeWantToAdd[0]), intEncoded]
+        write_binary_to_file(encodedValues)
 
     with open("test.bin", "rb") as f:
         type = f.read(TYPE_LEN)
@@ -96,21 +101,14 @@ def write_string(string):
 
     pass
 
-
-
-
-
 def write_and_read_string_from_file():
     with open("test.bin", "wb+") as f:
         valuesWeWantToAdd = (1199, "hi", True) # values we want to figure out how to write to file
         
         stringEncoded = valuesWeWantToAdd[1].encode() #Encode the String
-
-        encodedLength = len(stringEncoded).to_bytes(INT_BYTE_MAX_LEN, INT_BYTE_TYPE)
-
-        encodedValues = [typeToBin[str(type(valuesWeWantToAdd[1]))], encodedLength, stringEncoded]
-        for i in encodedValues:
-            f.write(i)
+        encodedLength = get_encoded_value_len(stringEncoded)
+        encodedValues = [value_to_encoded_type(valuesWeWantToAdd[1]), encodedLength, stringEncoded]
+        write_binary_to_file(encodedValues)
 
     with open("test.bin", "rb") as f:
         type = f.read(TYPE_LEN)
