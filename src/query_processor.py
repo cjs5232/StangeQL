@@ -126,7 +126,7 @@ class QueryProcessor:
         return status
 
 
-    def select_cmd(self, query:list) -> int: #TODO add buffer manager stuff
+    def select_cmd(self, query:list) -> int:
         """
         Parse select query and use storage manager to access data.
         Once data is returned from storage manager, get the table column
@@ -196,21 +196,21 @@ class QueryProcessor:
         return 0
 
 
-    def insert_cmd(self, query:list) -> int: #TODO add buffer manager stuff
+    def insert_cmd(self, query:list) -> int:
         """
         Parse the insert into query and store attributes. Use the
         buffer manager to physically add the tuples of data into the table.
 
         Insert tuple(s) of information into a table.
         """
-        attributes = []
+        values = []
         table_name = query[2]
         query = query[4:]
 
         query_str = ' '.join(query)
 
         loop = True
-        while loop: # Each loop builds a tuple of row values and adds tuple to attributes list
+        while loop: # Each loop builds a tuple of row values and adds tuple to values list
             vals = [] # list to hold each element in a row
             cur_val = "" # Current value being built
             for i in range(len(query_str)):
@@ -232,9 +232,16 @@ class QueryProcessor:
                 else:
                     cur_val += query_str[i]
                     
-            attributes.append(tuple(vals))
+            values.append(tuple(vals))
         
-        #TODO Make call to storage manager passing in table name and attributes + return status code
+        attributes = self.Catalog.table_attributes(table_name)
+        if attributes == 1:
+            return 1
+        
+        result = self.StorageM.insert_record(table_name, attributes, values)
+        if result == 1:
+            return 1
+
 
         return 0 # update return based off storage manager
 
