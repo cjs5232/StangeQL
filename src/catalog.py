@@ -40,7 +40,7 @@ class Catalog:
         bytes_data = bytes(dumped_json, encoding='utf-8')
 
         # Open a binary file for writing
-        with open(self.location + "\\DBCatalog", "wb") as write_file:
+        with open(f"{self.location}/DBCatalog", "wb+") as write_file:
             # Write the bytes data to the binary file
             write_file.write(bytes_data)
         return 0
@@ -51,12 +51,12 @@ class Catalog:
     What if path is the same, but page and buffer sizes are different?
     """
     def load_catalog(self):
-        fileExist = os.path.exists(self.location + "\\DBCatalog")
+        fileExist = os.path.exists(f"{self.location}/DBCatalog")
         if not fileExist:
             print("No catalog file in path: " + self.location)
             return 1
 
-        f = open(self.location + "\\DBCatalog")
+        f = open(f"{self.location}/DBCatalog")
         data = json.load(f)
 
         self.location = data["db"]["location"]
@@ -68,12 +68,12 @@ class Catalog:
 
 
     def delete_table(self, table_name):
-        fileExist = os.path.exists(self.location + "\\DBCatalog")
+        fileExist = os.path.exists(f"{self.location}/DBCatalog")
         if not fileExist:
             print("No catalog file in path: " + self.location)
             return 1
 
-        f = open(self.location + "\\DBCatalog")
+        f = open(f"{self.location}/DBCatalog")
         data = json.load(f)
 
         for i in data["tables"]:
@@ -84,7 +84,7 @@ class Catalog:
                 bytes_data = bytes(dumped_json, encoding='utf-8')
 
                 # Open a binary file for writing
-                with open(self.location + "\\DBCatalog", "wb") as write_file:
+                with open(f"{self.location}/DBCatalog", "wb") as write_file:
                     # Write the bytes data to the binary file
                     write_file.write(bytes_data)
                 f.close()
@@ -98,12 +98,12 @@ class Catalog:
     Returns 0 if yes, 1 if no
     """
     def table_exists(self, table_name):
-        fileExist = os.path.exists(self.location + "\\DBCatalog")
+        fileExist = os.path.exists(f"{self.location}/DBCatalog")
         if not fileExist:
             print("No catalog file in path: " + self.location)
             return 1
 
-        f = open(self.location + "\\DBCatalog")
+        f = open(f"{self.location}/DBCatalog")
         data = json.load(f)
 
         for i in data["tables"]:
@@ -132,12 +132,12 @@ class Catalog:
     }
     """
     def add_table(self, table):
-        fileExist = os.path.exists(self.location + "\\DBCatalog")
+        fileExist = os.path.exists(f"{self.location}/DBCatalog")
         if not fileExist:
             print("No catalog file in path: " + self.location)
             return 1
 
-        f = open(self.location + "\\DBCatalog")
+        f = open(f"{self.location}/DBCatalog")
         data = json.load(f)
 
         data["tables"].append(table)
@@ -146,7 +146,7 @@ class Catalog:
         bytes_data = bytes(dumped_json, encoding='utf-8')
 
         # Open a binary file for writing
-        with open(self.location + "\\DBCatalog", "wb") as write_file:
+        with open(f"{self.location}/DBCatalog", "wb") as write_file:
             # Write the bytes data to the binary file
             write_file.write(bytes_data)
         f.close()
@@ -173,12 +173,12 @@ class Catalog:
     for page/record updates
     """
     def update_count(self, table_name, val, type):
-        fileExist = os.path.exists(self.location + "\\DBCatalog")
+        fileExist = os.path.exists(f"{self.location}/DBCatalog")
         if not fileExist:
             print("No catalog file in path: " + self.location)
             return 1
 
-        f = open(self.location + "\\DBCatalog")
+        f = open(f"{self.location}/DBCatalog")
         data = json.load(f)
 
         for i in data["tables"]:
@@ -186,7 +186,7 @@ class Catalog:
                 i[type] += val
                 dumped_json = json.dumps(data)
                 bytes_data = bytes(dumped_json, encoding='utf-8')
-                with open(self.location + "\\DBCatalog", "wb") as write_file:
+                with open(f"{self.location}/DBCatalog", "wb") as write_file:
                     # Write the bytes data to the binary file
                     write_file.write(bytes_data)
                 f.close()
@@ -197,12 +197,12 @@ class Catalog:
         return 1
 
     def print_catalog(self):
-        fileExist = os.path.exists(self.location + "\\DBCatalog")
+        fileExist = os.path.exists(f"{self.location}/DBCatalog")
         if not fileExist:
             print("No catalog file in path: " + self.location)
             return 1
 
-        f = open(self.location + "\\DBCatalog")
+        f = open(f"{self.location}/DBCatalog")
         data = json.load(f)
 
         print("\nPrinting database information: ")
@@ -232,12 +232,12 @@ class Catalog:
         return 0
 
     def print_table(self, table_name):
-        fileExist = os.path.exists(self.location + "\\DBCatalog")
+        fileExist = os.path.exists(f"{self.location}/DBCatalog")
         if not fileExist:
             print("No catalog file in path: " + self.location)
             return 1
 
-        f = open(self.location + "\\DBCatalog")
+        f = open(f"{self.location}/DBCatalog")
         data = json.load(f)
 
         for i in data["tables"]:
@@ -265,12 +265,12 @@ class Catalog:
     Returns the type if table/attribute names exists
     """
     def get_attribute_type(self, table_name, attribute_name):
-        fileExist = os.path.exists(self.location + "\\DBCatalog")
+        fileExist = os.path.exists(f"{self.location}/DBCatalog")
         if not fileExist:
             print("No catalog file in path: " + self.location)
             return 1
 
-        f = open(self.location + "\\DBCatalog")
+        f = open(f"{self.location}/DBCatalog")
         data = json.load(f)
 
         for i in data["tables"]:
@@ -290,12 +290,12 @@ class Catalog:
     Returns the bool: True if it is a prim key, False otherwise
     """
     def determine_attribute_key(self, table_name, attribute_name):
-        fileExist = os.path.exists(self.location + "\\DBCatalog")
+        fileExist = os.path.exists(f"{self.location}/DBCatalog")
         if not fileExist:
             print("No catalog file in path: " + self.location)
             return 1
 
-        f = open(self.location + "\\DBCatalog")
+        f = open(f"{self.location}/DBCatalog")
         data = json.load(f)
 
         for i in data["tables"]:
@@ -316,12 +316,12 @@ class Catalog:
     primary_key: bool whether or not its a primary key
     """
     def table_attributes(self, table_name):
-        fileExist = os.path.exists(self.location + "\\DBCatalog")
+        fileExist = os.path.exists(f"{self.location}/DBCatalog")
         if not fileExist:
             print("No catalog file in path: " + self.location)
             return 1
 
-        f = open(self.location + "\\DBCatalog")
+        f = open(f"{self.location}/DBCatalog")
         data = json.load(f)
 
         for i in data["tables"]:
@@ -336,12 +336,12 @@ class Catalog:
     Returns the entire catalog as a json
     """
     def get_catalog(self):
-        fileExist = os.path.exists(self.location + "\\DBCatalog")
+        fileExist = os.path.exists(f"{self.location}/DBCatalog")
         if not fileExist:
             print("No catalog file in path: " + self.location)
             return 1
 
-        f = open(self.location + "\\DBCatalog")
+        f = open(f"{self.location}/DBCatalog")
         data = json.load(f)
 
         return data
