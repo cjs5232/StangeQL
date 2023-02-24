@@ -25,39 +25,102 @@ for i in binToType:
 
 INT_BYTE_MAX_LEN = 7
 INT_BYTE_TYPE = "big"
-DELIMETER = ""
 TYPE_LEN = 3
-DELIM_LEN = len(DELIMETER.encode())
 
 with open("test.bin", "wb+") as f:
-    valuesWeWantToAdd = (1199, "hi", True) # values we want to figure out how to write to file
+    valuesWeWantToAdd = (1199, "hi", True, 10.14) # values we want to figure out how to write to file
+    floatEncoded = str(valuesWeWantToAdd[3]).split(".") #Encode the String
+
+    castArray = []
+    for i in floatEncoded:
+        castArray.append(int(i).to_bytes(INT_BYTE_MAX_LEN, INT_BYTE_TYPE))
+    print(castArray)
+
+    encodedValues = []
+
+    encodedValues.append()
+
     
-    intEncoded = valuesWeWantToAdd[0].to_bytes(INT_BYTE_MAX_LEN,INT_BYTE_TYPE) #Encode the int
-    stringEncoded = valuesWeWantToAdd[1].encode() #Encode the String
-    boolEncoded = bytes(valuesWeWantToAdd[2])
+    
+    
+    encodedLength = len(floatEncoded).to_bytes(INT_BYTE_MAX_LEN, INT_BYTE_TYPE)
 
-    stringGetByteLength = bytes(len(bytearray(stringEncoded))) #Get the length of the string
-    boolGetByteLength = bytes(1)
-
-    print(f"int Encoded: {intEncoded}")
-    # print(f"int decoded: {int.from_bytes(intEncoded,INT_BYTE_TYPE)}")
-    print(f"delim len: {len(DELIMETER.encode())}")
-
-
-    encodedValues = [typeToBin[str(type(valuesWeWantToAdd[0]))], intEncoded]
+    encodedValues = [typeToBin[str(type(valuesWeWantToAdd[3]))], encodedLength, floatEncoded]
     for i in encodedValues:
         f.write(i)
-        f.write(DELIMETER.encode())
 
 with open("test.bin", "rb") as f:
     type = f.read(TYPE_LEN)
     print(type)
     print(binToType[type])
-    DELIM = f.read(DELIM_LEN)
     knownInt = f.read(INT_BYTE_MAX_LEN)
+    knownInt = int.from_bytes(knownInt, INT_BYTE_TYPE)
     print(knownInt)
-    print(int.from_bytes(knownInt, INT_BYTE_TYPE))
-    
-    # for i in range(read):
-    #     if i < len(read) - 3:
-    #         print(i[i::i+3])
+    knownString = f.read(knownInt)
+    print(knownString.decode())
+
+
+def write_and_read_int_from_file():
+    with open("test.bin", "wb+") as f:
+        valuesWeWantToAdd = (1199, "hi", True) # values we want to figure out how to write to file
+        
+        intEncoded = valuesWeWantToAdd[0].to_bytes(INT_BYTE_MAX_LEN,INT_BYTE_TYPE) #Encode the int
+
+        print(f"int Encoded: {intEncoded}")
+        # print(f"int decoded: {int.from_bytes(intEncoded,INT_BYTE_TYPE)}")
+
+        encodedValues = [typeToBin[str(type(valuesWeWantToAdd[0]))], intEncoded]
+        for i in encodedValues:
+            f.write(i)
+
+    with open("test.bin", "rb") as f:
+        type = f.read(TYPE_LEN)
+        print(type)
+        print(binToType[type])
+        knownInt = f.read(INT_BYTE_MAX_LEN)
+        print(knownInt)
+        print(int.from_bytes(knownInt, INT_BYTE_TYPE))
+
+def write_and_read_string_from_file():
+    with open("test.bin", "wb+") as f:
+        valuesWeWantToAdd = (1199, "hi", True) # values we want to figure out how to write to file
+        
+        stringEncoded = valuesWeWantToAdd[1].encode() #Encode the String
+
+        encodedLength = len(stringEncoded).to_bytes(INT_BYTE_MAX_LEN, INT_BYTE_TYPE)
+
+        encodedValues = [typeToBin[str(type(valuesWeWantToAdd[1]))], encodedLength, stringEncoded]
+        for i in encodedValues:
+            f.write(i)
+
+    with open("test.bin", "rb") as f:
+        type = f.read(TYPE_LEN)
+        print(type)
+        print(binToType[type])
+        knownInt = f.read(INT_BYTE_MAX_LEN)
+        knownInt = int.from_bytes(knownInt, INT_BYTE_TYPE)
+        print(knownInt)
+        knownString = f.read(knownInt)
+        print(knownString.decode())
+
+def write_and_read_bool_from_file():
+    with open("test.bin", "wb+") as f:
+        valuesWeWantToAdd = (1199, "hi", True) # values we want to figure out how to write to file
+        
+        stringEncoded = str(valuesWeWantToAdd[2]).encode() #Encode the String
+
+        encodedLength = len(stringEncoded).to_bytes(INT_BYTE_MAX_LEN, INT_BYTE_TYPE)
+
+        encodedValues = [typeToBin[str(type(valuesWeWantToAdd[2]))], encodedLength, stringEncoded]
+        for i in encodedValues:
+            f.write(i)
+
+    with open("test.bin", "rb") as f:
+        type = f.read(TYPE_LEN)
+        print(type)
+        print(binToType[type])
+        knownInt = f.read(INT_BYTE_MAX_LEN)
+        knownInt = int.from_bytes(knownInt, INT_BYTE_TYPE)
+        print(knownInt)
+        knownString = f.read(knownInt)
+        print(knownString.decode())
