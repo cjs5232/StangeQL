@@ -41,9 +41,9 @@ class StorageManager:
             print(f"Table {table_name} already exists")
             return 0
         #create a new table
-        f = open(filepath, "w")
+        f = open(filepath, "wb+")
         #TODO write 0 as an integer to the table, there are currently 0 pages.
-        f.write(b"0")
+        f.write(int.to_bytes(0))
         return 1
     
     """
