@@ -26,7 +26,7 @@ class StorageManager:
         filepath = self.dbloc + "/" + table_name + ".bin"
         #if there is not a table yet
         if os.path.exists(filepath):
-            print("Table already exists")
+            print(f"Table {table_name} already exists")
             return 0
         #create a new table
         f = open(filepath, "w")

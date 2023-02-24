@@ -11,6 +11,7 @@ Authors:
 """
 import re
 import catalog
+import storage_manager
 
 class QueryProcessor:
 
@@ -19,6 +20,7 @@ class QueryProcessor:
         self.pageSize = pageSize
         self.bufferSize = bufferSize
         self.Catalog = catalog.Catalog(dbloc, pageSize, bufferSize)
+        self.StorageM = storage_manager.StorageManager(dbloc, pageSize, bufferSize)
 
 
     def check_data_type(self, d_type:str) -> int:
@@ -45,7 +47,7 @@ class QueryProcessor:
             return 1
 
 
-    def create_table_cmd(self, query:list) -> int: #TODO add buffer manager stuff 
+    def create_table_cmd(self, query:list) -> int:
         """
         Parse create table query and collect table name and attributes.
         Use storage manager for creating the actual table file.
@@ -117,15 +119,14 @@ class QueryProcessor:
             print("No primary key defined")
             return 1
 
-        # Add the table to catalog
         self.Catalog.add_table(table_name, attributes)
 
-        # TODO Make call to storage manager and return status code
+        status = self.StorageM.create_table(table_name)
         
-        return 0 # Update return based off storage manager
+        return status
 
 
-    def select_cmd(self, query:list) -> int: #TODO add buffer manager stuff
+    def select_cmd(self, query:list) -> int:
         """
         Parse select query and use storage manager to access data.
         Once data is returned from storage manager, get the table column
@@ -156,9 +157,19 @@ class QueryProcessor:
             print(f"Invalid selection: {query[1]}")
             return 1
         
-        
-        data = [(), (), ()] # TODO Make call to storage manager and return status code / data
-        columns = ["", "", ""] # TODO Get column names from catalog
+        # data = [(), (), ()] # TODO Make call to storage manager and return status code / data
+        data = self.StorageM.get_records(table_name, attributes)
+        if data == 1:
+            return 1
+
+        # columns = ["", "", ""] # TODO Get column names from catalog
+        columns = []
+        attributes = self.Catalog.table_attributes(table_name)
+        if attributes == 1:
+            return 1
+        else:
+            for i in attributes.keys():
+                columns.append(i)
 
         # Find necessary padding for columns and store in column_width
         length_list = [len(element) for row in data for element in row]
@@ -185,21 +196,21 @@ class QueryProcessor:
         return 0
 
 
-    def insert_cmd(self, query:list) -> int: #TODO add buffer manager stuff
+    def insert_cmd(self, query:list) -> int:
         """
         Parse the insert into query and store attributes. Use the
         buffer manager to physically add the tuples of data into the table.
 
         Insert tuple(s) of information into a table.
         """
-        attributes = []
+        values = []
         table_name = query[2]
         query = query[4:]
 
         query_str = ' '.join(query)
 
         loop = True
-        while loop: # Each loop builds a tuple of row values and adds tuple to attributes list
+        while loop: # Each loop builds a tuple of row values and adds tuple to values list
             vals = [] # list to hold each element in a row
             cur_val = "" # Current value being built
             for i in range(len(query_str)):
@@ -221,9 +232,16 @@ class QueryProcessor:
                 else:
                     cur_val += query_str[i]
                     
-            attributes.append(tuple(vals))
+            values.append(tuple(vals))
         
-        #TODO Make call to storage manager passing in table name and attributes + return status code
+        attributes = self.Catalog.table_attributes(table_name)
+        if attributes == 1:
+            return 1
+        
+        result = self.StorageM.insert_record(table_name, attributes, values)
+        if result == 1:
+            return 1
+
 
         return 0 # update return based off storage manager
 
