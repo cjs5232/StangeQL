@@ -21,7 +21,7 @@ class StorageManager:
         self.bufferSize = bufferSize
 
     #creates an empty table
-    def create_table(table_name):
+    def create_table(self, table_name):
         filepath = self.dbloc + "/" + table_name + ".bin"
         #if there is not a table yet
         if os.path.exists(filepath):
@@ -44,7 +44,7 @@ class StorageManager:
 
         return
     """
-    def get_dtype(attribute_string):
+    def get_dtype(self, attribute_string):
         """
         match attribute_string:
             case "integer":
@@ -60,7 +60,7 @@ class StorageManager:
 
 
     # phase 1
-    def get_record(primary_key):
+    def get_record(self, primary_key):
         cat = catalog.get_catalog(self)
         tables = cat["tables"]
         for table in tables:
@@ -85,15 +85,15 @@ class StorageManager:
 
         return
 
-    def get_page(table_number, page_number):
+    def get_page(self, table_number, page_number):
         return
 
-    def get_records(table_number):
+    def get_records(self, table_number):
         return
 
     # phase 1
     #attributes is a dictionary holding attributes of each in the form (name, type) if key=primarykey value=column name
-    def insert_record(table_name, attributes, values):
+    def insert_record(self, table_name, attributes, values):
         """
         if there are no pages for this table:
         make a new file for the table
@@ -164,10 +164,10 @@ class StorageManager:
 
         return
 
-    def delete_record(primary_key):
+    def delete_record(self, primary_key):
         return
 
-    def update_record(primary_key):
+    def update_record(self, primary_key):
         return
 
 if __name__ == '__main__':
