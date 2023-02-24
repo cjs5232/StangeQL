@@ -138,11 +138,9 @@ class StorageManager:
                         attribute_type = k["type"]
                         print(attribute_type)
                         #if int
-                            #value = f.read(self.INT_BYTE_MAX_LEN)
-                            #value = int.from_bytes(value, self.INT_BYTE_TYPE)
+                            #value = self.bytes_to_int(f.read(self.INT_BYTE_MAX_LEN))
                         #if bool
-                            #value = f.read(1)
-                            #value = int.from_bytes(value, INT_BYTE_TYPE)
+                            #value = self.bytes_to_int(f.read(1))
                             #match value
                                 #case 0:
                                     #record.append("False")
