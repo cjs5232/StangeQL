@@ -25,7 +25,7 @@ for i in binToType:
 
 INT_BYTE_MAX_LEN = 7
 INT_BYTE_TYPE = "big"
-DELIMETER = ""
+DELIMETER = "ç"
 TYPE_LEN = 3
 DELIM_LEN = len(DELIMETER.encode())
 
@@ -47,13 +47,11 @@ with open("test.bin", "wb+") as f:
     encodedValues = [typeToBin[str(type(valuesWeWantToAdd[0]))], intEncoded]
     for i in encodedValues:
         f.write(i)
-        f.write(DELIMETER.encode())
 
 with open("test.bin", "rb") as f:
     type = f.read(TYPE_LEN)
     print(type)
     print(binToType[type])
-    DELIM = f.read(DELIM_LEN)
     knownInt = f.read(INT_BYTE_MAX_LEN)
     print(knownInt)
     print(int.from_bytes(knownInt, INT_BYTE_TYPE))
@@ -61,3 +59,6 @@ with open("test.bin", "rb") as f:
     # for i in range(read):
     #     if i < len(read) - 3:
     #         print(i[i::i+3])
+
+def writeIntToFile():
+    pass
