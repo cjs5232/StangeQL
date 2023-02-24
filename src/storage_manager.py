@@ -20,6 +20,16 @@ class StorageManager:
         self.pageSize = pageSize
         self.bufferSize = bufferSize
         self.cat = catalog.Catalog(self.dbloc, self.pageSize, self.bufferSize)
+        self.TYPE_LEN = 3
+        self.INT_BYTE_MAX_LEN = 7
+        self.INT_BYTE_TYPE = "big"
+        self.binToType = {
+            b'001': "<class 'int'>",
+            b'010': "<class 'float'>", 
+            b'011': "<class 'str'>", #Varchar and char will have to be str
+            b'100': "<class 'bool'>"
+        }
+
 
     #creates an empty table
     def create_table(self, table_name):
@@ -30,6 +40,7 @@ class StorageManager:
             return 0
         #create a new table
         f = open(filepath, "w")
+        #TODO write 0 as an integer to the table, there are currently 0 pages.
         f.write(b"0</page>")
         return 1
     
@@ -66,6 +77,7 @@ class StorageManager:
 
     # phase 1
     def get_record(self, primary_key):
+        """
         getCatTables = self.get_catalog(self)
         tables = getCatTables["tables"]
         for table in tables:
@@ -90,11 +102,86 @@ class StorageManager:
                     if(primary_key == record[primary_index]):
                         return tuple(record)
         return 0
+        """
+        return
 
     def get_page(self, table_number, page_number):
         return
 
-    def get_records(self, table_number):
+    #phase 1
+    #returns a list of tuples ex: [(), (), ()][(), (), ()]
+    def get_records(self, table_name):
+        attributes = self.cat.table_attributes(self, table_name)
+
+        #get types of each attribute
+        data_types = []
+        records = []
+        #TODO if filepath does not exist, throw an error
+        filepath = self.dbloc + "/" + table_name + ".bin"
+        #open the filepath
+        with open(filepath, "rb") as f:
+            #read in the number of pages
+            num_pages = f.read(self.INT_BYTE_MAX_LEN)
+            #for each page, read in the number of records, then read each record
+            for i in range(num_pages):
+                num_records = f.read(self.INT_BYTE_MAX_LEN)
+                #for each record in the page, read each attribute
+                for j in range(num_records):
+                    record = []
+                    #for each attribute in the record
+                    for j in attributes:
+                        attribute_type = j["type"]
+                        #if int
+                            #value = f.read(self.INT_BYTE_MAX_LEN)
+                            #value = int.from_bytes(value, self.INT_BYTE_TYPE)
+                        #if bool
+                            #value = f.read(1)
+                            #value = int.from_bytes(value, INT_BYTE_TYPE)
+                            #match value
+                                #case 0:
+                                    #record.append("False")
+                                #case 1:
+                                    #record.append("True")
+                        #if fixed len char
+                            #char_len = TODO get the length of the char in bytes
+                                #this can be gotten from the attribute table from the catalog
+                            #value = f.read(char_len)
+                            #value = value.decode()
+                        #if varchar
+                            #knownInt = f.read(self.INT_BYTE_MAX_LEN)
+                            #knownInt = int.from_bytes(knownInt, self.INT_BYTE_TYPE)
+                            #print(knownInt)
+                            #knownString = f.read(knownInt)
+                            #print(knownString.decode())
+                        #if double
+                            #binfloatone = f.read(self.INT_BYTE_MAX_LEN)
+                            #floatone = int.from_bytes(binfloatone, self.INT_BYTE_TYPE)
+                            #binfloattwo = f.read(self.INT_BYTE_MAX_LEN)
+                            #floattwo = int.from_bytes(binfloattwo, self.INT_BYTE_TYPE)
+                            #value = float(str(floatone) + "." + str(floattwo))
+                            #
+                        
+                        #attribute_len = get_len()
+                        #record.append(get_len())
+
+                        #add the record attribute
+                        #record.append(value)
+                    records.append(record)
+                    
+            type = f.read(self.TYPE_LEN)
+            print(type)
+            print(self.binToType[type])
+            knownInt = f.read(self.INT_BYTE_MAX_LEN)
+            knownInt = int.from_bytes(knownInt, INT_BYTE_TYPE)
+            print(knownInt)
+            knownString = f.read(knownInt)
+            print(knownString.decode())
+        
+        return
+
+    #helper function to get the length to read
+    #attribute is the string of the current attribute being checked: ex)
+    def get_len(attribute_type, value):
         return
 
     # phase 1

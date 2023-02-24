@@ -81,6 +81,25 @@ def write_and_read_int_from_file():
         print(knownInt)
         print(int.from_bytes(knownInt, INT_BYTE_TYPE))
 
+def write_string(string):
+    with open("test.bin", "wb+") as f:
+        #encode string to account for special characters
+        stringEncoded = string.encode()
+        #get the byte length of the string we are writing
+        encodedLength = len(stringEncoded).to_bytes(INT_BYTE_MAX_LEN, INT_BYTE_TYPE)
+        f.write(encodedLength)
+        f.write(stringEncoded)
+
+        encodedValues = [typeToBin[str(type(valuesWeWantToAdd[1]))], encodedLength, stringEncoded]
+        for i in encodedValues:
+            f.write(i)
+
+    pass
+
+
+
+
+
 def write_and_read_string_from_file():
     with open("test.bin", "wb+") as f:
         valuesWeWantToAdd = (1199, "hi", True) # values we want to figure out how to write to file
@@ -124,3 +143,34 @@ def write_and_read_bool_from_file():
         print(knownInt)
         knownString = f.read(knownInt)
         print(knownString.decode())
+        
+def bool_rw():
+    with open("test2.bin", "wb+") as f:
+        f.write(int.to_bytes(True))
+        print(int.to_bytes(True))
+
+    with open("test2.bin", "rb") as f:
+        value = f.read(1)
+        value = int.from_bytes(value, INT_BYTE_TYPE)
+        match value:
+            case 0:
+                print("False")
+            case 1:
+                print("True")
+
+def double_rw():
+    with open("test2.bin", "wb+") as f:
+        floatone=14
+        f.write(floatone.to_bytes(INT_BYTE_MAX_LEN,INT_BYTE_TYPE))
+        floattwo=7
+        f.write(floattwo.to_bytes(INT_BYTE_MAX_LEN,INT_BYTE_TYPE))
+
+    with open("test2.bin", "rb") as f:
+        binfloatone = f.read(INT_BYTE_MAX_LEN)
+        print(binfloatone)
+        floatone = int.from_bytes(binfloatone, INT_BYTE_TYPE)
+        print(floatone)
+        binfloattwo = f.read(INT_BYTE_MAX_LEN)
+        floattwo = int.from_bytes(binfloattwo, INT_BYTE_TYPE)
+        value = float(str(floatone) + "." + str(floattwo))
+        print(value)
