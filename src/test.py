@@ -11,10 +11,10 @@ Authors:
 """
 
 binToType = {
-    "001": "<class 'int'>",
-    "010": "<class 'float'>", 
-    "011": "<class 'str'>", #Varchar and char will have to be str
-    "100": "<class 'bool'>"
+    b'001': "<class 'int'>",
+    b'010': "<class 'float'>", 
+    b'011': "<class 'str'>", #Varchar and char will have to be str
+    b'100': "<class 'bool'>"
 }
 
 typeToBin = {}
@@ -26,6 +26,8 @@ for i in binToType:
 INT_BYTE_MAX_LEN = 7
 INT_BYTE_TYPE = "big"
 DELIMETER = ""
+TYPE_LEN = 3
+DELIM_LEN = len(DELIMETER.encode())
 
 with open("test.bin", "wb+") as f:
     valuesWeWantToAdd = (1199, "hi", True) # values we want to figure out how to write to file
@@ -37,20 +39,25 @@ with open("test.bin", "wb+") as f:
     stringGetByteLength = bytes(len(bytearray(stringEncoded))) #Get the length of the string
     boolGetByteLength = bytes(1)
 
-    # print(f"int Encoded: {intEncoded}")
+    print(f"int Encoded: {intEncoded}")
     # print(f"int decoded: {int.from_bytes(intEncoded,INT_BYTE_TYPE)}")
+    print(f"delim len: {len(DELIMETER.encode())}")
 
 
-    encodedValues = [typeToBin[str(type(valuesWeWantToAdd[0]))].encode(), intEncoded]
+    encodedValues = [typeToBin[str(type(valuesWeWantToAdd[0]))], intEncoded]
     for i in encodedValues:
         f.write(i)
         f.write(DELIMETER.encode())
 
+with open("test.bin", "rb") as f:
+    type = f.read(TYPE_LEN)
+    print(type)
+    print(binToType[type])
+    DELIM = f.read(DELIM_LEN)
+    knownInt = f.read(INT_BYTE_MAX_LEN)
+    print(knownInt)
+    print(int.from_bytes(knownInt, INT_BYTE_TYPE))
     
-
-with open("test.bin", "r") as f:
-    read = f.read()
-    print(read)
-    maxAttribWritten = 2
-    for i in read:
-        print(i)
+    # for i in range(read):
+    #     if i < len(read) - 3:
+    #         print(i[i::i+3])
