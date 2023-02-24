@@ -176,7 +176,7 @@ class StorageManager:
             print(type)
             print(self.binToType[type])
             knownInt = f.read(self.INT_BYTE_MAX_LEN)
-            knownInt = int.from_bytes(knownInt, INT_BYTE_TYPE)
+            knownInt = int.from_bytes(knownInt, self.INT_BYTE_TYPE)
             print(knownInt)
             knownString = f.read(knownInt)
             print(knownString.decode())
@@ -269,5 +269,5 @@ class StorageManager:
 
 if __name__ == '__main__':
     SM = StorageManager("testDB", "1024", "64")
-
+    SM.get_records("test")
     print(f"Exit Code: ")
