@@ -43,7 +43,7 @@ class StorageManager:
         #create a new table
         f = open(filepath, "w")
         #TODO write 0 as an integer to the table, there are currently 0 pages.
-        f.write(b"0</page>")
+        f.write(b"0")
         return 1
     
     """
