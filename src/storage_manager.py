@@ -70,7 +70,7 @@ class StorageManager:
                 attribute = table["attributes"][i]
                 if attribute[primary_key]:
                     primary_index = i
-                data_types[i] = get_dtype(attribute["type"])
+                data_types[i] = self.get_dtype(attribute["type"])
 
             f = open(filepath, "rb")
             table_file = f.read()
@@ -147,9 +147,9 @@ class StorageManager:
             data_types = []
             for i in range(len(table["attributes"])):
                 attribute = table["attributes"][i]
-                if attribute[primary_key]:
+                if attribute["primary_key"]:
                     primary_index = i
-                data_types[i] = get_dtype(attribute["type"])
+                data_types[i] = self.get_dtype(attribute["type"])
 
             f = open(filepath, "rb")
             table_file = f.read()
