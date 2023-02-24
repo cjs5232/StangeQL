@@ -157,12 +157,12 @@ class QueryProcessor:
             print(f"Invalid selection: {query[1]}")
             return 1
         
-        # data = [(), (), ()] # TODO Make call to storage manager and return status code / data
+        # Get Data from Storage Manager: Expecting return: data = [(), (), ...]
         data = self.StorageM.get_records(table_name, attributes)
         if data == 1:
             return 1
 
-        # columns = ["", "", ""] # TODO Get column names from catalog
+        # Get column names from catalog
         columns = []
         attributes = self.Catalog.table_attributes(table_name)
         if attributes == 1:
@@ -246,7 +246,7 @@ class QueryProcessor:
         return 0 # update return based off storage manager
 
 
-    def display_schema_cmd(self) -> int: #TODO test
+    def display_schema_cmd(self) -> int:
         """
         Displays the catalog of the database in an easy to read format.
         Including: Database location, page size, buffer size, table schema.
@@ -259,7 +259,7 @@ class QueryProcessor:
         if catalog == 1:
             return 1
         
-        for i in catalog['tables']: #TODO Test if this works
+        for i in catalog['tables']:
             tables.append(i['name'])
         
         if len(tables) == 0:
@@ -268,15 +268,15 @@ class QueryProcessor:
         
         print("\nTables:\n")
         
-        for i in range(len(tables)): #TODO Test if this works and output is correct
+        for i in range(len(tables)):
             self.Catalog.print_table(tables[i])
             if i < len(tables) - 1:
                 print("\n")
         
-        return 0 # SUCCESS
+        return 0
 
 
-    def display_info_cmd(self, table_name:str) -> int: #TODO test
+    def display_info_cmd(self, table_name:str) -> int:
         """
         Calls print_table from Catalog to print given Table Names information.
         Including: Table name, table schema, number of pages, number of records.
