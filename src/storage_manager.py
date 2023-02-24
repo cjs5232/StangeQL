@@ -19,6 +19,7 @@ class StorageManager:
         self.dbloc = dbloc
         self.pageSize = pageSize
         self.bufferSize = bufferSize
+        self.cat = catalog.Catalog(self.dbloc, self.pageSize, self.bufferSize)
 
     #creates an empty table
     def create_table(self, table_name):
@@ -65,8 +66,8 @@ class StorageManager:
 
     # phase 1
     def get_record(self, primary_key):
-        cat = catalog.get_catalog(self)
-        tables = cat["tables"]
+        getCatTables = self.get_catalog(self)
+        tables = getCatTables["tables"]
         for table in tables:
             filepath = self.dbloc + "/" + table["name"] + ".bin"
             data_types = []
@@ -145,8 +146,8 @@ class StorageManager:
         f = open(filepath, "rw+")
         #traverse the file to find where this record belongs
         #check page length vs max page size
-        cat = catalog.get_catalog(self)
-        tables = cat["tables"]
+        getCatTables = self.cat.get_catalog(self)
+        tables = getCatTables["tables"]
         for table in tables:
             filepath = self.dbloc + "/" + table["name"] + ".bin"
             data_types = []
@@ -177,4 +178,5 @@ class StorageManager:
 
 if __name__ == '__main__':
     SM = StorageManager("testDB", "1024", "64")
+
     print(f"Exit Code: ")
