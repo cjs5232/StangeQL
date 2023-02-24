@@ -157,9 +157,19 @@ class QueryProcessor:
             print(f"Invalid selection: {query[1]}")
             return 1
         
-        
-        data = [(), (), ()] # TODO Make call to storage manager and return status code / data
-        columns = ["", "", ""] # TODO Get column names from catalog
+        # data = [(), (), ()] # TODO Make call to storage manager and return status code / data
+        data = self.StorageM.get_records(table_name, attributes)
+        if data == 1:
+            return 1
+
+        # columns = ["", "", ""] # TODO Get column names from catalog
+        columns = []
+        attributes = self.Catalog.table_attributes(table_name)
+        if attributes == 1:
+            return 1
+        else:
+            for i in attributes.keys():
+                columns.append(i)
 
         # Find necessary padding for columns and store in column_width
         length_list = [len(element) for row in data for element in row]
