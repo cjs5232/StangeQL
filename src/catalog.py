@@ -95,13 +95,13 @@ class Catalog:
 
     """
     Helper function to determine if a table exists or not
-    Returns 0 if yes, 1 if no
+    Returns 1 if yes, 0 if no, 2 if no catalog file
     """
     def table_exists(self, table_name):
         fileExist = os.path.exists(f"{self.location}/DBCatalog")
         if not fileExist:
             print("No catalog file in path: " + self.location)
-            return 1
+            return 2
 
         f = open(f"{self.location}/DBCatalog")
         data = json.load(f)
@@ -110,9 +110,9 @@ class Catalog:
 
             if i["name"] == table_name:
                 f.close()
-                return 0
+                return 1
         f.close()
-        return 1
+        return 0
 
     """
     Adds table to the catalog where the table is a dictionary in the form of
