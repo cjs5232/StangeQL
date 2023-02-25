@@ -44,7 +44,7 @@ class Driver:
             # cat.print_catalog()
             cat.create_catalog()
             print(f"New db created successfully\nPage size: {self.pageSize}\nBuffer size: {self.bufferSize}")
-            PB = pb.PageBuffer(self.bufferSize, self.pageSize)
+            # PB = pb.PageBuffer(self.bufferSize, self.pageSize)
         cat.table_attributes("tab3")
 
     """
