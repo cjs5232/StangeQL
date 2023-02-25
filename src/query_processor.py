@@ -121,18 +121,29 @@ class QueryProcessor:
         
         print(f"attributes {attributes}")
         
+            
+        # {
+        # "name" : "num", 
+        # "type" : "integer", 
+        # "primary_key" : False
+        # }
         table = {
                 "name" : table_name,
-                "pageCount" : 1,
-                "recordCount" : 1,
-                "attributes" : [ 
-                    {
-                    "name" : "num", 
-                    "type" : "integer", 
-                    "primary_key" : False
-                    }
-                ]
+                "pageCount" : 0,
+                "recordCount" : 0,
+                "attributes" : []
         }
+
+        for i in attributes:
+            if not i == "primarykey": # Add all non primary keys to array of attributes in table dict
+                table["attributes"].append({"name" : i, "type": attributes[i], "primary_key" : False})
+
+        
+        if "primarykey" in attributes: #this error gets handled later right now. TODO refactor
+            for i in range(len(table["attributes"])):
+                #Iterate through and find the primary key fugger
+                if attributes["primarykey"] == table["attributes"][i]["name"]:
+                    table["attributes"][i].update({"primary_key" : True})
 
         returnCode = self.cat.add_table(table)
         print(f"returnCode {returnCode}")
@@ -169,9 +180,10 @@ class QueryProcessor:
         
         if query[1] == "*":
             attributes.append(query[1])
-        else:
-            print(f"Invalid selection: {query[1]}")
-            return 1
+        else: # Assume single primary key select 
+            attributes.append(query[1]) # TODO: fix this to check for non-primary key?
+            # print(f"Invalid selection: {query[1]}")
+            # return 1
         
         # Get Data from Storage Manager: Expecting return: data = [(), (), ...]
         data = self.StorageM.get_records(table_name, attributes)
