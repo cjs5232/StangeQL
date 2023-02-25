@@ -14,7 +14,7 @@ with open("test3.bin", "rb+") as f:
     print(incremented_int)
     #move f pointer back
     neg = 0 - INT_BYTE_MAX_LEN
-    f.seek(-7,1)
+    f.seek(neg,1)
     print(incremented_int.to_bytes(INT_BYTE_MAX_LEN, INT_BYTE_TYPE))
     f.write(incremented_int.to_bytes(INT_BYTE_MAX_LEN, INT_BYTE_TYPE))
     test_int = f.read(INT_BYTE_MAX_LEN)
