@@ -25,7 +25,7 @@ class StorageManager:
         self.TYPE_LEN = 3
         self.INT_BYTE_MAX_LEN = 7
         self.INT_BYTE_TYPE = "big"
-        self.binToType = {
+        self.catAttrToType = {
             b'001': "<class 'int'>",
             b'010': "<class 'float'>", 
             b'011': "<class 'str'>", #Varchar and char will have to be str
@@ -43,7 +43,7 @@ class StorageManager:
         #create a new table
         f = open(filepath, "wb+")
         #TODO write 0 as an integer to the table, there are currently 0 pages.
-        f.write(int.to_bytes(0, self.INT_BYTE_MAX_LEN, self.INT_BYTE_TYPE))
+        f.write(int.to_bytes(0))
         return 1
     
     """
@@ -116,7 +116,7 @@ class StorageManager:
     #phase 1
     #returns a list of tuples ex: [(), (), ()][(), (), ()]
     def get_records(self, table_name):
-        attributes = self.cat.table_attributes(table_name)
+        attributes = self.cat.table_attributes(self, table_name)
 
         #get types of each attribute
         data_types = []
@@ -171,17 +171,7 @@ class StorageManager:
                         #add the record attribute
                         #record.append(value)
                     records.append(record)
-                    
-            # type = f.read(self.TYPE_LEN)
-            # print(type)
-            # print(self.binToType[type])
-            # knownInt = f.read(self.INT_BYTE_MAX_LEN)
-            # knownInt = int.from_bytes(knownInt, self.INT_BYTE_TYPE)
-            # print(knownInt)
-            # knownString = f.read(knownInt)
-            # print(knownString.decode())
-        
-        return
+        return records
 
     #helper function to get the length to read
     #attribute is the string of the current attribute being checked: ex)
@@ -191,31 +181,6 @@ class StorageManager:
     # phase 1
     #attributes is a dictionary holding attributes of each in the form (name, type) if key=primarykey value=column name
     def insert_record(self, table_name, attributes, values):
-        """
-        if there are no pages for this table:
-        make a new file for the table
-        add this entry to a new page
-        insert the page into the table file
-        end
-        3
-        Read each table page in order from the table file:
-        iterate the records in page:
-        if the record belongs before the current record:
-        insert the record before it
-        if the current page becomes overfull:
-        split the page
-        end
-        If the record does not get inserted:
-        insert it into the last page of the table file
-        if page becomes overfull:
-        split the page
-        end
-        splitting a page:
-        make a new page
-        remove half the items from the current page
-        add the items to the new page
-        insert the new page after the current page in the table file
-        """
         if (len(attributes) != len(values)):
             print("SM: Attribute size does not equal value size")
             return 0
@@ -224,40 +189,42 @@ class StorageManager:
         #if there is not a table yet
         if os.path.exists(filepath) is False:
             #create a new table
-            f = open(filepath, "wb")
-            #create a new page
-            f.write(b"<numPages>1</numPages><page1><numRecords>1</numRecords>")
-            #insert record being added
-            for i in range(len(attributes)):
-                f.write(b"")
-            f.write(b"</page1>")
-            return
+            self.create_table(table_name)
         
-        #if the table already exists, open the file
+        #open the file
         f = open(filepath, "rw+")
         #traverse the file to find where this record belongs
-        #check page length vs max page size
-        getCatTables = self.cat.get_catalog(self)
-        tables = getCatTables["tables"]
+        #get the tables from the catalog
+        tables = self.cat.get_catalog(self)["tables"]
+        #for each table in the catalog
         for table in tables:
-            filepath = self.dbloc + "/" + table["name"] + ".bin"
+            #a list to store the data type of each attribute
             data_types = []
-            for i in range(len(table["attributes"])):
-                attribute = table["attributes"][i]
+            #for each attribute in the table
+            for attribute in table["attributes"]:
+                #if the attribute is the primary key, store the primary index for later
                 if attribute["primary_key"]:
                     primary_index = i
-                data_types[i] = self.get_dtype(attribute["type"])
-
+                #add this attribute's data type using a helper function that parses the attribute type from the catalog
+                attribute_type = self.get_dtype(attribute["type"])
+                #append this to the data types list
+                data_types.append(attribute_type)
+            #open the table file
+            filepath = self.dbloc + "/" + table["name"] + ".bin"
             f = open(filepath, "rb")
-            table_file = f.read()
-            #splitting the file by pages
-            table_file = f.split("</page>")
-            num_pages = int(table_file[1])
-            #going through each page in the table_file
-            for i in range(num_pages) - 1:
-                records = table_file[i].split("</record>")
-                for j in range(len(records)):
-                    records[j]
+            with open(filepath, "rb") as f:
+                #read in the number of pages
+                num_pages = self.bytes_to_int(f.read(self.INT_BYTE_MAX_LEN))
+                #for each page, read in the number of records, then read each record
+                for i in range(num_pages):
+                    num_records = self.bytes_to_int(f.read(self.INT_BYTE_MAX_LEN))
+                    #for each record in the page, read each attribute
+                    for j in range(num_records):
+                        record = []
+                        #for each attribute in the record
+                        for k in attributes:
+                            attribute_type = k["type"]
+                            print(attribute_type)
 
         return
 
@@ -269,7 +236,5 @@ class StorageManager:
 
 if __name__ == '__main__':
     SM = StorageManager("testDB", "1024", "64")
-    SM.create_table("test")
-    SM.cat.add_table("test")
-    SM.get_records("test")
+
     print(f"Exit Code: ")
