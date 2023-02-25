@@ -37,7 +37,7 @@ class StorageManager:
         #create a new table
         f = open(filepath, "wb+")
         #TODO write 0 as an integer to the table, there are currently 0 pages.
-        f.write(int.to_bytes(0))
+        f.write(int.to_bytes(0, self.INT_BYTE_MAX_LEN, self.INT_BYTE_TYPE))
         return 1
 
     # phase 1
@@ -206,6 +206,7 @@ class StorageManager:
     
     def record_to_bytes(self, values, attributes):
         for j in range(len(values)):
+            print(len(attributes))
             for k in range(len(attributes)):
                 attribute_type = attributes[k]["type"]
                 print(attribute_type)
