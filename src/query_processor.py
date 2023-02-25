@@ -84,9 +84,14 @@ class QueryProcessor:
                 break
 
             name = query[i]
+            if "(" in name:
+                name = name.strip("(")
+
             d_type = query[i+1]
             
             if "))" in d_type:
+                d_type = d_type[:-1]
+            elif "char" not in d_type and "varchar" not in d_type and ")" in d_type:
                 d_type = d_type[:-1]
 
             if name in attributes.keys():
@@ -117,7 +122,7 @@ class QueryProcessor:
             else:
                 attributes[name] = d_type
                 i += 2
-        
+        print(attributes)
         if "primarykey" not in attributes.keys():
             print("No primary key defined")
             return 1
