@@ -191,7 +191,7 @@ class StorageManager:
                     print(values)
                     print(table_attributes)
                     #write a record to this position
-                    f.write(self.record_to_bytes(f,values,table_attributes))
+                    f.write(self.record_to_bytes(values,table_attributes))
                     self.cat.update_record_count(table_name,1)
                     #return successfully wrote record
                     return 0
