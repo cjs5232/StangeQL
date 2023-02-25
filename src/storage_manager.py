@@ -25,12 +25,6 @@ class StorageManager:
         self.TYPE_LEN = 3
         self.INT_BYTE_MAX_LEN = 7
         self.INT_BYTE_TYPE = "big"
-        self.catAttrToType = {
-            b'001': "<class 'int'>",
-            b'010': "<class 'float'>", 
-            b'011': "<class 'str'>", #Varchar and char will have to be str
-            b'100': "<class 'bool'>"
-        }
 
 
     #creates an empty table
@@ -45,37 +39,6 @@ class StorageManager:
         #TODO write 0 as an integer to the table, there are currently 0 pages.
         f.write(int.to_bytes(0))
         return 1
-    
-    """
-    #helper method to create a record from attributes
-    def create_record(attributes, values):
-        record = ""
-        for name in attributes:
-            match attributes[name]:
-                case "integer":
-
-        
-
-        return
-    """
-    def get_dtype(self, attribute_string):
-        """
-        match attribute_string:
-            case "integer":
-                return int
-            case "double":
-                return float
-        """
-        if "char" in attribute_string:
-            return (str,attribute_val)
-        attribute_val = int(re.findall(r"\((\d+)\)","char(10)")[0])
-        
-        return 1
-
-    def parse_record(record, primary_key, attributes):
-        
-        return
-
 
     # phase 1
     def get_record(self, primary_key):
@@ -186,11 +149,13 @@ class StorageManager:
             print("SM: Attribute size does not equal value size")
             return 0
 
+        
         filepath = self.dbloc + "/" + table_name + ".bin"
         #if there is not a table yet
         if os.path.exists(filepath) is False:
+            print("SM: Table does not exist.")
             #create a new table
-            self.create_table(table_name)
+            #self.create_table(table_name)
             
         table_attributes = self.cat.table_attributes(table_name)
         #traverse the file to find where this record belongs
@@ -204,33 +169,52 @@ class StorageManager:
             ####attribute_type = self.get_dtype(attribute["type"])
             #append this to the data types list
             ####data_types.append(attribute_type)
-        #open the table file
-        filepath = self.dbloc + "/" + table_name + ".bin"
+        #open the table file to read and write in binary
         with open(filepath, "rb+") as f:
             #read in the number of pages
             num_pages = self.bytes_to_int(f.read(self.INT_BYTE_MAX_LEN))
+            #if there are 0 pages, create a new page
             if num_pages == 0:
-                print("SM: There are 0 pages")
+                #increment catalog page count
+                self.cat.update_page_count(table_name,1)
+                #write page count to the table
+                f.write(int.to_bytes(1, self.INT_BYTE_MAX_LEN, self.INT_BYTE_TYPE))
+                #increment num_pages to 1
+                num_pages = 1
+            
             #for each page, read in the number of records, then read each record
             for i in range(num_pages):
                 num_records = self.bytes_to_int(f.read(self.INT_BYTE_MAX_LEN))
+                #if there are 0 records, write the value.
+                if num_records == 0:
+                    #write the number of records to the page
+                    f.write(int.to_bytes(1, self.INT_BYTE_MAX_LEN, self.INT_BYTE_TYPE))
+                    print(values)
+                    print(table_attributes)
+                    #write a record to this position
+                    self.write_record(f,values,table_attributes)
+                    self.cat.update_record_count(table_name,1)
+                    #return successfully wrote record
+                    return 0
                 #for each record in the page, read each attribute
-                for j in range(num_records):
-                    record = []
+                #for j in range(num_records):
+                 #   record = []
                     #for each attribute in the record
             #once the end of the file is reached, append new record
-            for j in range(len(values)):
-                for k in range(len(attributes)):
-                    attribute_type = attributes[k]["type"]
-                    print(attribute_type)
-                    if attribute_type == 'integer':
-                        print(values[j][k])
-                    int_val = int.to_bytes(int(values[j][k]), self.INT_BYTE_MAX_LEN, self.INT_BYTE_TYPE)
-                    f.write(int_val)
-                    self.cat.update_page_count(table_name,1)
-                    self.cat.update_record_count(table_name,1)
+            
 
         return
+    
+    def write_record(self, position, values, attributes):
+        for j in range(len(values)):
+            for k in range(len(attributes)):
+                attribute_type = attributes[k]["type"]
+                print(attribute_type)
+                if attribute_type == 'integer':
+                    print(values[j][k])
+                int_val = int.to_bytes(int(values[j][k]), self.INT_BYTE_MAX_LEN, self.INT_BYTE_TYPE)
+                position.write(int_val)
+        return 0
 
     def delete_record(self, primary_key):
         return
