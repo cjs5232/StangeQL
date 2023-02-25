@@ -149,7 +149,6 @@ class StorageManager:
             print("SM: Attribute size does not equal value size")
             return 0
 
-        
         filepath = self.dbloc + "/" + table_name + ".bin"
         #if there is not a table yet
         if os.path.exists(filepath) is False:
@@ -192,7 +191,7 @@ class StorageManager:
                     print(values)
                     print(table_attributes)
                     #write a record to this position
-                    self.write_record(f,values,table_attributes)
+                    f.write(self.record_to_bytes(f,values,table_attributes))
                     self.cat.update_record_count(table_name,1)
                     #return successfully wrote record
                     return 0
@@ -205,7 +204,7 @@ class StorageManager:
 
         return
     
-    def write_record(self, position, values, attributes):
+    def record_to_bytes(self, values, attributes):
         for j in range(len(values)):
             for k in range(len(attributes)):
                 attribute_type = attributes[k]["type"]
@@ -213,9 +212,8 @@ class StorageManager:
                 if attribute_type == 'integer':
                     print(values[j][k])
                 int_val = int.to_bytes(int(values[j][k]), self.INT_BYTE_MAX_LEN, self.INT_BYTE_TYPE)
-                position.write(int_val)
-        return 0
-
+        return int_val
+    
     def delete_record(self, primary_key):
         return
 
