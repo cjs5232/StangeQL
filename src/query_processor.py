@@ -122,7 +122,7 @@ class QueryProcessor:
             else:
                 attributes[name] = d_type
                 i += 2
-        print(attributes)
+        
         if "primarykey" not in attributes.keys():
             print("No primary key defined")
             return 1
