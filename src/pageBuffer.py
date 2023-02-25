@@ -10,8 +10,8 @@ Authors:
     - Cindy Donch (cad7046)
     - Connor Stange (cjs5232)
 """
-from src.page import Page
-from src.LRUReplace import LRUReplace
+from page import Page
+from LRUReplace import LRUReplace
 
 
 class PageBuffer:
