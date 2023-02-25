@@ -181,7 +181,7 @@ class QueryProcessor:
             # return 1
         
         # Get Data from Storage Manager: Expecting return: data = [(), (), ...]
-        data = self.StorageM.get_records(table_name, attributes)
+        data = self.StorageM.get_records(table_name)
         if data == 1:
             return 1
 
@@ -191,17 +191,18 @@ class QueryProcessor:
         if attributes == 1:
             return 1
         else:
-            for i in attributes.keys():
-                columns.append(i)
+            for i in attributes:
+                for j in i.keys():
+                    columns.append(i)
 
         # Find necessary padding for columns and store in column_width
-        length_list = [len(element) for row in data for element in row]
+        length_list = [len(str(element)) for row in data for element in row]
         for i in columns:
             length_list.append(len(i))
         column_width = max(length_list)
 
         # Format columns and barriers
-        columns_formatted = "|".join(element.center(column_width +2) for element in columns)
+        columns_formatted = "|".join(str(element).center(column_width +2) for element in columns)
         columns_formatted = "|" + columns_formatted + "|"
         horizontal_lines = "-" * (len(columns_formatted))
 
@@ -212,7 +213,7 @@ class QueryProcessor:
 
         # Print rows
         for row in data:
-            row = "|".join(element.center(column_width + 2) for element in row)
+            row = "|".join(str(element).center(column_width + 2) for element in row)
             row = "|" + row + "|"
             print(row)
         

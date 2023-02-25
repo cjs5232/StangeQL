@@ -116,7 +116,7 @@ class StorageManager:
     #phase 1
     #returns a list of tuples ex: [(), (), ()][(), (), ()]
     def get_records(self, table_name):
-        attributes = self.cat.table_attributes(self, table_name)
+        attributes = self.cat.table_attributes(table_name)
 
         #get types of each attribute
         data_types = []
@@ -137,8 +137,8 @@ class StorageManager:
                     for k in attributes:
                         attribute_type = k["type"]
                         print(attribute_type)
-                        #if int
-                            #value = self.bytes_to_int(f.read(self.INT_BYTE_MAX_LEN))
+                        if attribute_type == 'integer':
+                            value = self.bytes_to_int(f.read(self.INT_BYTE_MAX_LEN))
                         #if bool
                             #value = self.bytes_to_int(f.read(1))
                             #match value
@@ -169,9 +169,10 @@ class StorageManager:
                         #record.append(get_len())
 
                         #add the record attribute
-                        #record.append(value)
+                        record.append(value)
                     records.append(record)
-        return records
+            return records
+        return 1
 
     #helper function to get the length to read
     #attribute is the string of the current attribute being checked: ex)
