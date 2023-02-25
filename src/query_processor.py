@@ -137,11 +137,10 @@ class QueryProcessor:
                 table["attributes"].append({"name" : i, "type": attributes[i], "primary_key" : False})
 
         
-        if "primarykey" in attributes: #this error gets handled later right now. TODO refactor
-            for i in range(len(table["attributes"])):
-                #Iterate through and find the primary key fugger
-                if attributes["primarykey"] == table["attributes"][i]["name"]:
-                    table["attributes"][i].update({"primary_key" : True})
+        for i in range(len(table["attributes"])):
+            #Iterate through and find the primary key fugger
+            if attributes["primarykey"] == table["attributes"][i]["name"]:
+                table["attributes"][i].update({"primary_key" : True}) # Updating to little T true in the catalog?
 
         returnCode = self.cat.add_table(table)
         status = self.StorageM.create_table(table_name)
@@ -263,11 +262,7 @@ class QueryProcessor:
             return 1
         
         result = self.StorageM.insert_record(table_name, attributes, values)
-        if result == 1:
-            return 1
-
-
-        return 0 # update return based off storage manager
+        return result # update return based off storage manager
 
 
     def display_schema_cmd(self) -> int:

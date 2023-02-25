@@ -36,4 +36,9 @@ def bytes_to_int(byteRepresentation):
 with open("test3.bin", "wb+") as f:
     f.write(int.to_bytes(1, INT_BYTE_MAX_LEN, INT_BYTE_TYPE))
     f.write(int.to_bytes(1, INT_BYTE_MAX_LEN, INT_BYTE_TYPE))
-    f.write(int.to_bytes(True, INT_BYTE_MAX_LEN, INT_BYTE_TYPE))
+    f.write(int.to_bytes(190, INT_BYTE_MAX_LEN, INT_BYTE_TYPE))
+
+with open("test3.bin", "rb") as f:
+    print(int.from_bytes(f.read(INT_BYTE_MAX_LEN), INT_BYTE_TYPE))
+    print(int.from_bytes(f.read(INT_BYTE_MAX_LEN), INT_BYTE_TYPE))
+    print(int.from_bytes(f.read(INT_BYTE_MAX_LEN), INT_BYTE_TYPE))
