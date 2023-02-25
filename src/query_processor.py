@@ -70,8 +70,11 @@ class QueryProcessor:
             start_idx = 4
 
         # Check catalog
-        if self.cat.table_exists(table_name) == 0:
+        does_table_exist = self.cat.table_exists(table_name)
+        if does_table_exist == 1: # 1 meaning table does exist
             print(f"Table of name {table_name} already exists")
+            return 1
+        elif does_table_exist == 2: # 2 meaning no catalog found
             return 1
         
         # Loop through attributes
@@ -143,6 +146,9 @@ class QueryProcessor:
                 table["attributes"][i].update({"primary_key" : True}) # Updating to little T true in the catalog?
 
         returnCode = self.cat.add_table(table)
+        if returnCode == 1:
+            return 1
+
         status = self.StorageM.create_table(table_name)
         
         return status
@@ -169,8 +175,11 @@ class QueryProcessor:
                 table_name = query[i+1]
         
         # Check catalog
-        if self.cat.table_exists(table_name) == 1:
+        does_table_exist = self.cat.table_exists(table_name)
+        if does_table_exist == 0: # 0 meaning table does NOT exist
             print(f"No such table {table_name}")
+            return 1
+        elif does_table_exist == 2: # 2 meaning no catalog found
             return 1
         
         if query[1] == "*":
