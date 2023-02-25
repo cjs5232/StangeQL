@@ -13,6 +13,7 @@ import sys
 import os
 import query_processor as qp
 import catalog
+import pageBuffer as pb
 
 class Driver:
     def __init__(self, args) -> None:
@@ -43,7 +44,7 @@ class Driver:
             # cat.print_catalog()
             cat.create_catalog()
             print(f"New db created successfully\nPage size: {self.pageSize}\nBuffer size: {self.bufferSize}")
-            #TODO: Create pages and buffers with given the buffer size
+            PB = pb.PageBuffer(self.bufferSize, self.pageSize)
         cat.table_attributes("tab3")
 
     """
@@ -56,7 +57,7 @@ class Driver:
         returnCode = QP.main()
         print("\nSafely shutting down the database...")
         print("Purging page buffer...)")
-        # TODO
+        # TODO: PB.flushPages()
         print("Saving catalog...")
         # TODO:
         print("\nExiting the database...")

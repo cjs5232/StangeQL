@@ -10,8 +10,8 @@ Authors:
     - Cindy Donch (cad7046)
     - Connor Stange (cjs5232)
 """
-from page import Page
-from LRUReplace import LRUReplace
+import page
+import LRUReplace
 
 
 class PageBuffer:
@@ -20,11 +20,10 @@ class PageBuffer:
         self.buffer = []
 
         for i in range(bufferSize):
-            self.buffer[i] = Page(i, pageSize)
+            self.buffer[i] = page(i)
 
         self.replace = LRUReplace(self)
-        self.pageMap = {}
-        self.numPages = 0
+        self.numPages = bufferSize/pageSize
 
     def __len__(self):
         return self.numPages
@@ -45,9 +44,8 @@ class PageBuffer:
         for page in self.buffer:
             if page.index == page_id:
                 return page
-
+        # page not in buffer
         pageLRU = self.replace.least_recently_used()
-
         if pageLRU.is_modified():
             self.write_page(page)
 
