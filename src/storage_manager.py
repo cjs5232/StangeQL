@@ -191,9 +191,6 @@ class StorageManager:
         if os.path.exists(filepath) is False:
             #create a new table
             self.create_table(table_name)
-        
-        #open the file
-        f = open(filepath, "rw+")
         #traverse the file to find where this record belongs
         #get the tables from the catalog
         tables = self.cat.get_catalog(self)["tables"]
@@ -212,7 +209,6 @@ class StorageManager:
                 data_types.append(attribute_type)
             #open the table file
             filepath = self.dbloc + "/" + table["name"] + ".bin"
-            f = open(filepath, "rb")
             with open(filepath, "rb") as f:
                 #read in the number of pages
                 num_pages = self.bytes_to_int(f.read(self.INT_BYTE_MAX_LEN))
@@ -223,9 +219,11 @@ class StorageManager:
                     for j in range(num_records):
                         record = []
                         #for each attribute in the record
-                        for k in attributes:
-                            attribute_type = k["type"]
+                        for k in range(len(attributes)):
+                            attribute_type = attributes[k]["type"]
                             print(attribute_type)
+                            if attribute_type == 'integer':
+                                f.write(int.to_bytes(values[j], self.INT_BYTE_MAX_LEN, self.INT_BYTE_TYPE))
 
         return
 
