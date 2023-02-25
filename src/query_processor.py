@@ -19,7 +19,7 @@ class QueryProcessor:
         self.dbloc = dbloc
         self.pageSize = pageSize
         self.bufferSize = bufferSize
-        self.Catalog = catalog.Catalog(dbloc, pageSize, bufferSize)
+        self.cat = catalog.Catalog(dbloc, pageSize, bufferSize)
         self.StorageM = storage_manager.StorageManager(dbloc, pageSize, bufferSize)
 
 
@@ -70,7 +70,7 @@ class QueryProcessor:
             start_idx = 4
 
         # Check catalog
-        if self.Catalog.table_exists(table_name) == 0:
+        if self.cat.table_exists(table_name) == 0:
             print(f"Table of name {table_name} already exists")
             return 1
         
@@ -118,10 +118,26 @@ class QueryProcessor:
         if "primarykey" not in attributes.keys():
             print("No primary key defined")
             return 1
+        
+        print(f"attributes {attributes}")
+        
+        table = {
+                "name" : table_name,
+                "pageCount" : 1,
+                "recordCount" : 1,
+                "attributes" : [ 
+                    {
+                    "name" : "num", 
+                    "type" : "integer", 
+                    "primary_key" : False
+                    }
+                ]
+        }
 
-        self.Catalog.add_table(table_name, attributes)
-
+        returnCode = self.cat.add_table(table)
+        print(f"returnCode {returnCode}")
         status = self.StorageM.create_table(table_name)
+        print(f"status {status}")
         
         return status
 
@@ -147,7 +163,7 @@ class QueryProcessor:
                 table_name = query[i+1]
         
         # Check catalog
-        if self.Catalog.table_exists(table_name) == 1:
+        if self.cat.table_exists(table_name) == 1:
             print(f"No such table {table_name}")
             return 1
         
@@ -164,7 +180,7 @@ class QueryProcessor:
 
         # Get column names from catalog
         columns = []
-        attributes = self.Catalog.table_attributes(table_name)
+        attributes = self.cat.table_attributes(table_name)
         if attributes == 1:
             return 1
         else:
@@ -234,7 +250,7 @@ class QueryProcessor:
                     
             values.append(tuple(vals))
         
-        attributes = self.Catalog.table_attributes(table_name)
+        attributes = self.cat.table_attributes(table_name)
         if attributes == 1:
             return 1
         
@@ -254,7 +270,7 @@ class QueryProcessor:
         tables = []
         print(f"DB location: {self.dbloc}\nPage Size: {self.pageSize}\nBuffer Size: {self.bufferSize}\n")
         
-        catalog = self.Catalog.get_catalog()
+        catalog = self.cat.get_catalog()
 
         if catalog == 1:
             return 1
@@ -269,7 +285,7 @@ class QueryProcessor:
         print("\nTables:\n")
         
         for i in range(len(tables)):
-            self.Catalog.print_table(tables[i])
+            self.cat.print_table(tables[i])
             if i < len(tables) - 1:
                 print("\n")
         
@@ -282,7 +298,7 @@ class QueryProcessor:
         Including: Table name, table schema, number of pages, number of records.
         All output comes from Catalog.print_table.
         """
-        if self.Catalog.print_table(table_name) == 1:
+        if self.cat.print_table(table_name) == 1:
             return 1 # FAILURE
 
         return 0 # SUCCESS

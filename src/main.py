@@ -44,7 +44,7 @@ class Driver:
             cat.create_catalog()
             print(f"New db created successfully\nPage size: {self.pageSize}\nBuffer size: {self.bufferSize}")
             #TODO: Create pages and buffers with given the buffer size
-        x = cat.table_attributes("tab3")
+        cat.table_attributes("tab3")
 
     """
     Hand off program to the query processor for user input handling.

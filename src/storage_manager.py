@@ -43,7 +43,7 @@ class StorageManager:
         #create a new table
         f = open(filepath, "wb+")
         #TODO write 0 as an integer to the table, there are currently 0 pages.
-        f.write(int.to_bytes(0))
+        f.write(int.to_bytes(0, self.INT_BYTE_MAX_LEN, self.INT_BYTE_TYPE))
         return 1
     
     """
@@ -116,7 +116,7 @@ class StorageManager:
     #phase 1
     #returns a list of tuples ex: [(), (), ()][(), (), ()]
     def get_records(self, table_name):
-        attributes = self.cat.table_attributes(self, table_name)
+        attributes = self.cat.table_attributes(table_name)
 
         #get types of each attribute
         data_types = []
@@ -172,14 +172,14 @@ class StorageManager:
                         #record.append(value)
                     records.append(record)
                     
-            type = f.read(self.TYPE_LEN)
-            print(type)
-            print(self.binToType[type])
-            knownInt = f.read(self.INT_BYTE_MAX_LEN)
-            knownInt = int.from_bytes(knownInt, self.INT_BYTE_TYPE)
-            print(knownInt)
-            knownString = f.read(knownInt)
-            print(knownString.decode())
+            # type = f.read(self.TYPE_LEN)
+            # print(type)
+            # print(self.binToType[type])
+            # knownInt = f.read(self.INT_BYTE_MAX_LEN)
+            # knownInt = int.from_bytes(knownInt, self.INT_BYTE_TYPE)
+            # print(knownInt)
+            # knownString = f.read(knownInt)
+            # print(knownString.decode())
         
         return
 
@@ -269,5 +269,7 @@ class StorageManager:
 
 if __name__ == '__main__':
     SM = StorageManager("testDB", "1024", "64")
+    SM.create_table("test")
+    SM.cat.add_table("test")
     SM.get_records("test")
     print(f"Exit Code: ")

@@ -131,7 +131,7 @@ class Catalog:
         ]
     }
     """
-    def add_table(self, table):
+    def add_table(self, table): #didn't have attributes but was sent attributes in query_processor
         fileExist = os.path.exists(f"{self.location}/DBCatalog")
         if not fileExist:
             print("No catalog file in path: " + self.location)
