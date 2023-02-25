@@ -197,12 +197,12 @@ class QueryProcessor:
         # Get column names from catalog
         columns = []
         attributes = self.cat.table_attributes(table_name)
+
         if attributes == 1:
             return 1
         else:
             for i in attributes:
-                for j in i.keys():
-                    columns.append(i)
+                columns.append(i['name'])
 
         # Find necessary padding for columns and store in column_width
         length_list = [len(str(element)) for row in data for element in row]
@@ -225,6 +225,7 @@ class QueryProcessor:
             row = "|".join(str(element).center(column_width + 2) for element in row)
             row = "|" + row + "|"
             print(row)
+        print("\n")
         
         return 0
 
