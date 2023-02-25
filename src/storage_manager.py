@@ -191,39 +191,44 @@ class StorageManager:
         if os.path.exists(filepath) is False:
             #create a new table
             self.create_table(table_name)
+            
+        table_attributes = self.cat.table_attributes(table_name)
         #traverse the file to find where this record belongs
-        #get the tables from the catalog
-        tables = self.cat.get_catalog(self)["tables"]
-        #for each table in the catalog
-        for table in tables:
-            #a list to store the data type of each attribute
-            data_types = []
-            #for each attribute in the table
-            for attribute in table["attributes"]:
-                #if the attribute is the primary key, store the primary index for later
-                if attribute["primary_key"]:
-                    primary_index = i
-                #add this attribute's data type using a helper function that parses the attribute type from the catalog
-                attribute_type = self.get_dtype(attribute["type"])
-                #append this to the data types list
-                data_types.append(attribute_type)
-            #open the table file
-            filepath = self.dbloc + "/" + table["name"] + ".bin"
-            with open(filepath, "rb") as f:
-                #read in the number of pages
-                num_pages = self.bytes_to_int(f.read(self.INT_BYTE_MAX_LEN))
-                #for each page, read in the number of records, then read each record
-                for i in range(num_pages):
-                    num_records = self.bytes_to_int(f.read(self.INT_BYTE_MAX_LEN))
-                    #for each record in the page, read each attribute
-                    for j in range(num_records):
-                        record = []
-                        #for each attribute in the record
-                        for k in range(len(attributes)):
-                            attribute_type = attributes[k]["type"]
-                            print(attribute_type)
-                            if attribute_type == 'integer':
-                                f.write(int.to_bytes(values[j], self.INT_BYTE_MAX_LEN, self.INT_BYTE_TYPE))
+        #for each attribute in the table
+        for i in range(len(table_attributes)):
+            attribute = table_attributes[i]
+            #if the attribute is the primary key, store the primary index for later
+            if attribute["primary_key"]:
+                primary_index = i
+            #add this attribute's data type using a helper function that parses the attribute type from the catalog
+            ####attribute_type = self.get_dtype(attribute["type"])
+            #append this to the data types list
+            ####data_types.append(attribute_type)
+        #open the table file
+        filepath = self.dbloc + "/" + table_name + ".bin"
+        with open(filepath, "rb+") as f:
+            #read in the number of pages
+            num_pages = self.bytes_to_int(f.read(self.INT_BYTE_MAX_LEN))
+            if num_pages == 0:
+                print("SM: There are 0 pages")
+            #for each page, read in the number of records, then read each record
+            for i in range(num_pages):
+                num_records = self.bytes_to_int(f.read(self.INT_BYTE_MAX_LEN))
+                #for each record in the page, read each attribute
+                for j in range(num_records):
+                    record = []
+                    #for each attribute in the record
+            #once the end of the file is reached, append new record
+            for j in range(len(values)):
+                for k in range(len(attributes)):
+                    attribute_type = attributes[k]["type"]
+                    print(attribute_type)
+                    if attribute_type == 'integer':
+                        print(values[j][k])
+                    int_val = int.to_bytes(int(values[j][k]), self.INT_BYTE_MAX_LEN, self.INT_BYTE_TYPE)
+                    f.write(int_val)
+                    self.cat.update_page_count(table_name,1)
+                    self.cat.update_record_count(table_name,1)
 
         return
 
