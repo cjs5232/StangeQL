@@ -119,8 +119,6 @@ class QueryProcessor:
             print("No primary key defined")
             return 1
         
-        print(f"attributes {attributes}")
-        
             
         # {
         # "name" : "num", 
@@ -146,9 +144,7 @@ class QueryProcessor:
                     table["attributes"][i].update({"primary_key" : True})
 
         returnCode = self.cat.add_table(table)
-        print(f"returnCode {returnCode}")
         status = self.StorageM.create_table(table_name)
-        print(f"status {status}")
         
         return status
 
@@ -420,7 +416,7 @@ class QueryProcessor:
 
             inputList = readInput.split(';')[0].split(" ")
             inputList = [input for input in inputList if input != blankString]
-            print("INPUT LIST:", inputList) #TEMPORARY
+            # print("INPUT LIST:", inputList) #TEMPORARY
             status = self.process_input(inputList)
             if status == 0:
                 print("SUCCESS\n")
