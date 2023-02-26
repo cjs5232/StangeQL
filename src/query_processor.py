@@ -56,109 +56,127 @@ class QueryProcessor:
         The schema will be used by the system to store/access/update/delete
         data in the table.
         """
-        start_idx = 3
-        attributes = {} # Initialize dictionary to hold attributes (name, type) NOTE if key=primarykey value=column name
-        table_name = query[2]
+        try:
+            start_idx = 3
+            attributes = {} # Initialize dictionary to hold attributes (name, type) NOTE if key=primarykey value=column name
+            table_name = query[2]
 
-        # Steup
-        
-        if "()" in table_name:
-            print("Table with no attributes")
-            return 1
-        elif "(" in table_name:
-            table_name = table_name[:-1]
-        elif query[start_idx] == "(":
-            start_idx = 4
-            
+            # Steup
 
-        # Check catalog
-        does_table_exist = self.cat.table_exists(table_name)
-        if does_table_exist == 1: # 1 meaning table does exist
-            print(f"Table of name {table_name} already exists")
-            return 1
-        elif does_table_exist == 2: # 2 meaning no catalog found
-            return 1
-        
-        # Loop through attributes
-        i = start_idx
-        while i < len(query):
-            if query[i] == ")":
-                break
+            if "()" in table_name:
+                print("Table with no attributes")
+                return 1
+            elif "(" in table_name:
+                split_string = table_name.split('(')
+                query.remove(table_name)
 
-            name = query[i]
-            if "(" in name:
-                name = name.strip("(")
+                # there was a "(" + split
+                table_name = split_string[0]
+                query.insert(2, table_name)
+                attr_split = split_string[1]
+                if attr_split != '':
+                    query.insert(3, attr_split)
 
-            d_type = query[i+1]
-            
-            if "))" in d_type:
-                d_type = d_type[:-1]
-            elif "char" not in d_type and "varchar" not in d_type and ")" in d_type:
-                d_type = d_type[:-1]
+                #table_name = table_name[:-1]
 
-            if name in attributes.keys():
-                print(f'Duplicate attribute name "{name}"')
+            elif query[start_idx] == "(":
+                start_idx = 4
+
+
+            # Check catalog
+            does_table_exist = self.cat.table_exists(table_name)
+            if does_table_exist == 1: # 1 meaning table does exist
+                print(f"Table of name {table_name} already exists")
+                return 1
+            elif does_table_exist == 2: # 2 meaning no catalog found
                 return 1
 
-            if self.check_data_type(d_type) == 1:
-                print(f'Invalid data type "{d_type}"')
+            # Loop through attributes
+            i = start_idx
+            while i < len(query):
+                if query[i] == ")":
+                    break
+
+                name = query[i]
+                if "(" in name:
+                    name = name.strip("(")
+
+                d_type = query[i+1]
+
+                if "))" in d_type:
+                    d_type = d_type[:-1]
+                elif "char" not in d_type and "varchar" not in d_type and ")" in d_type:
+                    d_type = d_type[:-1]
+
+                if name in attributes.keys():
+                    print(f'Duplicate attribute name "{name}"')
+                    return 1
+
+                if self.check_data_type(d_type) == 1:
+                    print(f'Invalid data type "{d_type}"')
+                    return 1
+
+                if "," in d_type:
+                    d_type = d_type.rstrip(',')
+                    attributes[name] = d_type
+                    i += 2
+                    continue
+                elif len(query) <= i+2:
+                    attributes[name] = d_type
+                    break
+
+                if "primarykey" in query[i+2] and "primarykey" not in attributes.keys():
+                    query[i+2].rstrip(',')
+                    attributes[name] = d_type
+                    attributes["primarykey"] = name
+                    i += 3
+                elif "primarykey" in query[i+2] and "primarykey" in attributes.keys():
+                    print("More than 1 primary key")
+                    return 1
+                else:
+                    attributes[name] = d_type
+                    i += 2
+
+            if "primarykey" not in attributes.keys():
+                print("No primary key defined")
                 return 1
 
-            if "," in d_type:
-                d_type = d_type.rstrip(',')
-                attributes[name] = d_type
-                i += 2
-                continue
-            elif len(query) <= i+2:
-                attributes[name] = d_type
-                break
-            
-            if "primarykey" in query[i+2] and "primarykey" not in attributes.keys():
-                query[i+2].rstrip(',')
-                attributes[name] = d_type
-                attributes["primarykey"] = name
-                i += 3
-            elif "primarykey" in query[i+2] and "primarykey" in attributes.keys():
-                print("More than 1 primary key")
+
+            # {
+            # "name" : "num",
+            # "type" : "integer",
+            # "primary_key" : False
+            # }
+            table = {
+                    "name" : table_name,
+                    "pageCount" : 0,
+                    "recordCount" : 0,
+                    "attributes" : []
+            }
+
+            for i in attributes:
+                if not i == "primarykey": # Add all non primary keys to array of attributes in table dict
+                    table["attributes"].append({"name" : i, "type": attributes[i], "primary_key" : False})
+
+
+            for i in range(len(table["attributes"])):
+                #Iterate through and find the primary key fugger
+                if attributes["primarykey"] == table["attributes"][i]["name"]:
+                    table["attributes"][i].update({"primary_key" : True}) # Updating to little T true in the catalog?
+
+            returnCode = self.cat.add_table(table)
+            if returnCode == 1:
                 return 1
-            else:
-                attributes[name] = d_type
-                i += 2
-        
-        if "primarykey" not in attributes.keys():
-            print("No primary key defined")
-            return 1
-        
-            
-        # {
-        # "name" : "num", 
-        # "type" : "integer", 
-        # "primary_key" : False
-        # }
-        table = {
-                "name" : table_name,
-                "pageCount" : 0,
-                "recordCount" : 0,
-                "attributes" : []
-        }
 
-        for i in attributes:
-            if not i == "primarykey": # Add all non primary keys to array of attributes in table dict
-                table["attributes"].append({"name" : i, "type": attributes[i], "primary_key" : False})
+            status = self.StorageM.create_table(table_name)
 
-        
-        for i in range(len(table["attributes"])):
-            #Iterate through and find the primary key fugger
-            if attributes["primarykey"] == table["attributes"][i]["name"]:
-                table["attributes"][i].update({"primary_key" : True}) # Updating to little T true in the catalog?
-
-        returnCode = self.cat.add_table(table)
-        if returnCode == 1:
+            return status
+        except:
+            #TODO actual checks for things below
+            #no paren around tab_name, extra parameters in the parens that arent primarykey
             return 1
 
-        status = self.StorageM.create_table(table_name)
-        
-        return status
+
 
 
     def select_cmd(self, query:list) -> int:
