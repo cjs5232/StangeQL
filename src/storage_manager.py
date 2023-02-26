@@ -72,7 +72,7 @@ class StorageManager:
                     #for each attribute in the record
                     for k in attributes:
                         attribute_type = k["type"]
-                        print(attribute_type)
+                        #print(attribute_type)
                         if attribute_type == 'integer':
                             value = self.bytes_to_int(f.read(self.INT_BYTE_MAX_LEN))
                         elif attribute_type == 'boolean':
@@ -114,7 +114,7 @@ class StorageManager:
 
     # phase 1
     def insert_record(self, table_name, attributes, values):
-        print(len(values))
+        #print(len(values))
         if (len(attributes) != len(values)):
             print("SM: Attribute size does not equal value size")
             return 0
@@ -145,7 +145,7 @@ class StorageManager:
                 num_pages = 1
                 #increment catalog page count
                 self.cat.update_page_count(table_name,1)
-                print(int.to_bytes(num_pages, self.INT_BYTE_MAX_LEN, self.INT_BYTE_TYPE))
+                #print(int.to_bytes(num_pages, self.INT_BYTE_MAX_LEN, self.INT_BYTE_TYPE))
                 #write page count to the table
                 num_pages_pointer.write(int.to_bytes(num_pages, self.INT_BYTE_MAX_LEN, self.INT_BYTE_TYPE))
                 
@@ -158,8 +158,8 @@ class StorageManager:
                     num_records+=1
                     #write the number of records to the page
                     num_records_pointer.write(int.to_bytes(1, self.INT_BYTE_MAX_LEN, self.INT_BYTE_TYPE))
-                    print(values)
-                    print(table_attributes)
+                    #print(values)
+                    #print(table_attributes)
                     #write a record to this position
                     f.write(self.record_to_bytes(values,table_attributes))
                     self.cat.update_record_count(table_name,1)
@@ -176,13 +176,13 @@ class StorageManager:
     
     def record_to_bytes(self, values, attributes):
         for j in range(len(values)):
-            print(len(attributes))
+            #print(len(attributes))
             for k in range(len(attributes)):
                 attribute_type = attributes[k]["type"]
-                print(attribute_type)
+                #print(attribute_type)
                 if attribute_type == 'integer':
-                    print(values[j][k])
-                int_val = int.to_bytes(int(values[j][k]), self.INT_BYTE_MAX_LEN, self.INT_BYTE_TYPE)
+                    #print(values[j][k])
+                    int_val = int.to_bytes(int(values[j][k]), self.INT_BYTE_MAX_LEN, self.INT_BYTE_TYPE)
         return int_val
     
     def delete_record(self, primary_key):
