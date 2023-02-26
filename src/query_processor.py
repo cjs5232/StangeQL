@@ -66,6 +66,8 @@ class QueryProcessor:
             return 1
         elif "(" in table_name:
             table_name = table_name[:-1]
+        elif start_idx+1 < query.__sizeof__():
+            return 1
         elif query[start_idx] == "(":
             start_idx = 4
 
