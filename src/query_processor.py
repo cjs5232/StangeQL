@@ -67,11 +67,7 @@ class QueryProcessor:
             return 1
         elif "(" in table_name:
             table_name = table_name[:-1]
-        else:
-            print("Incorrect format, ( expected")
-            return 1
-        
-        if query[start_idx] == "(":
+        elif query[start_idx] == "(":
             start_idx = 4
             
 
