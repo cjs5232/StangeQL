@@ -161,7 +161,10 @@ class StorageManager:
                     #print(values)
                     #print(table_attributes)
                     #write a record to this position
-                    f.write(self.record_to_bytes(values,table_attributes))
+                    toWrite = self.record_to_bytes(values,table_attributes)
+                    if toWrite == 1:
+                        return 1
+                    f.write(toWrite)
                     self.cat.update_record_count(table_name,1)
                     #return successfully wrote record
                     return 0
@@ -183,6 +186,8 @@ class StorageManager:
                 if attribute_type == 'integer':
                     #print(values[j][k])
                     int_val = int.to_bytes(int(values[j][k]), self.INT_BYTE_MAX_LEN, self.INT_BYTE_TYPE)
+                else:
+                    return 1
         return int_val
     
     def delete_record(self, primary_key):
