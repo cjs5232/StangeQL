@@ -163,6 +163,7 @@ class StorageManager:
                     #write a record to this position
                     toWrite = self.record_to_bytes(values,table_attributes)
                     if toWrite == 1:
+                        print("Type error: we only have integer working")
                         return 1
                     f.write(toWrite)
                     self.cat.update_record_count(table_name,1)
