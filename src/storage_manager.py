@@ -154,17 +154,17 @@ class StorageManager:
                 num_records_pointer = f
                 num_records = self.bytes_to_int(f.read(self.INT_BYTE_MAX_LEN))
                 #if there are 0 records, write the value.
-                if num_records == 0:
-                    num_records+=1
-                    #write the number of records to the page
-                    num_records_pointer.write(int.to_bytes(1, self.INT_BYTE_MAX_LEN, self.INT_BYTE_TYPE))
-                    #print(values)
-                    #print(table_attributes)
-                    #write a record to this position
-                    f.write(self.record_to_bytes(values,table_attributes))
-                    self.cat.update_record_count(table_name,1)
-                    #return successfully wrote record
-                    return 0
+                #if num_records == 0:
+                num_records+=1
+                #write the number of records to the page
+                num_records_pointer.write(int.to_bytes(1, self.INT_BYTE_MAX_LEN, self.INT_BYTE_TYPE))
+                #print(values)
+                #print(table_attributes)
+                #write a record to this position
+                f.write(self.record_to_bytes(values,table_attributes))
+                self.cat.update_record_count(table_name,1)
+                #return successfully wrote record
+                return 0
                 #for each record in the page, read each attribute
                 for j in range(num_records):
                     record = []
