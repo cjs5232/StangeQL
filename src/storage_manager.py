@@ -140,31 +140,31 @@ class StorageManager:
             #read in the number of pages
             num_pages = self.bytes_to_int(f.read(self.INT_BYTE_MAX_LEN))
             #if there are 0 pages, create a new page
-            if num_pages == 0:
-                #increment num_pages to 1
-                num_pages = 1
-                #increment catalog page count
-                self.cat.update_page_count(table_name,1)
-                #print(int.to_bytes(num_pages, self.INT_BYTE_MAX_LEN, self.INT_BYTE_TYPE))
-                #write page count to the table
-                num_pages_pointer.write(int.to_bytes(num_pages, self.INT_BYTE_MAX_LEN, self.INT_BYTE_TYPE))
+            #if num_pages == 0:
+            #increment num_pages to 1
+            num_pages += 1
+            #increment catalog page count
+            self.cat.update_page_count(table_name,1)
+            #print(int.to_bytes(num_pages, self.INT_BYTE_MAX_LEN, self.INT_BYTE_TYPE))
+            #write page count to the table
+            num_pages_pointer.write(int.to_bytes(num_pages, self.INT_BYTE_MAX_LEN, self.INT_BYTE_TYPE))
                 
             #for each page, read in the number of records, then read each record
             for i in range(num_pages):
                 num_records_pointer = f
                 num_records = self.bytes_to_int(f.read(self.INT_BYTE_MAX_LEN))
                 #if there are 0 records, write the value.
-                #if num_records == 0:
-                num_records+=1
-                #write the number of records to the page
-                num_records_pointer.write(int.to_bytes(1, self.INT_BYTE_MAX_LEN, self.INT_BYTE_TYPE))
-                #print(values)
-                #print(table_attributes)
-                #write a record to this position
-                f.write(self.record_to_bytes(values,table_attributes))
-                self.cat.update_record_count(table_name,1)
-                #return successfully wrote record
-                return 0
+                if num_records == 0:
+                    num_records+=1
+                    #write the number of records to the page
+                    num_records_pointer.write(int.to_bytes(1, self.INT_BYTE_MAX_LEN, self.INT_BYTE_TYPE))
+                    #print(values)
+                    #print(table_attributes)
+                    #write a record to this position
+                    f.write(self.record_to_bytes(values,table_attributes))
+                    self.cat.update_record_count(table_name,1)
+                    #return successfully wrote record
+                    return 0
                 #for each record in the page, read each attribute
                 for j in range(num_records):
                     record = []
