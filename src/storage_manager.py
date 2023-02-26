@@ -38,10 +38,11 @@ class StorageManager:
         f = open(filepath, "wb+")
         #write 0 as an integer to the table, there are currently 0 pages.
         #f.write(int.to_bytes(0, self.INT_BYTE_MAX_LEN, self.INT_BYTE_TYPE))
+        #TODO fix out how to fix this error with bad returns. (return negative 1?) <-- Definitely not.
+        f.close()
         return 0
 
     def get_record(self, primary_key):
-
         return
 
     def get_page(self, table_number, page_number):
