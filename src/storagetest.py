@@ -1,6 +1,6 @@
 INT_BYTE_MAX_LEN = 7
 INT_BYTE_TYPE = "big"
-
+"""
 with open("test3.bin", "wb+") as f:
     int_to_write = 20
     print(int_to_write.to_bytes(INT_BYTE_MAX_LEN, INT_BYTE_TYPE))
@@ -23,3 +23,19 @@ with open("test3.bin", "rb+") as f:
     incremented_int = f.read(INT_BYTE_MAX_LEN)
     incremented_int = int.from_bytes(incremented_int, INT_BYTE_TYPE)
     print(incremented_int)
+"""
+with open("./testDB/bars.bin", "wb+") as f:
+    f.write(int.to_bytes(1,INT_BYTE_MAX_LEN, INT_BYTE_TYPE))
+    f.write(int.to_bytes(1,INT_BYTE_MAX_LEN, INT_BYTE_TYPE))
+    int_to_write = 20
+    print(int_to_write.to_bytes(INT_BYTE_MAX_LEN, INT_BYTE_TYPE))
+    f.write(int_to_write.to_bytes(INT_BYTE_MAX_LEN, INT_BYTE_TYPE))
+
+"""
+with open("./testDB/bars.bin", "rb+") as f:
+    print(int.from_bytes(f.read(INT_BYTE_MAX_LEN), INT_BYTE_TYPE))
+    print(int.from_bytes(f.read(INT_BYTE_MAX_LEN), INT_BYTE_TYPE))
+    print(int.from_bytes(f.read(INT_BYTE_MAX_LEN), INT_BYTE_TYPE))
+    print(int.from_bytes(f.read(INT_BYTE_MAX_LEN), INT_BYTE_TYPE))
+    print(int.from_bytes(f.read(INT_BYTE_MAX_LEN), INT_BYTE_TYPE))
+"""
