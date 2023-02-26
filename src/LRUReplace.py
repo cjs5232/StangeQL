@@ -17,35 +17,43 @@ class LRUReplace(ABC):
 
     def __init__(self, pageBuffer):
         super().__init__()
-        self.numBuffers = len(pageBuffer)
+        self.bufferCount = len(pageBuffer)
         self.buffer = pageBuffer.getBuffer()
-
         for dbloc in self.buffer:
-            dbloc.state = -1  # available
-
-        self.head = -1
+            dbloc.state = -1    # make everything in the buffer available
 
     def insert(self, page):
         page.state = 0  # referenced
 
+    """
+    loops through the buffer until finding an available page
+    if none are available, the page that was added to the buffer first is returned
+    """
     def least_recently_used(self):
         if self.buffer:
-            for i in range(2 * len(self.buffer)):
-                self.head = (self.head + 1) % len(self.buffer)
-
-                if self.buffer[self.head].state == 0:  # referenced
-                    self.buffer[self.head].state = -1  # available
-
-                elif self.buffer[self.head].state == -1:  # available:
-                    return self.buffer[self.head]
-
+            # loop the buffer twice
+            # first loop will only return available pages
+            # second loop will only return referenced pages
+            # pinned pages are protected from being removed
+            for i in range(2 * self.bufferCount):
+                index = i % self.bufferCount
+                if self.buffer[index].state == -1:
+                    return self.buffer[index]
+                elif self.buffer[index].state == 0:
+                    self.buffer[index].state = -1
         return None
 
+    """
+    remove a page from the buffer
+    """
     def erase(self, page):
         index = -1
+        # for each page
         for dbloc in self.buffer:
             index += 1
+            # if the index of the page matches the one we are looking to remove
             if dbloc.index == page.index:
+                # remove it from the buffer
                 self.buffer.pop(index)
                 return True
         return False

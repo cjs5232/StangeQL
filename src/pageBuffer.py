@@ -18,10 +18,8 @@ class PageBuffer:
 
     def __init__(self, bufferSize, pageSize):
         self.buffer = []
-
         for i in range(bufferSize):
             self.buffer[i] = page(i)
-
         self.replace = LRUReplace(self)
         self.numPages = bufferSize/pageSize
 
@@ -31,25 +29,22 @@ class PageBuffer:
     def get_Buffer(self):
         return self.buffer
 
-    def new_page(self):
-        page = self.allocate_page()
-        page.incr_pin()
-        return page
+    def new_page(self, page_id):
+        p = self.__init__(page_id)
+        p.incr_pin()
+        return p
 
-    # TODO:
-    def allocate_page(self):
-        pass
 
-    def get_page(self, page_id):
-        for page in self.buffer:
-            if page.index == page_id:
+    def get_page(self, p_id):
+        for p in self.buffer:
+            if p == p_id:
                 return page
         # page not in buffer
         pageLRU = self.replace.least_recently_used()
         if pageLRU.is_modified():
             self.write_page(page)
 
-        return self.read_page(page_id)
+        return self.read_page(p_id)
 
     # TODO:
     def read_page(self, page):

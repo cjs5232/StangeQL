@@ -15,7 +15,7 @@ Authors:
 class Page:
 
     def __init__(self, id):
-        self.index = id
+        self.id = id
         self.pinCount = 0
         self.modified = False
         self.state = -1
@@ -31,3 +31,6 @@ class Page:
 
     def get_pin(self):
         return self.pinCount
+
+    def get_id(self):
+        return self.id

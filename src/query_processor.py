@@ -447,7 +447,7 @@ class QueryProcessor:
 
             inputList = readInput.split(';')[0].split(" ")
             inputList = [input for input in inputList if input != blankString]
-            # print("INPUT LIST:", inputList) #TEMPORARY
+            print("\n")
             status = self.process_input(inputList)
             if status == 0:
                 print("SUCCESS\n")
