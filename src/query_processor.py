@@ -61,15 +61,19 @@ class QueryProcessor:
         table_name = query[2]
 
         # Steup
+        
         if "()" in table_name:
             print("Table with no attributes")
             return 1
         elif "(" in table_name:
             table_name = table_name[:-1]
-        elif start_idx+1 < query.__sizeof__():
+        else:
+            print("Incorrect format, ( expected")
             return 1
-        elif query[start_idx] == "(":
+        
+        if query[start_idx] == "(":
             start_idx = 4
+            
 
         # Check catalog
         does_table_exist = self.cat.table_exists(table_name)
