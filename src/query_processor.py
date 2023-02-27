@@ -323,7 +323,6 @@ class QueryProcessor:
         return 0
 
     def display(self):
-
         return 0
     
     def display_schema_cmd(self) -> int:
@@ -461,7 +460,7 @@ class QueryProcessor:
         # inputString = self.remove_blank_entries(inputString) #TODO LATER
         attribs = self.inputString.split("(")[1:]
         attribs = self.remove_blank_entries(attribs)
-        attribs = ' '.join(str(x) for x in attribs).replace("varchar ", "varchar(")
+        attribs = ' '.join(str(x) for x in attribs).replace("char ", "char(")
         attribs = attribs.split(",")
         temp_attribs = []
         processed_attribs = []
@@ -471,11 +470,9 @@ class QueryProcessor:
             if i[0] == " ":
                 i = i[1:]
             temp_attribs.append(i)
-        print(temp_attribs)
         for processed_attrib in temp_attribs:
             processed_attrib = self.remove_blank_entries(processed_attrib.split(" "))
             processed_attribs.append(processed_attrib)
-    
 
         print(processed_attribs)
         # return inputString
@@ -525,16 +522,16 @@ class QueryProcessor:
 
             # self.commandArgs = self.process_cmds(inputString) # TODO implement for create and select and insert
             commands = {
-                "create" : self.create_table_cmd(),
-                "select": self.select_cmd(),
-                "insert" : self.insert_cmd(),
-                "drop" : self.drop_cmd(),
-                "alter" : self.alter_cmd(),
-                "delete" : self.delete_cmd(),
-                "update" : self.update_cmd(),
-                "display" : self.display()
+                "create" : lambda: self.create_table_cmd(),
+                "select": lambda: self.select_cmd(),
+                "insert" : lambda: self.insert_cmd(),
+                "drop" : lambda: self.drop_cmd(),
+                "alter" : lambda: self.alter_cmd(),
+                "delete" : lambda: self.delete_cmd(),
+                "update" : lambda: self.update_cmd(),
+                "display" : lambda: self.display()
             }
-            status = commands.get(specificCommand)
+            status = commands.get(specificCommand, lambda: "invalid")()
 
             print("\n")
             # status = self.process_input(inputString)
