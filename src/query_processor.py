@@ -13,6 +13,9 @@ import re
 import catalog
 import storage_manager
 
+BAD_STATUS = 1
+GOOD_STATUS = 0
+
 class QueryProcessor:
 
     def __init__(self, dbloc, pageSize, bufferSize) -> None:
@@ -40,17 +43,17 @@ class QueryProcessor:
         if "varchar" in d_type:
             n = re.findall("^varchar\(\d+\)$", d_type)
             if len(n) == 1: 
-                return 0
+                return GOOD_STATUS
             else: 
-                return 1
+                return BAD_STATUS
         elif "char" in d_type:
             n = re.findall("^char\(\d+\)$", d_type)
-            if len(n) == 1: return 0
-            else: return 1
+            if len(n) == 1: return GOOD_STATUS
+            else: return BAD_STATUS
         elif d_type in valid_types:
-            return 0
+            return GOOD_STATUS
         else:
-            return 1
+            return BAD_STATUS
 
 
     # def create_table_cmd(self, query:list) -> int:
@@ -71,7 +74,7 @@ class QueryProcessor:
 
     #         if "()" in table_name:
     #             print("Table with no attributes")
-    #             return 1
+    #             return BAD_STATUS
     #         elif "(" in table_name:
     #             split_string = table_name.split('(')
     #             query.remove(table_name)
@@ -93,9 +96,9 @@ class QueryProcessor:
     #         does_table_exist = self.cat.table_exists(table_name)
     #         if does_table_exist == 1: # 1 meaning table does exist
     #             print(f"Table of name {table_name} already exists")
-    #             return 1
+    #             return BAD_STATUS
     #         elif does_table_exist == 2: # 2 meaning no catalog found
-    #             return 1
+    #             return BAD_STATUS
 
     #         # Loop through attributes
     #         i = start_idx
@@ -116,11 +119,11 @@ class QueryProcessor:
 
     #             if name in attributes.keys():
     #                 print(f'Duplicate attribute name "{name}"')
-    #                 return 1
+    #                 return BAD_STATUS
 
     #             if self.check_data_type(d_type) == 1:
     #                 print(f'Invalid data type "{d_type}"')
-    #                 return 1
+    #                 return BAD_STATUS
 
     #             if "," in d_type:
     #                 d_type = d_type.rstrip(',')
@@ -138,14 +141,14 @@ class QueryProcessor:
     #                 i += 3
     #             elif "primarykey" in query[i+2] and "primarykey" in attributes.keys():
     #                 print("More than 1 primary key")
-    #                 return 1
+    #                 return BAD_STATUS
     #             else:
     #                 attributes[name] = d_type
     #                 i += 2
 
     #         if "primarykey" not in attributes.keys():
     #             print("No primary key defined")
-    #             return 1
+    #             return BAD_STATUS
 
 
     #         # {
@@ -172,7 +175,7 @@ class QueryProcessor:
 
     #         returnCode = self.cat.add_table(table)
     #         if returnCode == 1:
-    #             return 1
+    #             return BAD_STATUS
 
     #         status = self.StorageM.create_table(table_name)
 
@@ -180,7 +183,7 @@ class QueryProcessor:
     #     except:
     #         #TODO actual checks for things below
     #         #no paren around tab_name, extra parameters in the parens that arent primarykey
-    #         return 1
+    #         return BAD_STATUS
 
     # def select_cmd(self, query:list) -> int:
     #     """
@@ -196,7 +199,7 @@ class QueryProcessor:
 
     #     if "from" not in query:
     #         print('"from" keyword missing in select query')
-    #         return 1
+    #         return BAD_STATUS
 
     #     for i in range(len(query)):
     #         if query[i] == "from":
@@ -206,28 +209,28 @@ class QueryProcessor:
     #     does_table_exist = self.cat.table_exists(table_name)
     #     if does_table_exist == 0: # 0 meaning table does NOT exist
     #         print(f"No such table {table_name}")
-    #         return 1
+    #         return BAD_STATUS
     #     elif does_table_exist == 2: # 2 meaning no catalog found
-    #         return 1
+    #         return BAD_STATUS
         
     #     if query[1] == "*":
     #         attributes.append(query[1])
     #     else: # Assume single primary key select 
     #         attributes.append(query[1]) # TODO: fix this to check for non-primary key?
     #         # print(f"Invalid selection: {query[1]}")
-    #         # return 1
+    #         # return BAD_STATUS
         
     #     # Get Data from Storage Manager: Expecting return: data = [(), (), ...]
     #     data = self.StorageM.get_records(table_name)
     #     if data == 1:
-    #         return 1
+    #         return BAD_STATUS
 
     #     # Get column names from catalog
     #     columns = []
     #     attributes = self.cat.table_attributes(table_name)
 
     #     if attributes == 1:
-    #         return 1
+    #         return BAD_STATUS
     #     else:
     #         for i in attributes:
     #             columns.append(i['name'])
@@ -255,7 +258,7 @@ class QueryProcessor:
     #         print(row)
     #     print("\n")
         
-    #     return 0
+    #     return GOOD_STATUS
 
     # def insert_cmd(self, query:list) -> int:
     #     """
@@ -297,7 +300,7 @@ class QueryProcessor:
         
     #     attributes = self.cat.table_attributes(table_name)
     #     if attributes == 1:
-    #         return 1
+    #         return BAD_STATUS
         
     #     result = self.StorageM.insert_record(table_name, attributes, values)
     #     return result # update return based off storage manager
@@ -306,32 +309,33 @@ class QueryProcessor:
         status = self.process_complex_cmds()
 
         if not ' '.join(self.commandPrefix[:2]) == 'create table':
-            return 1
-
+            return BAD_STATUS
+        if self.commandPrefix[2] in self.keywords:
+            return BAD_STATUS
 
         return status
     
     def select_cmd(self):
-        return 0
+        return GOOD_STATUS
     
     def insert_cmd(self):
         status = self.process_complex_cmds()
         return status
     
     def drop_cmd(self):
-        return 0
+        return GOOD_STATUS
 
     def alter_cmd(self):
-        return 0
+        return GOOD_STATUS
 
     def delete_cmd(self):
-        return 0
+        return GOOD_STATUS
 
     def update_cmd(self):
-        return 0
+        return GOOD_STATUS
 
     def display(self):
-        return 0
+        return GOOD_STATUS
     
     def display_schema_cmd(self) -> int:
         """
@@ -344,14 +348,14 @@ class QueryProcessor:
         catalog = self.cat.get_catalog()
 
         if catalog == 1:
-            return 1
+            return BAD_STATUS
         
         for i in catalog['tables']:
             tables.append(i['name'])
         
         if len(tables) == 0:
             print("\nNo tables to display")
-            return 0
+            return GOOD_STATUS
         
         print("\nTables:\n")
         
@@ -360,7 +364,7 @@ class QueryProcessor:
             if i < len(tables) - 1:
                 print("\n")
         
-        return 0
+        return GOOD_STATUS
 
     def display_info_cmd(self, table_name:str) -> int:
         """
@@ -369,9 +373,9 @@ class QueryProcessor:
         All output comes from Catalog.print_table.
         """
         if self.cat.print_table(table_name) == 1:
-            return 1 # FAILURE
+            return BAD_STATUS # FAILURE
 
-        return 0 # SUCCESS
+        return GOOD_STATUS # SUCCESS
 
 
     def help(self) -> int:
@@ -415,7 +419,7 @@ class QueryProcessor:
                     
                     ]"""
         print(helpMsg)
-        return 0
+        return GOOD_STATUS
 
     def process_input(self, query:list) -> int:
         """
@@ -435,9 +439,9 @@ class QueryProcessor:
                     status = self.display_info_cmd(query[2])
                     return  status
                 except IndexError:
-                    return 1
+                    return BAD_STATUS
             else:
-                return 1
+                return BAD_STATUS
         elif query[0] == "select":
             status = self.select_cmd(query)
             return status
@@ -476,7 +480,7 @@ class QueryProcessor:
         for i in attribs:
             if i == '' or i == ')':
                 print(f"Error in formatting <{self.inputString}>")
-                return 1
+                return BAD_STATUS
             if i[-1] == ")":
                 i = i[:-1]
             if i[0] == " ":
@@ -487,7 +491,7 @@ class QueryProcessor:
             processed_attribs.append(processed_attrib)
 
         self.commandArgs = processed_attribs
-        return 0
+        return GOOD_STATUS
 
     def remove_blank_entries(self, inputString):
         """
