@@ -24,6 +24,9 @@ class QueryProcessor:
 
         self.inputString = ""
         self.commandArgs = []
+        self.commandPrefix = []
+
+        self.keywords = ["select", "create", "insert", "delete", "update", "display", "where", "set", "from", "orderby", "and", "or", "table", "notnull", "unique", "primarykey", "alter", "drop", "add", "default"]
 
 
     def check_data_type(self, d_type:str) -> int:
@@ -302,6 +305,8 @@ class QueryProcessor:
     def create_table_cmd(self):
         status = self.process_complex_cmds()
 
+        if not ' '.join(self.commandPrefix[:2]) == 'create table':
+            return 1
 
 
         return status
@@ -524,7 +529,7 @@ class QueryProcessor:
                 print(f"Incorrect format <{''.join(str(x) for x in readInput)}>")
                 status = 1
             specificCommand = commandPrefix[0]
-
+            self.commandPrefix = commandPrefix
             commands = {
                 "create" : lambda: self.create_table_cmd(),
                 "select": lambda: self.select_cmd(),
