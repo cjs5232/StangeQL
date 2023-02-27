@@ -300,15 +300,18 @@ class QueryProcessor:
     #     return result # update return based off storage manager
 
     def create_table_cmd(self):
-        self.process_complex_cmds()
-        return 0
+        status = self.process_complex_cmds()
+
+
+
+        return status
     
     def select_cmd(self):
         return 0
     
     def insert_cmd(self):
-        self.process_complex_cmds()
-        return 0
+        status = self.process_complex_cmds()
+        return status
     
     def drop_cmd(self):
         return 0
@@ -464,7 +467,11 @@ class QueryProcessor:
         attribs = attribs.split(",")
         temp_attribs = []
         processed_attribs = []
+        
         for i in attribs:
+            if i == '' or i == ')':
+                print(f"Error in formatting <{self.inputString}>")
+                return 1
             if i[-1] == ")":
                 i = i[:-1]
             if i[0] == " ":
@@ -474,8 +481,8 @@ class QueryProcessor:
             processed_attrib = self.remove_blank_entries(processed_attrib.split(" "))
             processed_attribs.append(processed_attrib)
 
-        print(processed_attribs)
-        # return inputString
+        self.commandArgs = processed_attribs
+        return 0
 
     def remove_blank_entries(self, inputString):
         """
@@ -510,17 +517,14 @@ class QueryProcessor:
             while not ";" in readInput:
                 readInput += " " + input().lower()
 
-            # insert into foo values (1 foo true 2.1), (3 baz true 4.14), (2 bar false 5.2);
-
             inputString = readInput.replace(";", "").lower()
             self.inputString = inputString
             commandPrefix = inputString.split("(")[0].split(" ")
             if len(commandPrefix) < 3 and "display" not in commandPrefix:
-                print(f"Incorrect format <{''.join(str(x) for x in commandPrefix)}>")
-                return 1
+                print(f"Incorrect format <{''.join(str(x) for x in readInput)}>")
+                status = 1
             specificCommand = commandPrefix[0]
 
-            # self.commandArgs = self.process_cmds(inputString) # TODO implement for create and select and insert
             commands = {
                 "create" : lambda: self.create_table_cmd(),
                 "select": lambda: self.select_cmd(),
@@ -531,9 +535,9 @@ class QueryProcessor:
                 "update" : lambda: self.update_cmd(),
                 "display" : lambda: self.display()
             }
-            status = commands.get(specificCommand, lambda: "invalid")()
+            if status != 1:
+                status = commands.get(specificCommand, lambda: "invalid")()
 
-            print("\n")
             # status = self.process_input(inputString)
             if status == 0:
                 print("SUCCESS\n")
