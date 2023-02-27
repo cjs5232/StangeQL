@@ -22,6 +22,9 @@ class QueryProcessor:
         self.cat = catalog.Catalog(dbloc, pageSize, bufferSize)
         self.StorageM = storage_manager.StorageManager(dbloc, pageSize, bufferSize)
 
+        self.inputString = ""
+        self.commandArgs = []
+
 
     def check_data_type(self, d_type:str) -> int:
         """
@@ -47,260 +50,281 @@ class QueryProcessor:
             return 1
 
 
-    def create_table_cmd(self, query:list) -> int:
-        """
-        Parse create table query and collect table name and attributes.
-        Use storage manager for creating the actual table file.
+    # def create_table_cmd(self, query:list) -> int:
+    #     """
+    #     Parse create table query and collect table name and attributes.
+    #     Use storage manager for creating the actual table file.
 
-        Creates the schema for a table. The schema is added to the catalog.
-        The schema will be used by the system to store/access/update/delete
-        data in the table.
-        """
-        try:
-            start_idx = 3
-            attributes = {} # Initialize dictionary to hold attributes (name, type) NOTE if key=primarykey value=column name
-            table_name = query[2]
+    #     Creates the schema for a table. The schema is added to the catalog.
+    #     The schema will be used by the system to store/access/update/delete
+    #     data in the table.
+    #     """
+    #     try:
+    #         start_idx = 3
+    #         attributes = {} # Initialize dictionary to hold attributes (name, type) NOTE if key=primarykey value=column name
+    #         table_name = query[2]
 
-            # Steup
+    #         # Steup
 
-            if "()" in table_name:
-                print("Table with no attributes")
-                return 1
-            elif "(" in table_name:
-                split_string = table_name.split('(')
-                query.remove(table_name)
+    #         if "()" in table_name:
+    #             print("Table with no attributes")
+    #             return 1
+    #         elif "(" in table_name:
+    #             split_string = table_name.split('(')
+    #             query.remove(table_name)
 
-                # there was a "(" + split
-                table_name = split_string[0]
-                query.insert(2, table_name)
-                attr_split = split_string[1]
-                if attr_split != '':
-                    query.insert(3, attr_split)
+    #             # there was a "(" + split
+    #             table_name = split_string[0]
+    #             query.insert(2, table_name)
+    #             attr_split = split_string[1]
+    #             if attr_split != '':
+    #                 query.insert(3, attr_split)
 
-                #table_name = table_name[:-1]
+    #             #table_name = table_name[:-1]
 
-            elif query[start_idx] == "(":
-                start_idx = 4
-
-
-            # Check catalog
-            does_table_exist = self.cat.table_exists(table_name)
-            if does_table_exist == 1: # 1 meaning table does exist
-                print(f"Table of name {table_name} already exists")
-                return 1
-            elif does_table_exist == 2: # 2 meaning no catalog found
-                return 1
-
-            # Loop through attributes
-            i = start_idx
-            while i < len(query):
-                if query[i] == ")":
-                    break
-
-                name = query[i]
-                if "(" in name:
-                    name = name.strip("(")
-
-                d_type = query[i+1]
-
-                if "))" in d_type:
-                    d_type = d_type[:-1]
-                elif "char" not in d_type and "varchar" not in d_type and ")" in d_type:
-                    d_type = d_type[:-1]
-
-                if name in attributes.keys():
-                    print(f'Duplicate attribute name "{name}"')
-                    return 1
-
-                if self.check_data_type(d_type) == 1:
-                    print(f'Invalid data type "{d_type}"')
-                    return 1
-
-                if "," in d_type:
-                    d_type = d_type.rstrip(',')
-                    attributes[name] = d_type
-                    i += 2
-                    continue
-                elif len(query) <= i+2:
-                    attributes[name] = d_type
-                    break
-
-                if "primarykey" in query[i+2] and "primarykey" not in attributes.keys():
-                    query[i+2].rstrip(',')
-                    attributes[name] = d_type
-                    attributes["primarykey"] = name
-                    i += 3
-                elif "primarykey" in query[i+2] and "primarykey" in attributes.keys():
-                    print("More than 1 primary key")
-                    return 1
-                else:
-                    attributes[name] = d_type
-                    i += 2
-
-            if "primarykey" not in attributes.keys():
-                print("No primary key defined")
-                return 1
+    #         elif query[start_idx] == "(":
+    #             start_idx = 4
 
 
-            # {
-            # "name" : "num",
-            # "type" : "integer",
-            # "primary_key" : False
-            # }
-            table = {
-                    "name" : table_name,
-                    "pageCount" : 0,
-                    "recordCount" : 0,
-                    "attributes" : []
-            }
+    #         # Check catalog
+    #         does_table_exist = self.cat.table_exists(table_name)
+    #         if does_table_exist == 1: # 1 meaning table does exist
+    #             print(f"Table of name {table_name} already exists")
+    #             return 1
+    #         elif does_table_exist == 2: # 2 meaning no catalog found
+    #             return 1
 
-            for i in attributes:
-                if not i == "primarykey": # Add all non primary keys to array of attributes in table dict
-                    table["attributes"].append({"name" : i, "type": attributes[i], "primary_key" : False})
+    #         # Loop through attributes
+    #         i = start_idx
+    #         while i < len(query):
+    #             if query[i] == ")":
+    #                 break
+
+    #             name = query[i]
+    #             if "(" in name:
+    #                 name = name.strip("(")
+
+    #             d_type = query[i+1]
+
+    #             if "))" in d_type:
+    #                 d_type = d_type[:-1]
+    #             elif "char" not in d_type and "varchar" not in d_type and ")" in d_type:
+    #                 d_type = d_type[:-1]
+
+    #             if name in attributes.keys():
+    #                 print(f'Duplicate attribute name "{name}"')
+    #                 return 1
+
+    #             if self.check_data_type(d_type) == 1:
+    #                 print(f'Invalid data type "{d_type}"')
+    #                 return 1
+
+    #             if "," in d_type:
+    #                 d_type = d_type.rstrip(',')
+    #                 attributes[name] = d_type
+    #                 i += 2
+    #                 continue
+    #             elif len(query) <= i+2:
+    #                 attributes[name] = d_type
+    #                 break
+
+    #             if "primarykey" in query[i+2] and "primarykey" not in attributes.keys():
+    #                 query[i+2].rstrip(',')
+    #                 attributes[name] = d_type
+    #                 attributes["primarykey"] = name
+    #                 i += 3
+    #             elif "primarykey" in query[i+2] and "primarykey" in attributes.keys():
+    #                 print("More than 1 primary key")
+    #                 return 1
+    #             else:
+    #                 attributes[name] = d_type
+    #                 i += 2
+
+    #         if "primarykey" not in attributes.keys():
+    #             print("No primary key defined")
+    #             return 1
 
 
-            for i in range(len(table["attributes"])):
-                #Iterate through and find the primary key fugger
-                if attributes["primarykey"] == table["attributes"][i]["name"]:
-                    table["attributes"][i].update({"primary_key" : True}) # Updating to little T true in the catalog?
+    #         # {
+    #         # "name" : "num",
+    #         # "type" : "integer",
+    #         # "primary_key" : False
+    #         # }
+    #         table = {
+    #                 "name" : table_name,
+    #                 "pageCount" : 0,
+    #                 "recordCount" : 0,
+    #                 "attributes" : []
+    #         }
 
-            returnCode = self.cat.add_table(table)
-            if returnCode == 1:
-                return 1
-
-            status = self.StorageM.create_table(table_name)
-
-            return status
-        except:
-            #TODO actual checks for things below
-            #no paren around tab_name, extra parameters in the parens that arent primarykey
-            return 1
-
+    #         for i in attributes:
+    #             if not i == "primarykey": # Add all non primary keys to array of attributes in table dict
+    #                 table["attributes"].append({"name" : i, "type": attributes[i], "primary_key" : False})
 
 
+    #         for i in range(len(table["attributes"])):
+    #             #Iterate through and find the primary key fugger
+    #             if attributes["primarykey"] == table["attributes"][i]["name"]:
+    #                 table["attributes"][i].update({"primary_key" : True}) # Updating to little T true in the catalog?
 
-    def select_cmd(self, query:list) -> int:
-        """
-        Parse select query and use storage manager to access data.
-        Once data is returned from storage manager, get the table column
-        names from the catalog and output the table in a clean/formatted
-        way.
+    #         returnCode = self.cat.add_table(table)
+    #         if returnCode == 1:
+    #             return 1
 
-        Access data in tables. Will display all of the data in the table in
-        an easy to read format, including column names.
-        """
-        attributes = []
+    #         status = self.StorageM.create_table(table_name)
 
-        if "from" not in query:
-            print('"from" keyword missing in select query')
-            return 1
+    #         return status
+    #     except:
+    #         #TODO actual checks for things below
+    #         #no paren around tab_name, extra parameters in the parens that arent primarykey
+    #         return 1
 
-        for i in range(len(query)):
-            if query[i] == "from":
-                table_name = query[i+1]
+    # def select_cmd(self, query:list) -> int:
+    #     """
+    #     Parse select query and use storage manager to access data.
+    #     Once data is returned from storage manager, get the table column
+    #     names from the catalog and output the table in a clean/formatted
+    #     way.
+
+    #     Access data in tables. Will display all of the data in the table in
+    #     an easy to read format, including column names.
+    #     """
+    #     attributes = []
+
+    #     if "from" not in query:
+    #         print('"from" keyword missing in select query')
+    #         return 1
+
+    #     for i in range(len(query)):
+    #         if query[i] == "from":
+    #             table_name = query[i+1]
         
-        # Check catalog
-        does_table_exist = self.cat.table_exists(table_name)
-        if does_table_exist == 0: # 0 meaning table does NOT exist
-            print(f"No such table {table_name}")
-            return 1
-        elif does_table_exist == 2: # 2 meaning no catalog found
-            return 1
+    #     # Check catalog
+    #     does_table_exist = self.cat.table_exists(table_name)
+    #     if does_table_exist == 0: # 0 meaning table does NOT exist
+    #         print(f"No such table {table_name}")
+    #         return 1
+    #     elif does_table_exist == 2: # 2 meaning no catalog found
+    #         return 1
         
-        if query[1] == "*":
-            attributes.append(query[1])
-        else: # Assume single primary key select 
-            attributes.append(query[1]) # TODO: fix this to check for non-primary key?
-            # print(f"Invalid selection: {query[1]}")
-            # return 1
+    #     if query[1] == "*":
+    #         attributes.append(query[1])
+    #     else: # Assume single primary key select 
+    #         attributes.append(query[1]) # TODO: fix this to check for non-primary key?
+    #         # print(f"Invalid selection: {query[1]}")
+    #         # return 1
         
-        # Get Data from Storage Manager: Expecting return: data = [(), (), ...]
-        data = self.StorageM.get_records(table_name)
-        if data == 1:
-            return 1
+    #     # Get Data from Storage Manager: Expecting return: data = [(), (), ...]
+    #     data = self.StorageM.get_records(table_name)
+    #     if data == 1:
+    #         return 1
 
-        # Get column names from catalog
-        columns = []
-        attributes = self.cat.table_attributes(table_name)
+    #     # Get column names from catalog
+    #     columns = []
+    #     attributes = self.cat.table_attributes(table_name)
 
-        if attributes == 1:
-            return 1
-        else:
-            for i in attributes:
-                columns.append(i['name'])
+    #     if attributes == 1:
+    #         return 1
+    #     else:
+    #         for i in attributes:
+    #             columns.append(i['name'])
 
-        # Find necessary padding for columns and store in column_width
-        length_list = [len(str(element)) for row in data for element in row]
-        for i in columns:
-            length_list.append(len(i))
-        column_width = max(length_list)
+    #     # Find necessary padding for columns and store in column_width
+    #     length_list = [len(str(element)) for row in data for element in row]
+    #     for i in columns:
+    #         length_list.append(len(i))
+    #     column_width = max(length_list)
 
-        # Format columns and barriers
-        columns_formatted = "|".join(str(element).center(column_width +2) for element in columns)
-        columns_formatted = "|" + columns_formatted + "|"
-        horizontal_lines = "-" * (len(columns_formatted))
+    #     # Format columns and barriers
+    #     columns_formatted = "|".join(str(element).center(column_width +2) for element in columns)
+    #     columns_formatted = "|" + columns_formatted + "|"
+    #     horizontal_lines = "-" * (len(columns_formatted))
 
-        # Print column section
-        print(horizontal_lines)
-        print(columns_formatted)
-        print(horizontal_lines)
+    #     # Print column section
+    #     print(horizontal_lines)
+    #     print(columns_formatted)
+    #     print(horizontal_lines)
 
-        # Print rows
-        for row in data:
-            row = "|".join(str(element).center(column_width + 2) for element in row)
-            row = "|" + row + "|"
-            print(row)
-        print("\n")
+    #     # Print rows
+    #     for row in data:
+    #         row = "|".join(str(element).center(column_width + 2) for element in row)
+    #         row = "|" + row + "|"
+    #         print(row)
+    #     print("\n")
         
+    #     return 0
+
+    # def insert_cmd(self, query:list) -> int:
+    #     """
+    #     Parse the insert into query and store attributes. Use the
+    #     buffer manager to physically add the tuples of data into the table.
+
+    #     Insert tuple(s) of information into a table.
+    #     """
+    #     values = []
+    #     table_name = query[2]
+    #     query = query[4:]
+
+    #     query_str = ' '.join(query)
+
+    #     loop = True
+    #     while loop: # Each loop builds a tuple of row values and adds tuple to values list
+    #         vals = [] # list to hold each element in a row
+    #         cur_val = "" # Current value being built
+    #         for i in range(len(query_str)):
+    #             if query_str[i] == "(" or query_str[i] == ',':
+    #                 pass
+    #             elif query_str[i] == ")":
+    #                 if i == len(query_str) - 1:
+    #                     vals.append(cur_val)
+    #                     loop = False
+    #                     query_str = query_str[i+1:]
+    #                     break
+    #                 else:
+    #                     vals.append(cur_val)
+    #                     query_str = query_str[i+1:]
+    #                     break
+    #             elif query_str[i] == ' ':
+    #                 vals.append(cur_val)
+    #                 cur_val = ""
+    #             else:
+    #                 cur_val += query_str[i]
+                    
+    #         values.append(tuple(vals))
+        
+    #     attributes = self.cat.table_attributes(table_name)
+    #     if attributes == 1:
+    #         return 1
+        
+    #     result = self.StorageM.insert_record(table_name, attributes, values)
+    #     return result # update return based off storage manager
+
+    def create_table_cmd(self):
+        return 0
+    
+    def select_cmd(self):
+        return 0
+    
+    def insert_cmd(self):
+        self.process_complex_cmds()
+        return 0
+    
+    def drop_cmd(self):
         return 0
 
+    def alter_cmd(self):
+        return 0
 
-    def insert_cmd(self, query:list) -> int:
-        """
-        Parse the insert into query and store attributes. Use the
-        buffer manager to physically add the tuples of data into the table.
+    def delete_cmd(self):
+        return 0
 
-        Insert tuple(s) of information into a table.
-        """
-        values = []
-        table_name = query[2]
-        query = query[4:]
+    def update_cmd(self):
+        return 0
 
-        query_str = ' '.join(query)
+    def display(self):
 
-        loop = True
-        while loop: # Each loop builds a tuple of row values and adds tuple to values list
-            vals = [] # list to hold each element in a row
-            cur_val = "" # Current value being built
-            for i in range(len(query_str)):
-                if query_str[i] == "(" or query_str[i] == ',':
-                    pass
-                elif query_str[i] == ")":
-                    if i == len(query_str) - 1:
-                        vals.append(cur_val)
-                        loop = False
-                        query_str = query_str[i+1:]
-                        break
-                    else:
-                        vals.append(cur_val)
-                        query_str = query_str[i+1:]
-                        break
-                elif query_str[i] == ' ':
-                    vals.append(cur_val)
-                    cur_val = ""
-                else:
-                    cur_val += query_str[i]
-                    
-            values.append(tuple(vals))
-        
-        attributes = self.cat.table_attributes(table_name)
-        if attributes == 1:
-            return 1
-        
-        result = self.StorageM.insert_record(table_name, attributes, values)
-        return result # update return based off storage manager
-
-
+        return 0
+    
     def display_schema_cmd(self) -> int:
         """
         Displays the catalog of the database in an easy to read format.
@@ -329,7 +353,6 @@ class QueryProcessor:
                 print("\n")
         
         return 0
-
 
     def display_info_cmd(self, table_name:str) -> int:
         """
@@ -386,7 +409,6 @@ class QueryProcessor:
         print(helpMsg)
         return 0
 
-
     def process_input(self, query:list) -> int:
         """
         Process query. Depending on the command entered, call the 
@@ -421,6 +443,53 @@ class QueryProcessor:
         status = 1 #Bad status
         return status
 
+    def process_complex_cmds(self):
+        """
+        Process passed commands for select, create, and insert statements where there are weird things with parentheses and multiple inserts being passed.
+
+        Follows some easy steps:
+        - Get rid of the prefix commands (like create table foo)
+        - Join the array into one string again
+
+        Args:
+            inputString (str): passed command from user
+
+        Returns:
+            array: array of attributes to be processed.
+        """
+        # inputString = self.remove_blank_entries(inputString) #TODO LATER
+        attribs = self.inputString.split("(")[1:]
+        attribs = self.remove_blank_entries(attribs)
+        attribs = ' '.join(str(x) for x in attribs).replace("varchar ", "varchar(")
+        attribs = attribs.split(",")
+        temp_attribs = []
+        processed_attribs = []
+        for i in attribs:
+            if i[-1] == ")":
+                i = i[:-1]
+            if i[0] == " ":
+                i = i[1:]
+            temp_attribs.append(i)
+        print(temp_attribs)
+        for processed_attrib in temp_attribs:
+            processed_attrib = self.remove_blank_entries(processed_attrib.split(" "))
+            processed_attribs.append(processed_attrib)
+    
+
+        print(processed_attribs)
+        # return inputString
+
+    def remove_blank_entries(self, inputString):
+        """
+        Remove blank strings from array entry
+
+        Args:
+            inputString (arr): input list of commands
+
+        Returns:
+            array: cleaned input list
+        """
+        return [input for input in inputString if input != ""]
 
     def main(self):
         """
@@ -432,23 +501,42 @@ class QueryProcessor:
         """
         print("\nPlease enter commands, enter <quit> to shutdown the db\n")
 
-        blankString = ''
-
         while True:
             status = 0 
             readInput = input("JottQL> ").lower()
             if readInput == "<quit>":
                 return status
-            if readInput == "<help>": #This is a placeholder
+            if readInput == "<help>":
                 self.help()
                 continue
             while not ";" in readInput:
                 readInput += " " + input().lower()
 
-            inputList = readInput.split(';')[0].split(" ")
-            inputList = [input for input in inputList if input != blankString]
+            # insert into foo values (1 foo true 2.1), (3 baz true 4.14), (2 bar false 5.2);
+
+            inputString = readInput.replace(";", "").lower()
+            self.inputString = inputString
+            commandPrefix = inputString.split("(")[0].split(" ")
+            if len(commandPrefix) < 3 and "display" not in commandPrefix:
+                print(f"Incorrect format <{''.join(str(x) for x in commandPrefix)}>")
+                return 1
+            specificCommand = commandPrefix[0]
+
+            # self.commandArgs = self.process_cmds(inputString) # TODO implement for create and select and insert
+            commands = {
+                "create" : self.create_table_cmd(),
+                "select": self.select_cmd(),
+                "insert" : self.insert_cmd(),
+                "drop" : self.drop_cmd(),
+                "alter" : self.alter_cmd(),
+                "delete" : self.delete_cmd(),
+                "update" : self.update_cmd(),
+                "display" : self.display()
+            }
+            status = commands.get(specificCommand)
+
             print("\n")
-            status = self.process_input(inputList)
+            # status = self.process_input(inputString)
             if status == 0:
                 print("SUCCESS\n")
             else:
@@ -457,4 +545,5 @@ class QueryProcessor:
 
 if __name__ == '__main__':
     QP = QueryProcessor("testDB", "1024", "64")
+    QP.main()
     print(f"Exit Code: {QP.main()}")
