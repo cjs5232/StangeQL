@@ -300,6 +300,7 @@ class QueryProcessor:
     #     return result # update return based off storage manager
 
     def create_table_cmd(self):
+        self.process_complex_cmds()
         return 0
     
     def select_cmd(self):
