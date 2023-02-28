@@ -310,7 +310,7 @@ class QueryProcessor:
         Create a table with the catalog with given args. (Includes error checks)
 
         Returns:
-            _type_: _description_
+            status: GOOD_STATUS or BAD_STATUS
         """
         status = self.process_complex_cmds()
 
