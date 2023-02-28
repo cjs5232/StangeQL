@@ -26,8 +26,8 @@ class QueryProcessor:
         self.StorageM = storage_manager.StorageManager(dbloc, pageSize, bufferSize)
 
         self.inputString = ""
-        self.commandArgs = []
-        self.commandPrefix = []
+        self.command_args = []
+        self.command_prefix = []
 
         self.keywords = ["select", "create", "insert", "delete", "update", "display", "where", "set", "from", "orderby", "and", "or", "table", "notnull", "unique", "primarykey", "alter", "drop", "add", "default"]
 
@@ -93,10 +93,10 @@ class QueryProcessor:
 
 
     #         # Check catalog
-    #         does_table_exist = self.cat.table_exists(table_name)
-    #         if does_table_exist == 1: # 1 meaning table does exist
-    #             print(f"Table of name {table_name} already exists")
-    #             return BAD_STATUS
+            # does_table_exist = self.cat.table_exists(table_name)
+            # if does_table_exist == 1: # 1 meaning table does exist
+            #     print(f"Table of name {table_name} already exists")
+            #     return BAD_STATUS
     #         elif does_table_exist == 2: # 2 meaning no catalog found
     #             return BAD_STATUS
 
@@ -308,10 +308,63 @@ class QueryProcessor:
     def create_table_cmd(self):
         status = self.process_complex_cmds()
 
-        if not ' '.join(self.commandPrefix[:2]) == 'create table':
+        if not ' '.join(self.command_prefix[:2]) == 'create table':
             return BAD_STATUS
-        if self.commandPrefix[2] in self.keywords:
+        if self.command_prefix[2] in self.keywords:
             return BAD_STATUS
+        
+        does_table_exist = self.cat.table_exists(self.command_prefix[2])
+        if does_table_exist == 1:
+            print(f"Table of name {self.command_prefix[2]} already exists")
+            return BAD_STATUS
+        
+
+        table = {
+            "name" : self.command_prefix[2],
+            "pageCount" : 0,
+            "recordCount" : 0,
+            "attributes" : []
+        }
+
+        tableAttribNames = [] #For easier lookup
+
+        foundPrimaryKey = False
+
+        #Loop through attributes
+        for attrib_list in self.command_args:
+            if len(attrib_list) < 2:
+                print(f"Less than expected number of values <{attrib_list}>")
+                return BAD_STATUS
+            if len(attrib_list) > 5:
+                print(f"Passed attributes more than expected values <{attrib_list}>")
+                return BAD_STATUS
+            if self.check_data_type(attrib_list[1]) == BAD_STATUS:
+                print(f"Invalid datatype: <{attrib_list[1]}>")
+                return BAD_STATUS
+            
+            if attrib_list[0] in tableAttribNames:
+                print(f"Duplicate attribute {attrib_list[0]}")
+                return BAD_STATUS
+            
+            if "primarykey" in attrib_list:
+                foundPrimaryKey = True
+
+            #add to table thing
+            temp_Attrib = {
+                "name" : attrib_list[0],
+                "type" : attrib_list[1],
+                "primary_key" : "primarykey" in attrib_list, #Technically could be in position 3, 4, or 5
+                "unique" : "unique" in attrib_list,
+                "notnull" : "notnull" in attrib_list
+            }
+
+            table["attributes"].append(temp_Attrib)
+        
+        if not foundPrimaryKey:
+            print("No primary key found")
+            return BAD_STATUS
+        
+        status = self.cat.add_table(table)
 
         return status
     
@@ -335,6 +388,9 @@ class QueryProcessor:
         return GOOD_STATUS
 
     def display(self):
+
+        
+
         return GOOD_STATUS
     
     def display_schema_cmd(self) -> int:
@@ -490,7 +546,7 @@ class QueryProcessor:
             processed_attrib = self.remove_blank_entries(processed_attrib.split(" "))
             processed_attribs.append(processed_attrib)
 
-        self.commandArgs = processed_attribs
+        self.command_args = processed_attribs
         return GOOD_STATUS
 
     def remove_blank_entries(self, inputString):
@@ -527,13 +583,18 @@ class QueryProcessor:
                 readInput += " " + input().lower()
 
             inputString = readInput.replace(";", "").lower()
+            if not inputString[-1] == ")":
+                print("No closing parentheses for statement")
+                print("ERROR")
+                status = 1
+                continue
             self.inputString = inputString
-            commandPrefix = inputString.split("(")[0].split(" ")
-            if len(commandPrefix) < 3 and "display" not in commandPrefix:
+            command_prefix = inputString.split("(")[0].split(" ")
+            if len(command_prefix) < 3 and "display" not in command_prefix:
                 print(f"Incorrect format <{''.join(str(x) for x in readInput)}>")
                 status = 1
-            specificCommand = commandPrefix[0]
-            self.commandPrefix = commandPrefix
+            specificCommand = command_prefix[0]
+            self.command_prefix = command_prefix
             commands = {
                 "create" : lambda: self.create_table_cmd(),
                 "select": lambda: self.select_cmd(),
