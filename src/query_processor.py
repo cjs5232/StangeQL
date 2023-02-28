@@ -806,14 +806,15 @@ class QueryProcessor:
             for cond in self.conditionalKeywords:
                 if cond in i:
                     argumentsSplit = self.format_conditional_statement(argumentsSplit)
-
+        print(argumentsSplit)
         return GOOD_STATUS
     
-    def replace_from_array(self, arr, index, arr_to_insert):
+    def insert_into_array(self, arr, index, arr_to_insert):
         """
-        Replace a given index with an array of characters (typically the same characters but split on a different delimeter)
+        Insert a given array  of characters (typically the same characters but split on a different delimeter) into an index
         Example:
             ['select', 'one', 'two', 'three', 'from', 'foo', 'where', 'x', '=', '1', 'and', *'y=2'*, 'orderby', 'x;']
+            (In this example the given index was the y=2, but the program assumes that it has been removed)
             --> 
             ['select', 'one', 'two', 'three', 'from', 'foo', 'where', 'x', '=', '1', 'and', *'y', '=', '2'*, 'orderby', 'x;']
 
@@ -827,11 +828,11 @@ class QueryProcessor:
         Returns:
             array : updated array after replacement.
         """
-        if index >= len(arr):
-            print("Index to replace larger than allowed")
-            return []
+        # if index >= len(arr):
+        #     print("Index to replace larger than allowed")
+        #     return []
         left = arr[:index]
-        right = arr[index+1:]
+        right = arr[index:]
         return [*left, *arr_to_insert, *right]
     
     def format_conditional_statement(self, argumentsSplit):
@@ -843,13 +844,29 @@ class QueryProcessor:
                     argSplit = arg.split(cond)
                     argSplit = self.remove_blank_entries(argSplit)
                     if len(argSplit) == 2:
+                        argumentsSplit.remove(arg)
                         temp.append([index, [argSplit[0], cond, argSplit[1]]])
                         index += 2
             index += 1
 
         for indexOfInsert, insert_arr in temp:
-            argumentsSplit = self.replace_from_array(argumentsSplit, indexOfInsert, insert_arr)
+            argumentsSplit = self.insert_into_array(argumentsSplit, indexOfInsert, insert_arr)
 
+        for i in range(len(argumentsSplit)):
+            if i >= len(argumentsSplit)-1:
+                break
+            checkConditionalKeyword = argumentsSplit[i]
+            mayNeedCombining = "! = < >"
+            if checkConditionalKeyword in mayNeedCombining:
+                if argumentsSplit[i+1] in mayNeedCombining:
+                    combined = [f"{argumentsSplit[i]}{argumentsSplit[i+1]}"]
+                    argumentsSplit[i] = ''
+                    argumentsSplit[i+1] = ''
+                    argumentsSplit = self.remove_blank_entries(argumentsSplit)
+                    argumentsSplit = self.insert_into_array(argumentsSplit, i, combined)
+                    # i+=1
+
+        # print(argumentsSplit)
         return argumentsSplit
 
     def remove_blank_entries(self, passedArray):
