@@ -30,7 +30,7 @@ class QueryProcessor:
         self.command_prefix = []
 
         self.keywords = ["select", "create", "insert", "delete", "update", "display", "where", "set", "from", "orderby", "and", "or", "table", "notnull", "unique", "primarykey", "alter", "drop", "add", "default"]
-        self.conditionalKeywords = ["=", ">", "<", ">=", "<=", "!="]
+        # self.conditionalKeywords = ["!=", ">=", "<=", ">", "<", "="] #TODO pending deletion of old format code
 
 
     def check_data_type(self, d_type:str) -> int:
@@ -785,11 +785,11 @@ class QueryProcessor:
         Process the simple(r) by comparison commands for select, drop, alter, delete, update where the 
         commands follow a pretty simple flow.
 
-        Returns:
-            _type_: _description_
-        """
-        
-        '''
+        This section uses a whole lot of regex for string matching and processing, 
+        just to make everything easier for parsing down the line
+
+        Commands tested:
+
         Test commands
         (below command has different spacing also for testing)
         select one, two,three from foo where x=1 and y=2 orderby x;
@@ -798,14 +798,49 @@ class QueryProcessor:
         alter table foo add testcol boolean default False;
         delete from foo where num = 1;
         update foo set num=1;
-        '''
+        
 
-        argumentsSplit = re.split(r' |,', self.inputString)
+        For developing the regex I used
+        >>> arg = "baz<=3.2"
+        >>> regex = r'[a-z0-9]*[<=*|>=*|!=|=]+[a-z0-9.]*'
+        >>> r = re.compile(regex)
+        >>> r.match(arg)
+        <re.Match object; span=(0, 8), match='baz<=3.2'>
+        >>> regex2 = r'[<=*|>=*|!=|=]+'
+        >>> t = re.compile(regex2)
+        >>> t
+        re.compile('[<=*|>=*|!=|=]+')
+        >>> t.search(arg)
+        <re.Match object; span=(3, 5), match='<='>
+
+        Returns:
+            _type_: _description_
+        """
+        
+        argumentsSplit = re.split(r' |,', self.inputString) # Split on spaces or commas
         argumentsSplit = self.remove_blank_entries(argumentsSplit)
-        for i in argumentsSplit: #Fix formatting where conditionals may not have spacing
-            for cond in self.conditionalKeywords:
-                if cond in i:
-                    argumentsSplit = self.format_conditional_statement(argumentsSplit)
+
+        statmentWithNoSpacing = r'[a-z0-9]*[<=*|>=*|!=|=][a-z0-9.]*'
+        keywordConditional = r'[<=*|>=*|!=|=]+'
+
+        regexSpacing = re.compile(statmentWithNoSpacing)
+
+        regexKeyword = re.compile(keywordConditional)
+        for i in argumentsSplit: #Fix formatting where conditionals may not have spacing (ie baz<=3.2)
+            index = argumentsSplit.index(i)
+            matched = regexSpacing.match(i)
+            if matched == None:
+                continue
+            searched = regexKeyword.search(i)
+            keywordFound = searched.group()
+            splitAtribs = i.split(keywordFound)
+
+            argumentsSplit.remove(i)
+            argumentsSplit = self.insert_into_array(argumentsSplit, index, [splitAtribs[0], keywordFound, splitAtribs[1]])
+
+            # for cond in self.conditionalKeywords:
+            #     if cond in i:
+            #         argumentsSplit = self.format_conditional_statement(argumentsSplit)
         print(argumentsSplit)
         return GOOD_STATUS
     
@@ -813,7 +848,7 @@ class QueryProcessor:
         """
         Insert a given array  of characters (typically the same characters but split on a different delimeter) into an index
         Example:
-            ['select', 'one', 'two', 'three', 'from', 'foo', 'where', 'x', '=', '1', 'and', *'y=2'*, 'orderby', 'x;']
+            ['select', 'one', 'two', 'three', 'from', 'foo', 'where', 'x', '=', '1', 'and', ** 'orderby', 'x;']
             (In this example the given index was the y=2, but the program assumes that it has been removed)
             --> 
             ['select', 'one', 'two', 'three', 'from', 'foo', 'where', 'x', '=', '1', 'and', *'y', '=', '2'*, 'orderby', 'x;']
@@ -828,46 +863,50 @@ class QueryProcessor:
         Returns:
             array : updated array after replacement.
         """
-        # if index >= len(arr):
-        #     print("Index to replace larger than allowed")
-        #     return []
+        if index >= len(arr):
+            print("Index to replace larger than allowed")
+            return []
         left = arr[:index]
         right = arr[index:]
         return [*left, *arr_to_insert, *right]
     
-    def format_conditional_statement(self, argumentsSplit):
-        temp = []
-        index = 0
-        for arg in argumentsSplit:
-            for cond in self.conditionalKeywords:
-                if cond in arg:
-                    argSplit = arg.split(cond)
-                    argSplit = self.remove_blank_entries(argSplit)
-                    if len(argSplit) == 2:
-                        argumentsSplit.remove(arg)
-                        temp.append([index, [argSplit[0], cond, argSplit[1]]])
-                        index += 2
-            index += 1
+    # def format_conditional_statement(self, argumentsSplit):
+    #     print(argumentsSplit)
+    #     temp = []
+    #     index = 0
+    #     for arg in argumentsSplit:
+    #         for cond in self.conditionalKeywords:
+    #             if index+1 >= len(argumentsSplit):
+    #                 break
+    #             if cond in arg and ''.join([cond,argumentsSplit[index+1]]) not in self.conditionalKeywords:
+    #                 argSplit = arg.split(cond)
+    #                 argSplit = self.remove_blank_entries(argSplit)
+    #                 if len(argSplit) == 2:
+    #                     argumentsSplit.remove(arg)
+    #                     temp.append([index, [argSplit[0], cond, argSplit[1]]])
+    #                     index += 1
+    #                     continue
+    #         # index += 1
 
-        for indexOfInsert, insert_arr in temp:
-            argumentsSplit = self.insert_into_array(argumentsSplit, indexOfInsert, insert_arr)
+    #     for indexOfInsert, insert_arr in temp:
+    #         argumentsSplit = self.insert_into_array(argumentsSplit, indexOfInsert, insert_arr)
 
-        for i in range(len(argumentsSplit)):
-            if i >= len(argumentsSplit)-1:
-                break
-            checkConditionalKeyword = argumentsSplit[i]
-            mayNeedCombining = "! = < >"
-            if checkConditionalKeyword in mayNeedCombining:
-                if argumentsSplit[i+1] in mayNeedCombining:
-                    combined = [f"{argumentsSplit[i]}{argumentsSplit[i+1]}"]
-                    argumentsSplit[i] = ''
-                    argumentsSplit[i+1] = ''
-                    argumentsSplit = self.remove_blank_entries(argumentsSplit)
-                    argumentsSplit = self.insert_into_array(argumentsSplit, i, combined)
-                    # i+=1
+    #     for i in range(len(argumentsSplit)):
+    #         if i >= len(argumentsSplit)-1:
+    #             break
+    #         checkConditionalKeyword = argumentsSplit[i]
+    #         mayNeedCombining = "! = < >"
+    #         if checkConditionalKeyword in mayNeedCombining:
+    #             if argumentsSplit[i+1] in mayNeedCombining:
+    #                 combined = [f"{argumentsSplit[i]}{argumentsSplit[i+1]}"]
+    #                 argumentsSplit[i] = ''
+    #                 argumentsSplit[i+1] = ''
+    #                 argumentsSplit = self.remove_blank_entries(argumentsSplit)
+    #                 argumentsSplit = self.insert_into_array(argumentsSplit, i, combined)
+    #                 # i+=1
 
-        # print(argumentsSplit)
-        return argumentsSplit
+    #     # print(argumentsSplit)
+    #     return argumentsSplit
 
     def remove_blank_entries(self, passedArray):
         """
