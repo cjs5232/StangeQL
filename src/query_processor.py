@@ -307,7 +307,25 @@ class QueryProcessor:
 
     def create_table_cmd(self):
         """
-        Create a table with the catalog with given args. (Includes error checks)
+        This command will be used to create the schema for a table. This schema will be added to
+        the catalog. This schema will be used by the system to store/access/update/delete data in
+        the created table.
+
+        Constraints: There are two types of constraints that can be added to a single variable:
+            • notnull: The value of this attribute cannot be null. Keyword.
+            • primarykey: This attribute becomes the single attribute primary key for the table.
+                A table can only have one primary key. Any attempt to make another will result
+                in an error. Keyword.
+            • unique: The values for this attribute must be unique. Keyword.
+        Names can start with a alpha-character and contain alphanumeric characters.
+        Primary keys are assumed to be automatically not null and unique.
+        Examples:
+        CREATE TABLE BAZZLE( baz double PRIMARYKEY );
+        create table foo(
+        baz integer primarykey,
+        bar Double notnull,
+        bazzle char(10) unique notnull
+);
 
         Returns:
             status: GOOD_STATUS or BAD_STATUS
@@ -375,6 +393,20 @@ class QueryProcessor:
         return status
     
     def select_cmd(self):
+        """
+        • Each query can be one line or multiple lines.
+        • The newline character is to be considered the same as a space.
+        • Multiple spaces are to be considered a single space; but where spaces are shown below
+        at least one space will exist there.
+        • All statements will end with a semi-colon.
+
+        (Above is for phase 3) #TODO remove this comment
+
+        Returns:
+            _type_: _description_
+        """
+        
+
         return GOOD_STATUS
     
     def insert_cmd(self):
