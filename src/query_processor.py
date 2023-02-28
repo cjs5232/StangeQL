@@ -185,80 +185,6 @@ class QueryProcessor:
     #         #no paren around tab_name, extra parameters in the parens that arent primarykey
     #         return BAD_STATUS
 
-    # def select_cmd(self, query:list) -> int:
-    #     """
-    #     Parse select query and use storage manager to access data.
-    #     Once data is returned from storage manager, get the table column
-    #     names from the catalog and output the table in a clean/formatted
-    #     way.
-
-    #     Access data in tables. Will display all of the data in the table in
-    #     an easy to read format, including column names.
-    #     """
-    #     attributes = []
-
-    #     if "from" not in query:
-    #         print('"from" keyword missing in select query')
-    #         return BAD_STATUS
-
-    #     for i in range(len(query)):
-    #         if query[i] == "from":
-    #             table_name = query[i+1]
-        
-    #     # Check catalog
-    #     does_table_exist = self.cat.table_exists(table_name)
-    #     if does_table_exist == 0: # 0 meaning table does NOT exist
-    #         print(f"No such table {table_name}")
-    #         return BAD_STATUS
-    #     elif does_table_exist == 2: # 2 meaning no catalog found
-    #         return BAD_STATUS
-        
-    #     if query[1] == "*":
-    #         attributes.append(query[1])
-    #     else: # Assume single primary key select 
-    #         attributes.append(query[1]) # TODO: fix this to check for non-primary key?
-    #         # print(f"Invalid selection: {query[1]}")
-    #         # return BAD_STATUS
-        
-    #     # Get Data from Storage Manager: Expecting return: data = [(), (), ...]
-    #     data = self.StorageM.get_records(table_name)
-    #     if data == 1:
-    #         return BAD_STATUS
-
-    #     # Get column names from catalog
-    #     columns = []
-    #     attributes = self.cat.table_attributes(table_name)
-
-    #     if attributes == 1:
-    #         return BAD_STATUS
-    #     else:
-    #         for i in attributes:
-    #             columns.append(i['name'])
-
-    #     # Find necessary padding for columns and store in column_width
-    #     length_list = [len(str(element)) for row in data for element in row]
-    #     for i in columns:
-    #         length_list.append(len(i))
-    #     column_width = max(length_list)
-
-    #     # Format columns and barriers
-    #     columns_formatted = "|".join(str(element).center(column_width +2) for element in columns)
-    #     columns_formatted = "|" + columns_formatted + "|"
-    #     horizontal_lines = "-" * (len(columns_formatted))
-
-    #     # Print column section
-    #     print(horizontal_lines)
-    #     print(columns_formatted)
-    #     print(horizontal_lines)
-
-    #     # Print rows
-    #     for row in data:
-    #         row = "|".join(str(element).center(column_width + 2) for element in row)
-    #         row = "|" + row + "|"
-    #         print(row)
-    #     print("\n")
-        
-    #     return GOOD_STATUS
 
     # def insert_cmd(self, query:list) -> int:
     #     """
@@ -307,30 +233,24 @@ class QueryProcessor:
 
     def create_table_cmd(self):
         """
-        This command will be used to create the schema for a table. This schema will be added to
-        the catalog. This schema will be used by the system to store/access/update/delete data in
-        the created table.
+        Create a table in the catalog via a few steps:
+        - Process complex arguments into specific arrays of attributes 
+            2D Array following the form of 
+            [[name of attribute type [primarykey / unique / notnull], ...]
+        Check that the method of calling the command is valid:
+            - Args start with create table
+            - Table name passed does not already exist in the catalog
+        Then iterate through the attribute array and add it to a table to be added to the catalog
+            - One of the attributes passed MUST be a primarykey
 
-        Constraints: There are two types of constraints that can be added to a single variable:
-            • notnull: The value of this attribute cannot be null. Keyword.
-            • primarykey: This attribute becomes the single attribute primary key for the table.
-                A table can only have one primary key. Any attempt to make another will result
-                in an error. Keyword.
-            • unique: The values for this attribute must be unique. Keyword.
-        Names can start with a alpha-character and contain alphanumeric characters.
-        Primary keys are assumed to be automatically not null and unique.
-        Examples:
-        CREATE TABLE BAZZLE( baz double PRIMARYKEY );
-        create table foo(
-            baz integer primarykey,
-            bar Double notnull,
-            bazzle char(10) unique notnull
-        );
+        See README for more constraints on this section
 
         Returns:
             status: GOOD_STATUS or BAD_STATUS
         """
         status = self.process_complex_cmds()
+        if status == 1:
+            return BAD_STATUS
 
         table_name = self.command_prefix[2]
 
@@ -405,9 +325,88 @@ class QueryProcessor:
         Returns:
             status: GOOD_STATUS or BAD_STATUS
         """
+
+        status = self.process_simple_cmds()
+        if status == 1:
+            return BAD_STATUS
         
 
         return GOOD_STATUS
+    
+    # def select_cmd(self, query:list) -> int:
+    #     """
+    #     Parse select query and use storage manager to access data.
+    #     Once data is returned from storage manager, get the table column
+    #     names from the catalog and output the table in a clean/formatted
+    #     way.
+
+    #     Access data in tables. Will display all of the data in the table in
+    #     an easy to read format, including column names.
+    #     """
+    #     attributes = []
+
+    #     if "from" not in query:
+    #         print('"from" keyword missing in select query')
+    #         return BAD_STATUS
+
+    #     for i in range(len(query)):
+    #         if query[i] == "from":
+    #             table_name = query[i+1]
+        
+    #     # Check catalog
+    #     does_table_exist = self.cat.table_exists(table_name)
+    #     if does_table_exist == 0: # 0 meaning table does NOT exist
+    #         print(f"No such table {table_name}")
+    #         return BAD_STATUS
+    #     elif does_table_exist == 2: # 2 meaning no catalog found
+    #         return BAD_STATUS
+        
+    #     if query[1] == "*":
+    #         attributes.append(query[1])
+    #     else: # Assume single primary key select 
+    #         attributes.append(query[1]) # TODO: fix this to check for non-primary key?
+    #         # print(f"Invalid selection: {query[1]}")
+    #         # return BAD_STATUS
+        
+    #     # Get Data from Storage Manager: Expecting return: data = [(), (), ...]
+    #     data = self.StorageM.get_records(table_name)
+    #     if data == 1:
+    #         return BAD_STATUS
+
+    #     # Get column names from catalog
+    #     columns = []
+    #     attributes = self.cat.table_attributes(table_name)
+
+    #     if attributes == 1:
+    #         return BAD_STATUS
+    #     else:
+    #         for i in attributes:
+    #             columns.append(i['name'])
+
+    #     # Find necessary padding for columns and store in column_width
+    #     length_list = [len(str(element)) for row in data for element in row]
+    #     for i in columns:
+    #         length_list.append(len(i))
+    #     column_width = max(length_list)
+
+    #     # Format columns and barriers
+    #     columns_formatted = "|".join(str(element).center(column_width +2) for element in columns)
+    #     columns_formatted = "|" + columns_formatted + "|"
+    #     horizontal_lines = "-" * (len(columns_formatted))
+
+    #     # Print column section
+    #     print(horizontal_lines)
+    #     print(columns_formatted)
+    #     print(horizontal_lines)
+
+    #     # Print rows
+    #     for row in data:
+    #         row = "|".join(str(element).center(column_width + 2) for element in row)
+    #         row = "|" + row + "|"
+    #         print(row)
+    #     print("\n")
+        
+    #     return GOOD_STATUS
     
     def insert_cmd(self):
         """
@@ -761,6 +760,34 @@ class QueryProcessor:
         self.command_args = processed_attribs
         return GOOD_STATUS
 
+    def process_simple_cmds(self):
+        """
+        Process the simple(r) by comparison commands for select, drop, alter, delete, update where the 
+        commands follow a pretty simple flow.
+
+        Returns:
+            _type_: _description_
+        """
+        
+        '''
+        Test commands
+        select one, two,three from foo where x = 1 and y=2 orderby asc;
+        drop table foo;
+        alter table foo drop num;
+        alter table foo add testcol boolean default False;
+        delete from foo where num = 1;
+        update foo set num = 1;
+        '''
+
+        print(self.inputString)
+        argumentsSplit = re.split(r' |,', self.inputString)
+        print(argumentsSplit)
+
+
+        #TODO check if no spaces in conditionals and split on conditional keywords
+        
+        return GOOD_STATUS
+
     def remove_blank_entries(self, inputString):
         """
         Remove blank strings from array entry
@@ -795,11 +822,6 @@ class QueryProcessor:
                 readInput += " " + input().lower()
 
             inputString = readInput.replace(";", "").lower()
-            if not inputString[-1] == ")":
-                print("No closing parentheses for statement")
-                print("ERROR")
-                status = 1
-                continue
             self.inputString = inputString
             command_prefix = inputString.split("(")[0].split(" ")
             if len(command_prefix) < 3 and "display" not in command_prefix:
