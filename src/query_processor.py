@@ -30,6 +30,7 @@ class QueryProcessor:
         self.command_prefix = []
 
         self.keywords = ["select", "create", "insert", "delete", "update", "display", "where", "set", "from", "orderby", "and", "or", "table", "notnull", "unique", "primarykey", "alter", "drop", "add", "default"]
+        self.conditionalKeywords = ["=", ">", "<", ">=", "<=", "!="]
 
 
     def check_data_type(self, d_type:str) -> int:
@@ -450,6 +451,10 @@ class QueryProcessor:
         Returns:
             status: GOOD_STATUS or BAD_STATUS
         """
+        status = self.process_simple_cmds()
+        if status == 1:
+            return BAD_STATUS
+
         return GOOD_STATUS
 
     def alter_cmd(self):
@@ -489,6 +494,11 @@ class QueryProcessor:
         Returns:
             status: GOOD_STATUS or BAD_STATUS
         """
+
+        status = self.process_simple_cmds()
+        if status == 1:
+            return BAD_STATUS
+
         return GOOD_STATUS
 
     def delete_cmd(self):
@@ -518,6 +528,11 @@ class QueryProcessor:
         Returns:
             status: GOOD_STATUS or BAD_STATUS
         """
+
+        status = self.process_simple_cmds()
+        if status == 1:
+            return BAD_STATUS
+        
         return GOOD_STATUS
 
     def update_cmd(self):
@@ -548,6 +563,11 @@ class QueryProcessor:
         Returns:
             status: GOOD_STATUS or BAD_STATUS
         """
+
+        status = self.process_simple_cmds()
+        if status == 1:
+            return BAD_STATUS
+        
         return GOOD_STATUS
 
     def display(self):
@@ -777,16 +797,15 @@ class QueryProcessor:
         alter table foo drop num;
         alter table foo add testcol boolean default False;
         delete from foo where num = 1;
-        update foo set num = 1;
+        update foo set num=1;
         '''
 
         argumentsSplit = re.split(r' |,', self.inputString)
         argumentsSplit = self.remove_blank_entries(argumentsSplit)
-        # print(argumentsSplit)
-        if "where" in argumentsSplit:
-            argumentsSplit = self.format_where_statement(argumentsSplit)
-
-        print(argumentsSplit)
+        for i in argumentsSplit: #Fix formatting where conditionals may not have spacing
+            for cond in self.conditionalKeywords:
+                if cond in i:
+                    argumentsSplit = self.format_conditional_statement(argumentsSplit)
 
         return GOOD_STATUS
     
@@ -815,12 +834,11 @@ class QueryProcessor:
         right = arr[index+1:]
         return [*left, *arr_to_insert, *right]
     
-    def format_where_statement(self, argumentsSplit):
-        conditionalKeywords = ["=", ">", "<", ">=", "<=", "!="]
+    def format_conditional_statement(self, argumentsSplit):
         temp = []
         index = 0
         for arg in argumentsSplit:
-            for cond in conditionalKeywords:
+            for cond in self.conditionalKeywords:
                 if cond in arg:
                     argSplit = arg.split(cond)
                     argSplit = self.remove_blank_entries(argSplit)
