@@ -819,7 +819,7 @@ class QueryProcessor:
         conditionalKeywords = ["=", ">", "<", ">=", "<=", "!="]
         temp = []
         index = 0
-        for count, arg in enumerate(argumentsSplit):
+        for arg in argumentsSplit:
             for cond in conditionalKeywords:
                 if cond in arg:
                     argSplit = arg.split(cond)
