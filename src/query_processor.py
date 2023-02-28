@@ -772,7 +772,7 @@ class QueryProcessor:
         '''
         Test commands
         (below command has different spacing also for testing)
-        select one, two,three from foo where x = 1 and y=2 orderby x;
+        select one, two,three from foo where x=1 and y=2 orderby x;
         drop table foo;
         alter table foo drop num;
         alter table foo add testcol boolean default False;
@@ -780,29 +780,14 @@ class QueryProcessor:
         update foo set num = 1;
         '''
 
-        print(self.inputString)
         argumentsSplit = re.split(r' |,', self.inputString)
         argumentsSplit = self.remove_blank_entries(argumentsSplit)
         # print(argumentsSplit)
-        conditionalKeywords = ["=", ">", "<", ">=", "<=", "!="]
-        temp = []
-        index = 0
-        for arg in argumentsSplit:
-            for cond in conditionalKeywords:
-                if cond in arg:
-                    argSplit = arg.split("=")
-                    if len(argSplit) == 2:
-                        temp.append([index, [argSplit[0], cond, argSplit[1]]])
-            index += 1
+        if "where" in argumentsSplit:
+            argumentsSplit = self.format_where_statement(argumentsSplit)
 
-        for indexOfInsert, insert_arr in temp:
-            argumentsSplit = self.replace_from_array(argumentsSplit, indexOfInsert, insert_arr)
-        # command_list = ["select", "drop", "alter", "delete", "update"]
+        print(argumentsSplit)
 
-
-
-        #TODO check if no spaces in conditionals and split on conditional keywords
-        
         return GOOD_STATUS
     
     def replace_from_array(self, arr, index, arr_to_insert):
@@ -819,6 +804,9 @@ class QueryProcessor:
             arr (array): original array containing element to replace
             index (int): index of element to be replaced
             arr_to_insert (array): the array to be inserted
+
+        Returns:
+            array : updated array after replacement.
         """
         if index >= len(arr):
             print("Index to replace larger than allowed")
@@ -826,6 +814,25 @@ class QueryProcessor:
         left = arr[:index]
         right = arr[index+1:]
         return [*left, *arr_to_insert, *right]
+    
+    def format_where_statement(self, argumentsSplit):
+        conditionalKeywords = ["=", ">", "<", ">=", "<=", "!="]
+        temp = []
+        index = 0
+        for count, arg in enumerate(argumentsSplit):
+            for cond in conditionalKeywords:
+                if cond in arg:
+                    argSplit = arg.split(cond)
+                    argSplit = self.remove_blank_entries(argSplit)
+                    if len(argSplit) == 2:
+                        temp.append([index, [argSplit[0], cond, argSplit[1]]])
+                        index += 2
+            index += 1
+
+        for indexOfInsert, insert_arr in temp:
+            argumentsSplit = self.replace_from_array(argumentsSplit, indexOfInsert, insert_arr)
+
+        return argumentsSplit
 
     def remove_blank_entries(self, passedArray):
         """
