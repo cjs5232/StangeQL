@@ -786,13 +786,17 @@ class QueryProcessor:
         # print(argumentsSplit)
         conditionalKeywords = ["=", ">", "<", ">=", "<=", "!="]
         temp = []
+        index = 0
         for arg in argumentsSplit:
             for cond in conditionalKeywords:
                 if cond in arg:
                     argSplit = arg.split("=")
                     if len(argSplit) == 2:
-                        temp = [argSplit[0], cond, argSplit[1]]
-        #how to remove the y=2 from list and replace with temp?
+                        temp.append([index, [argSplit[0], cond, argSplit[1]]])
+            index += 1
+
+        for indexOfInsert, insert_arr in temp:
+            argumentsSplit = self.replace_from_array(argumentsSplit, indexOfInsert, insert_arr)
         # command_list = ["select", "drop", "alter", "delete", "update"]
 
 
@@ -800,6 +804,28 @@ class QueryProcessor:
         #TODO check if no spaces in conditionals and split on conditional keywords
         
         return GOOD_STATUS
+    
+    def replace_from_array(self, arr, index, arr_to_insert):
+        """
+        Replace a given index with an array of characters (typically the same characters but split on a different delimeter)
+        Example:
+            ['select', 'one', 'two', 'three', 'from', 'foo', 'where', 'x', '=', '1', 'and', *'y=2'*, 'orderby', 'x;']
+            --> 
+            ['select', 'one', 'two', 'three', 'from', 'foo', 'where', 'x', '=', '1', 'and', *'y', '=', '2'*, 'orderby', 'x;']
+
+        NOTE: This can easily be updated to simply insert without removing the element from the list by removing the index+1 on the right var
+
+        Args:
+            arr (array): original array containing element to replace
+            index (int): index of element to be replaced
+            arr_to_insert (array): the array to be inserted
+        """
+        if index >= len(arr):
+            print("Index to replace larger than allowed")
+            return []
+        left = arr[:index]
+        right = arr[index+1:]
+        return [*left, *arr_to_insert, *right]
 
     def remove_blank_entries(self, passedArray):
         """
