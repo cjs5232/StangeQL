@@ -570,33 +570,6 @@ class QueryProcessor:
         
         return GOOD_STATUS
 
-    def display(self):
-        """
-        Usage display [info/schema];
-
-        Display schema
-            This command will display the catalog of the database in an easy to read format. For this
-            phase it will just display:
-            • database location
-            • page size
-            • buffer size
-            • table schema
-
-        Display Info
-            This command will display the information about a table in an easy to read format. Tt will
-            display:
-            • table name
-            • table schema
-            • number of pages
-            • number of records
-            The command will be display info <name>;
-        
-
-        Returns:
-            status: GOOD_STATUS or BAD_STATUS
-        """
-        return GOOD_STATUS
-    
     def conditional(self):
         """
         Conditionals can be a single relational operation or a list of relational operators separated
@@ -623,6 +596,47 @@ class QueryProcessor:
             Status: GOOD_STATUS or BAD_STATUS
         """
         return GOOD_STATUS
+    
+    def display(self):
+        """
+        Usage display [info/schema];
+
+        Display schema
+            This command will display the catalog of the database in an easy to read format. For this
+            phase it will just display:
+            • database location
+            • page size
+            • buffer size
+            • table schema
+
+        Display Info
+            This command will display the information about a table in an easy to read format. Tt will
+            display:
+            • table name
+            • table schema
+            • number of pages
+            • number of records
+            The command will be display info <name>;
+        
+
+        Returns:
+            status: GOOD_STATUS or BAD_STATUS
+        """
+
+        status = self.process_simple_cmds()
+        if status == 1:
+            return BAD_STATUS
+        
+        print(len(self.command_args))
+        if len(self.command_args) < 2:
+            print(f"Incorrect format: More values expected for {self.command_args}")
+            return BAD_STATUS
+        if self.command_args[1] == "schema":
+            return self.display_schema_cmd()
+        elif self.command_args[1] == "info":
+            return self.display_info_cmd()
+        else:
+            return BAD_STATUS
     
     def display_schema_cmd(self) -> int:
         """
@@ -708,40 +722,6 @@ class QueryProcessor:
         print(helpMsg)
         return GOOD_STATUS
 
-    def process_input(self, query:list) -> int:
-        """
-        Process query. Depending on the command entered, call the 
-        necessary function to execute the query and then return.
-        Returns 0 if success and 1 if failure.
-        """
-        status = 0 # Default good status
-        if query[0] == "help":
-            return help()
-        elif query[0] == "display":
-            if query[1] == "schema":
-                status = self.display_schema_cmd()
-                return  status
-            elif query[1] == "info":
-                try:
-                    status = self.display_info_cmd(query[2])
-                    return  status
-                except IndexError:
-                    return BAD_STATUS
-            else:
-                return BAD_STATUS
-        elif query[0] == "select":
-            status = self.select_cmd(query)
-            return status
-        elif query[0] == "insert" and query[1] == "into" and query[3] == "values":
-            status = self.insert_cmd(query)
-            return status
-        elif query[0] == "create" and query[1] == "table":
-            status = self.create_table_cmd(query)
-            return  status
-        
-        status = 1 #Bad status
-        return status
-
     def process_complex_cmds(self):
         """
         Process passed commands for select, create, and insert statements where there are weird things with parentheses and multiple inserts being passed.
@@ -756,7 +736,6 @@ class QueryProcessor:
         Returns:
             array: array of attributes to be processed.
         """
-        # inputString = self.remove_blank_entries(inputString) #TODO LATER
         attribs = self.inputString.split("(")[1:]
         attribs = self.remove_blank_entries(attribs)
         attribs = ' '.join(str(x) for x in attribs).replace("char ", "char(")
@@ -841,7 +820,7 @@ class QueryProcessor:
             # for cond in self.conditionalKeywords:
             #     if cond in i:
             #         argumentsSplit = self.format_conditional_statement(argumentsSplit)
-        print(argumentsSplit)
+        self.command_args = argumentsSplit
         return GOOD_STATUS
     
     def insert_into_array(self, arr, index, arr_to_insert):
