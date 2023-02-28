@@ -306,56 +306,62 @@ class QueryProcessor:
     #     return result # update return based off storage manager
 
     def create_table_cmd(self):
+        """
+        Create a table with the catalog with given args. (Includes error checks)
+
+        Returns:
+            _type_: _description_
+        """
         status = self.process_complex_cmds()
+
+        table_name = self.command_prefix[2]
 
         if not ' '.join(self.command_prefix[:2]) == 'create table':
             return BAD_STATUS
-        if self.command_prefix[2] in self.keywords:
+        if table_name in self.keywords:
             return BAD_STATUS
         
-        does_table_exist = self.cat.table_exists(self.command_prefix[2])
+        does_table_exist = self.cat.table_exists(table_name)
         if does_table_exist == 1:
-            print(f"Table of name {self.command_prefix[2]} already exists")
+            print(f"Table of name {table_name} already exists")
             return BAD_STATUS
-        
 
         table = {
-            "name" : self.command_prefix[2],
+            "name" : table_name,
             "pageCount" : 0,
             "recordCount" : 0,
             "attributes" : []
         }
 
         tableAttribNames = [] #For easier lookup
-
         foundPrimaryKey = False
 
         #Loop through attributes
-        for attrib_list in self.command_args:
-            if len(attrib_list) < 2:
-                print(f"Less than expected number of values <{attrib_list}>")
+        for attrib in self.command_args:
+            if len(attrib) < 2:
+                print(f"Less than expected number of values <{attrib}>")
                 return BAD_STATUS
-            if len(attrib_list) > 5:
-                print(f"Passed attributes more than expected values <{attrib_list}>")
+            if len(attrib) > 5:
+                print(f"Passed attributes more than expected values <{attrib}>")
                 return BAD_STATUS
-            if self.check_data_type(attrib_list[1]) == BAD_STATUS:
-                print(f"Invalid datatype: <{attrib_list[1]}>")
-                return BAD_STATUS
-            
-            if attrib_list[0] in tableAttribNames:
-                print(f"Duplicate attribute {attrib_list[0]}")
+            if self.check_data_type(attrib[1]) == BAD_STATUS:
+                print(f"Invalid datatype: <{attrib[1]}>")
                 return BAD_STATUS
             
-            if "primarykey" in attrib_list:
+            if attrib[0] in tableAttribNames:
+                print(f"Duplicate attribute {attrib[0]}")
+                return BAD_STATUS
+            
+            if "primarykey" in attrib:
                 foundPrimaryKey = True
 
             #add to table thing
             temp_Attrib = {
-                "name" : attrib_list[0],
-                "type" : attrib_list[1],
-                "primary_key" : "primarykey" in attrib_list, #Technically could be in position 3, 4, or 5
-                "unique" : "unique" in attrib_list,
-                "notnull" : "notnull" in attrib_list
+                "name" : attrib[0],
+                "type" : attrib[1],
+                "primary_key" : "primarykey" in attrib, #Technically could be in position 3, 4, or 5
+                "unique" : "unique" in attrib,
+                "notnull" : "notnull" in attrib
             }
 
             table["attributes"].append(temp_Attrib)
