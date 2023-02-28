@@ -771,7 +771,8 @@ class QueryProcessor:
         
         '''
         Test commands
-        select one, two,three from foo where x = 1 and y=2 orderby asc;
+        (below command has different spacing also for testing)
+        select one, two,three from foo where x = 1 and y=2 orderby x;
         drop table foo;
         alter table foo drop num;
         alter table foo add testcol boolean default False;
@@ -781,24 +782,36 @@ class QueryProcessor:
 
         print(self.inputString)
         argumentsSplit = re.split(r' |,', self.inputString)
-        print(argumentsSplit)
+        argumentsSplit = self.remove_blank_entries(argumentsSplit)
+        # print(argumentsSplit)
+        conditionalKeywords = ["=", ">", "<", ">=", "<=", "!="]
+        temp = []
+        for arg in argumentsSplit:
+            for cond in conditionalKeywords:
+                if cond in arg:
+                    argSplit = arg.split("=")
+                    if len(argSplit) == 2:
+                        temp = [argSplit[0], cond, argSplit[1]]
+        #how to remove the y=2 from list and replace with temp?
+        # command_list = ["select", "drop", "alter", "delete", "update"]
+
 
 
         #TODO check if no spaces in conditionals and split on conditional keywords
         
         return GOOD_STATUS
 
-    def remove_blank_entries(self, inputString):
+    def remove_blank_entries(self, passedArray):
         """
         Remove blank strings from array entry
 
         Args:
-            inputString (arr): input list of commands
+            passedArray (arr): input list of commands
 
         Returns:
             array: cleaned input list
         """
-        return [input for input in inputString if input != ""]
+        return [element for element in passedArray if element != ""]
 
     def main(self):
         """
