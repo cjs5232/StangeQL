@@ -30,8 +30,6 @@ class QueryProcessor:
         self.command_prefix = []
 
         self.keywords = ["select", "create", "insert", "delete", "update", "display", "where", "set", "from", "orderby", "and", "or", "table", "notnull", "unique", "primarykey", "alter", "drop", "add", "default"]
-        # self.conditionalKeywords = ["!=", ">=", "<=", ">", "<", "="] #TODO pending deletion of old format code
-
 
     def check_data_type(self, d_type:str) -> int:
         """
@@ -848,44 +846,6 @@ class QueryProcessor:
         left = arr[:index]
         right = arr[index:]
         return [*left, *arr_to_insert, *right]
-    
-    # def format_conditional_statement(self, argumentsSplit):
-    #     print(argumentsSplit)
-    #     temp = []
-    #     index = 0
-    #     for arg in argumentsSplit:
-    #         for cond in self.conditionalKeywords:
-    #             if index+1 >= len(argumentsSplit):
-    #                 break
-    #             if cond in arg and ''.join([cond,argumentsSplit[index+1]]) not in self.conditionalKeywords:
-    #                 argSplit = arg.split(cond)
-    #                 argSplit = self.remove_blank_entries(argSplit)
-    #                 if len(argSplit) == 2:
-    #                     argumentsSplit.remove(arg)
-    #                     temp.append([index, [argSplit[0], cond, argSplit[1]]])
-    #                     index += 1
-    #                     continue
-    #         # index += 1
-
-    #     for indexOfInsert, insert_arr in temp:
-    #         argumentsSplit = self.insert_into_array(argumentsSplit, indexOfInsert, insert_arr)
-
-    #     for i in range(len(argumentsSplit)):
-    #         if i >= len(argumentsSplit)-1:
-    #             break
-    #         checkConditionalKeyword = argumentsSplit[i]
-    #         mayNeedCombining = "! = < >"
-    #         if checkConditionalKeyword in mayNeedCombining:
-    #             if argumentsSplit[i+1] in mayNeedCombining:
-    #                 combined = [f"{argumentsSplit[i]}{argumentsSplit[i+1]}"]
-    #                 argumentsSplit[i] = ''
-    #                 argumentsSplit[i+1] = ''
-    #                 argumentsSplit = self.remove_blank_entries(argumentsSplit)
-    #                 argumentsSplit = self.insert_into_array(argumentsSplit, i, combined)
-    #                 # i+=1
-
-    #     # print(argumentsSplit)
-    #     return argumentsSplit
 
     def remove_blank_entries(self, passedArray):
         """
