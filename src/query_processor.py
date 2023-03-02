@@ -272,33 +272,32 @@ class QueryProcessor:
 
         tableAttribNames = [] #For easier lookup
         foundPrimaryKey = False
-
-        #Loop through attributes
-        for attrib in self.command_args:
-            if len(attrib) < 2:
-                print(f"Less than expected number of values <{attrib}>")
+        for attrib in self.command_args[0]: # Only the first element as there shouldn't be multiple tuples passed
+            attrib_components = attrib.split(" ") # 'placeofbirth char(10)'
+            if len(attrib_components) < 2:
+                print(f"Less than expected number of values <{attrib_components}>")
                 return BAD_STATUS
-            if len(attrib) > 5:
-                print(f"Passed attributes more than expected values <{attrib}>")
+            if len(attrib_components) > 5:
+                print(f"Passed attributes more than expected values <{attrib_components}>")
                 return BAD_STATUS
-            if self.check_data_type(attrib[1]) == BAD_STATUS:
-                print(f"Invalid datatype: <{attrib[1]}>")
-                return BAD_STATUS
-            
-            if attrib[0] in tableAttribNames:
-                print(f"Duplicate attribute {attrib[0]}")
+            if self.check_data_type(attrib_components[1]) == BAD_STATUS:
+                print(f"Invalid datatype: <{attrib_components[1]}>")
                 return BAD_STATUS
             
-            if "primarykey" in attrib:
+            if attrib_components[0] in tableAttribNames:
+                print(f"Duplicate attribute {attrib_components[0]}")
+                return BAD_STATUS
+            
+            if "primarykey" in attrib_components:
                 foundPrimaryKey = True
 
             #add to table thing
             temp_Attrib = {
-                "name" : attrib[0],
-                "type" : attrib[1],
-                "primary_key" : "primarykey" in attrib, #Technically could be in position 3, 4, or 5
-                "unique" : "unique" in attrib,
-                "notnull" : "notnull" in attrib
+                "name" : attrib_components[0],
+                "type" : attrib_components[1],
+                "primary_key" : "primarykey" in attrib_components, #Technically could be in position 3, 4, or 5
+                "unique" : "unique" in attrib_components,
+                "notnull" : "notnull" in attrib_components
             }
 
             table["attributes"].append(temp_Attrib)
@@ -308,7 +307,6 @@ class QueryProcessor:
             return BAD_STATUS
         
         status = self.cat.add_table(table)
-
         return status
     
     def select_cmd(self):
@@ -431,6 +429,8 @@ class QueryProcessor:
             status: GOOD_STATUS or BAD_STATUS
         """
         status = self.process_complex_cmds()
+        if status == 1:
+            return BAD_STATUS
         return status
     
     def drop_cmd(self):
@@ -734,27 +734,54 @@ class QueryProcessor:
         Returns:
             array: array of attributes to be processed.
         """
-        attribs = self.inputString.split("(")[1:]
-        attribs = self.remove_blank_entries(attribs)
-        attribs = ' '.join(str(x) for x in attribs).replace("char ", "char(")
-        attribs = attribs.split(",")
-        temp_attribs = []
-        processed_attribs = []
-        
-        for i in attribs:
-            if i == '' or i == ')':
-                print(f"Error in formatting <{self.inputString}>")
-                return BAD_STATUS
-            if i[-1] == ")":
-                i = i[:-1]
-            if i[0] == " ":
-                i = i[1:]
-            temp_attribs.append(i)
-        for processed_attrib in temp_attribs:
-            processed_attrib = self.remove_blank_entries(processed_attrib.split(" "))
-            processed_attribs.append(processed_attrib)
 
-        self.command_args = processed_attribs
+        firstPass = re.compile('(\\d+\\.\\d+)|([(])|([)])|([a-zA-Z0-9. ]+)')
+        processed_attribs = []
+        rawRegex = firstPass.findall(self.inputString)
+        for tup in rawRegex:
+            for element in tup:
+                if element != "":
+                    processed_attribs.append(element)
+
+        index = 0
+        while index < len(processed_attribs):
+            temp = processed_attribs[index]
+            if temp[0] == " ":
+                processed_attribs[index] = temp[1:]
+            if temp[:-1] == " ":
+                processed_attribs[index] = temp[:-1]
+            if "char" in temp: # Varchar and char are split on parens with the regex
+                toInsert = [''.join([temp, processed_attribs[index+1], processed_attribs[index+2], processed_attribs[index+3]])]
+                processed_attribs[index] = ""
+                for count in range(1,4):
+                    processed_attribs[count+index] = ""
+                processed_attribs = self.remove_blank_entries(processed_attribs)
+                processed_attribs = self.insert_into_array(processed_attribs, index, toInsert)
+            index += 1
+
+        actual_args = []
+        index = 0
+        while index < len(processed_attribs[1:]): # Combine the values within parens to their own array
+            tempIndex = index
+            tempVal = processed_attribs[tempIndex]
+            combinedArr = []
+            if tempVal != "(":
+                index += 1
+                continue
+            while not tempVal == ")":
+                tempIndex += 1
+                tempVal = processed_attribs[tempIndex]
+                if tempVal[0] == " ":
+                    tempVal = tempVal[1:]
+                if tempVal[-1] == " ":
+                    tempVal = tempVal[:-1]
+                combinedArr.append(tempVal)
+            if ")" in combinedArr:
+                combinedArr.remove(")")
+            actual_args.append(combinedArr)
+            index = tempIndex
+        actual_args = self.remove_blank_entries(actual_args)
+        self.command_args = actual_args
         return GOOD_STATUS
 
     def process_simple_cmds(self):
@@ -815,9 +842,6 @@ class QueryProcessor:
             argumentsSplit.remove(i)
             argumentsSplit = self.insert_into_array(argumentsSplit, index, [splitAtribs[0], keywordFound, splitAtribs[1]])
 
-            # for cond in self.conditionalKeywords:
-            #     if cond in i:
-            #         argumentsSplit = self.format_conditional_statement(argumentsSplit)
         self.command_args = argumentsSplit
         return GOOD_STATUS
     
@@ -901,7 +925,6 @@ class QueryProcessor:
             if status != 1:
                 status = commands.get(specificCommand, lambda: "invalid")()
 
-            # status = self.process_input(inputString)
             if status == 0:
                 print("SUCCESS\n")
             else:
