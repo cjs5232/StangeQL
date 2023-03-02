@@ -763,44 +763,12 @@ class QueryProcessor:
                     processed_attribs.append(element)
 
         index = 0
-        while index < len(processed_attribs):
-            temp = processed_attribs[index]
-            if temp[0] == " ":
-                processed_attribs[index] = temp[1:]
-            if temp[:-1] == " ":
-                processed_attribs[index] = temp[:-1]
-            if "char" in temp: # Varchar and char are split on parens with the regex
-                toInsert = [''.join([temp, processed_attribs[index+1], processed_attribs[index+2], processed_attribs[index+3]])]
-                processed_attribs[index] = ""
-                for count in range(1,4):
-                    processed_attribs[count+index] = ""
-                processed_attribs = self.remove_blank_entries(processed_attribs)
-                processed_attribs = self.insert_into_array(processed_attribs, index, toInsert)
-            index += 1
+        processed_attribs = self.clean_array(processed_attribs)
+        
 
-        actual_args = []
-        index = 0
-        while index < len(processed_attribs[1:]): # Combine the values within parens to their own array
-            tempIndex = index
-            tempVal = processed_attribs[tempIndex]
-            combinedArr = []
-            if tempVal != "(":
-                index += 1
-                continue
-            while not tempVal == ")":
-                tempIndex += 1
-                tempVal = processed_attribs[tempIndex]
-                if tempVal[0] == " ":
-                    tempVal = tempVal[1:]
-                if tempVal[-1] == " ":
-                    tempVal = tempVal[:-1]
-                combinedArr.append(tempVal)
-            if ")" in combinedArr:
-                combinedArr.remove(")")
-            actual_args.append(combinedArr)
-            index = tempIndex
-        actual_args = self.remove_blank_entries(actual_args)
-        self.command_args = actual_args
+        self.command_args = processed_attribs
+        # self.command_args = self.condense_array(processed_attribs[1:], "(", ")")
+        print(self.command_args)
         return GOOD_STATUS
 
     def process_simple_cmds(self):
@@ -839,29 +807,36 @@ class QueryProcessor:
         Returns:
             _type_: _description_
         """
+
+        regex = re.compile('([a-zA-Z0-9. ]+)')
+        argument_split = re.split(regex, self.inputString)
+        argument_split = self.remove_blank_entries(argument_split)
+        argument_split = [*argument_split[0].split(" "), *argument_split[1:]]
+
+        self.command_args = self.clean_array(argument_split)
         
-        argumentsSplit = re.split(r' |,', self.inputString) # Split on spaces or commas
-        argumentsSplit = self.remove_blank_entries(argumentsSplit)
+        # argumentsSplit = re.split(r' |,', self.inputString) # Split on spaces or commas
+        # argumentsSplit = self.remove_blank_entries(argumentsSplit)
 
-        statmentWithNoSpacing = r'[a-z0-9]*[<=*|>=*|!=|=][a-z0-9.]*'
-        keywordConditional = r'[<=*|>=*|!=|=]+'
+        # statmentWithNoSpacing = r'[a-z0-9]*[<=*|>=*|!=|=][a-z0-9.]*'
+        # keywordConditional = r'[<=*|>=*|!=|=]+'
 
-        regexSpacing = re.compile(statmentWithNoSpacing)
+        # regexSpacing = re.compile(statmentWithNoSpacing)
+        # regexKeyword = re.compile(keywordConditional)
 
-        regexKeyword = re.compile(keywordConditional)
-        for i in argumentsSplit: #Fix formatting where conditionals may not have spacing (ie baz<=3.2)
-            index = argumentsSplit.index(i)
-            matched = regexSpacing.match(i)
-            if matched == None:
-                continue
-            searched = regexKeyword.search(i)
-            keywordFound = searched.group()
-            splitAtribs = i.split(keywordFound)
+        # for i in argumentsSplit: #Fix formatting where conditionals may not have spacing (ie baz<=3.2)
+        #     index = argumentsSplit.index(i)
+        #     matched = regexSpacing.match(i)
+        #     if matched == None:
+        #         continue
+        #     searched = regexKeyword.search(i)
+        #     keywordFound = searched.group()
+        #     splitAtribs = i.split(keywordFound)
 
-            argumentsSplit.remove(i)
-            argumentsSplit = self.insert_into_array(argumentsSplit, index, [splitAtribs[0], keywordFound, splitAtribs[1]])
+        #     argumentsSplit.remove(i)
+        #     argumentsSplit = self.insert_into_array(argumentsSplit, index, [splitAtribs[0], keywordFound, splitAtribs[1]])
 
-        self.command_args = argumentsSplit
+        print(self.command_args)
         return GOOD_STATUS
     
     def insert_into_array(self, arr, index, arr_to_insert):
@@ -883,12 +858,43 @@ class QueryProcessor:
         Returns:
             array : updated array after replacement.
         """
-        if index >= len(arr):
-            print("Index to replace larger than allowed")
-            return []
+        # if index >= len(arr):
+        #     print("Index to replace larger than allowed")
+        #     return []
         left = arr[:index]
         right = arr[index:]
         return [*left, *arr_to_insert, *right]
+    
+    def condense_elements(self, arr, index):
+
+        toInsert = [''.join([*arr[index:index+4]])]
+        arr[index] = ""
+
+        for count in range(1,4):
+            arr.append("")
+            arr[count+index] = ""
+        arr = self.remove_blank_entries(arr)
+        arr = self.insert_into_array(arr, index, toInsert)
+
+        return arr
+    
+    def clean_array(self, arr):
+        index = 0
+        while index < len(arr):
+            temp = arr[index]
+            if temp[0] == " ":
+                arr[index] = temp[1:]
+            if temp[:-1] == " ":
+                arr[index] = temp[:-1]
+            temp = arr[index]
+            if "char" in temp: # Varchar and char are split on parens with the regex
+                temp = ''.join([*arr[index:index+4]])
+                arr = self.condense_elements(arr, index)
+            if '"' == temp:
+                temp = ''.join([*arr[index:index+4]])
+                arr = self.condense_elements(arr, index)
+            index = arr.index(temp) + 1
+        return arr
 
     def remove_blank_entries(self, passedArray):
         """
