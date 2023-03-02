@@ -57,14 +57,6 @@ class StorageManager:
             # if page becomes overfull:
                 # split the page
             # end
-        
-
-
-        # splitting a page:
-            # make a new page
-            # remove half the items from the current page
-            # add the items to the new page
-            # insert the new page after the current page in the table
 
         return 0
     
