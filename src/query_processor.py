@@ -184,52 +184,6 @@ class QueryProcessor:
     #         #no paren around tab_name, extra parameters in the parens that arent primarykey
     #         return BAD_STATUS
 
-
-    # def insert_cmd(self, query:list) -> int:
-    #     """
-    #     Parse the insert into query and store attributes. Use the
-    #     buffer manager to physically add the tuples of data into the table.
-
-    #     Insert tuple(s) of information into a table.
-    #     """
-    #     values = []
-    #     table_name = query[2]
-    #     query = query[4:]
-
-    #     query_str = ' '.join(query)
-
-    #     loop = True
-    #     while loop: # Each loop builds a tuple of row values and adds tuple to values list
-    #         vals = [] # list to hold each element in a row
-    #         cur_val = "" # Current value being built
-    #         for i in range(len(query_str)):
-    #             if query_str[i] == "(" or query_str[i] == ',':
-    #                 pass
-    #             elif query_str[i] == ")":
-    #                 if i == len(query_str) - 1:
-    #                     vals.append(cur_val)
-    #                     loop = False
-    #                     query_str = query_str[i+1:]
-    #                     break
-    #                 else:
-    #                     vals.append(cur_val)
-    #                     query_str = query_str[i+1:]
-    #                     break
-    #             elif query_str[i] == ' ':
-    #                 vals.append(cur_val)
-    #                 cur_val = ""
-    #             else:
-    #                 cur_val += query_str[i]
-                    
-    #         values.append(tuple(vals))
-        
-    #     attributes = self.cat.table_attributes(table_name)
-    #     if attributes == 1:
-    #         return BAD_STATUS
-        
-    #     result = self.StorageM.insert_record(table_name, attributes, values)
-    #     return result # update return based off storage manager
-
     def create_table_cmd(self):
         """
         Create a table in the catalog via a few steps:
@@ -326,7 +280,8 @@ class QueryProcessor:
         status = self.process_simple_cmds()
         if status == 1:
             return BAD_STATUS
-        
+
+
 
         return GOOD_STATUS
     
@@ -431,7 +386,71 @@ class QueryProcessor:
         status = self.process_complex_cmds()
         if status == 1:
             return BAD_STATUS
+        if len(self.command_prefix) != 4:
+            print(f"Incorrect number of arguments for {' '.join(self.command_prefix)}")
+            return BAD_STATUS
+        joinedPrefix = ' '.join([*self.command_prefix[:2], self.command_prefix[3]]) # insert into values
+        if joinedPrefix != "insert into values":
+            print(f"incorrect formatting: {' '.join(self.command_prefix)}")
+            return BAD_STATUS
+        #Needs to fit scheme of insert into <valid table> values (array of values)
+
+        if self.command_args == [[]]:
+            print("Cannot insert empty attributes")
+            return BAD_STATUS
+
+        for attribute_to_insert in self.command_args:
+            # status = SM.insert(self.command_prefix[2], attribute_to_insert)
+            # if status == 1:
+                # return BAD_STATUS
+            print(f"Inserting {attribute_to_insert} into {self.command_prefix[2]}")
+
         return status
+    
+    # def insert_cmd(self, query:list) -> int:
+    #     """
+    #     Parse the insert into query and store attributes. Use the
+    #     buffer manager to physically add the tuples of data into the table.
+
+    #     Insert tuple(s) of information into a table.
+    #     """
+    #     values = []
+    #     table_name = query[2]
+    #     query = query[4:]
+
+    #     query_str = ' '.join(query)
+
+    #     loop = True
+    #     while loop: # Each loop builds a tuple of row values and adds tuple to values list
+    #         vals = [] # list to hold each element in a row
+    #         cur_val = "" # Current value being built
+    #         for i in range(len(query_str)):
+    #             if query_str[i] == "(" or query_str[i] == ',':
+    #                 pass
+    #             elif query_str[i] == ")":
+    #                 if i == len(query_str) - 1:
+    #                     vals.append(cur_val)
+    #                     loop = False
+    #                     query_str = query_str[i+1:]
+    #                     break
+    #                 else:
+    #                     vals.append(cur_val)
+    #                     query_str = query_str[i+1:]
+    #                     break
+    #             elif query_str[i] == ' ':
+    #                 vals.append(cur_val)
+    #                 cur_val = ""
+    #             else:
+    #                 cur_val += query_str[i]
+                    
+    #         values.append(tuple(vals))
+        
+    #     attributes = self.cat.table_attributes(table_name)
+    #     if attributes == 1:
+    #         return BAD_STATUS
+        
+    #     result = self.StorageM.insert_record(table_name, attributes, values)
+    #     return result # update return based off storage manager
     
     def drop_cmd(self):
         """
@@ -911,7 +930,7 @@ class QueryProcessor:
                 print(f"Incorrect format <{''.join(str(x) for x in readInput)}>")
                 status = 1
             specificCommand = command_prefix[0]
-            self.command_prefix = command_prefix
+            self.command_prefix = self.remove_blank_entries(command_prefix)
             commands = {
                 "create" : lambda: self.create_table_cmd(),
                 "select": lambda: self.select_cmd(),
