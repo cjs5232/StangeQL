@@ -19,42 +19,54 @@ class StorageManager:
         self.cat = catalog.Catalog(self.dbloc, self.pageSize, self.bufferSize)
 
 
-    """
-    • getting a record by primary key
-    • getting a page by table and page number
-    • getting all records for a given table number
-    • inserting a record into a given table
-    • deleting a record by primary key from a given table
-    • updating a record by primary key in a given table
-    """
     #phase 1
-    #input records is a 2d array of records ex) [[12,"hello"],[5,"hey"]]
-    def insert_records(self, records):
-        # if there are no pages for this table:
-        # make a new file for the table
-        # add this entry to a new page
-        # insert the page into the table file
-        
-        # end
-        # Read each table page in order from the table file:
-        # iterate the records in page:
-        # if the record belongs before the current record:
-        # insert the record before it
-        # if the current page becomes overfull:
-        # split the page
-        # end
-        # If the record does not get inserted:
-        # insert it into the last page of the table file
-        # if page becomes overfull:
-        # split the page
-        # end
-        # splitting a page:
-        # make a new page
-        # remove half the items from the current page
-        # add the items to the new page
-        # insert the new page after the current page in the table
+    def insert_records(self, table_name, records):
+        """
+        input records is a 2d array of records ex) [[12,"hello"],[5,"hey"]]
 
-        return
+
+        NOTE:
+            - Does storage manager do page splitting or page buffer?
+            - How do we know table filename?
+            - Where are we storing list/ordering of pages // free pages?
+        """
+        # Get table information from catalog
+        catalog_tables = self.cat.get_catalog()["tables"]
+        for table in catalog_tables:
+            if table["name"] == table_name:
+                table_info = table
+                break
+
+        # If there are no pages for this table
+        if table_info["pageCount"] == 0:
+            # make a new file for the table
+            # add this entry to a new page
+            # insert the page into the table file
+            return 0 # end
+        
+        # Read each table page in order from the table file:
+            # iterate the records in page:
+                # if the record belongs before the current record:
+                    # insert the record before it
+            # if the current page becomes overfull:
+                # split the page
+                # end
+        
+        # If the record does not get inserted:
+            # insert it into the last page of the table file
+            # if page becomes overfull:
+                # split the page
+            # end
+        
+
+
+        # splitting a page:
+            # make a new page
+            # remove half the items from the current page
+            # add the items to the new page
+            # insert the new page after the current page in the table
+
+        return 0
     
     #phase 1
     def get_page(self, table_name, page_number):
