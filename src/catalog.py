@@ -16,13 +16,12 @@ import os
 import codecs
 
 
-""" Nested dictionary"""
-"""Gonna need some attributes like, name of DB, and attributes"""
 class Catalog:
     def __init__(self, location, page_size, buffer_size):
         self.location = location
         self.page_size = page_size
         self.buffer_size = buffer_size
+        self.filename = "DBCatalog.bin"
 
     @property
     def create_catalog(self):
@@ -31,6 +30,7 @@ class Catalog:
                 "location": self.location,
                 "page_size": self.page_size,
                 "buffer_size": self.buffer_size
+                # if you need the filename, just get it from self.filename
             },
             "tables": [
             ]
@@ -54,7 +54,7 @@ class Catalog:
 
         bytes_data = bytes(bytes_data_array)
         # Open a binary file for writing
-        with open(f"{self.location}/DBCatalog.bin", "wb+") as write_file:
+        with open(f"{self.location}/{self.filename}", "wb+") as write_file:
             # Write the bytes data to the binary file
             write_file.write(bytes_data)
 
@@ -66,7 +66,7 @@ class Catalog:
     translates bytes to a string, reads the string as a json and returns the json
     """
     def read_from_file(self):
-        fileExist = os.path.exists(f"{self.location}/DBCatalog.bin")
+        fileExist = os.path.exists(f"{self.location}/{self.filename}")
         if not fileExist:
             print("No catalog file in path: " + self.location + "/DBCatalog.bin")
             return 1
@@ -142,7 +142,7 @@ class Catalog:
         ]
     }
     """
-    def add_table(self, table): #didn't have attributes but was sent attributes in query_processor
+    def add_table(self, table): # didn't have attributes but was sent attributes in query_processor
         data = self.read_from_file()
 
         data["tables"].append(table)
@@ -172,7 +172,7 @@ class Catalog:
     I wanted to save some space but keep it easy so I made this function more generic
     for page/record updates
     """
-    def update_count(self, table_name, val, type):
+    def update_count(self, table_name, val,type):
         data = self.read_from_file()
 
         for i in data["tables"]:
@@ -212,7 +212,6 @@ class Catalog:
 
         if not tableFlag:
             print("There are no tables to display")
-
 
         return 0
 
