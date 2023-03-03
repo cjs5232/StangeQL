@@ -38,69 +38,75 @@ class Catalog:
 
         dumped_json = json.dumps(dictionary)
 
-        #bytes_data = list(bytes(dumped_json, 'utf-8'))
-        bytes_data = bytearray(dumped_json, 'utf-8')
-        for index in range(len(bytes_data)):
-            bytes_data[index] ^= 0b11111111
+        self.write_to_file(dumped_json)
 
-        #bytes_data = bytes_data.decode('utf-8')
-        #bytes_data = bytes(bytes_data, 'utf-8')
-        bytes_data = bytes(bytes_data)
+        return 0
+
+    """
+    Makes json into byte array, xor with a bitmap of all 1s, converts
+    byte array into bytes, and stores the binary into the file
+    """
+    def write_to_file(self, dumped_json):
+
+        bytes_data_array = bytearray(dumped_json, 'utf-8')
+        for index in range(len(bytes_data_array)):
+            bytes_data_array[index] ^= 0b11111111
+
+        bytes_data = bytes(bytes_data_array)
         # Open a binary file for writing
         with open(f"{self.location}/DBCatalog.bin", "wb+") as write_file:
             # Write the bytes data to the binary file
             write_file.write(bytes_data)
-        arr = bytearray(bytes_data)
-        for index in range(len(arr)):
-            arr[index] ^= 0b11111111
-        arr = bytes(arr)
-        print(str(arr))
 
-        return 0
+        return
 
+    """
+    Does the opposite of writing.
+    Grabs binary data as an array, reverses the xor bitmap, read array as bytes
+    translates bytes to a string, reads the string as a json and returns the json
+    """
+    def read_from_file(self):
+        fileExist = os.path.exists(f"{self.location}/DBCatalog.bin")
+        if not fileExist:
+            print("No catalog file in path: " + self.location + "/DBCatalog.bin")
+            return 1
+
+        f = open(f"{self.location}/DBCatalog.bin", 'rb')
+
+        bytes_data = f.read()
+
+        bytes_data_array = bytearray(bytes_data)
+        for index in range(len(bytes_data_array)):
+            bytes_data_array[index] ^= 0b11111111
+        string_data = bytes(bytes_data_array).decode("utf-8")
+        json_data = json.loads(string_data)
+        f.close()
+        return json_data
 
     """
     Might not need
     What if path is the same, but page and buffer sizes are different?
     """
     def load_catalog(self):
-        fileExist = os.path.exists(f"{self.location}/DBCatalog")
-        if not fileExist:
-            print("No catalog file in path: " + self.location)
-            return 1
 
-        f = open(f"{self.location}/DBCatalog")
-        data = json.load(f)
+        data = self.read_from_file()
 
         self.location = data["db"]["location"]
         self.page_size = data["db"]["page_size"]
         self.buffer_size = data["db"]["buffer_size"]
 
-        f.close()
         return self
 
-
     def delete_table(self, table_name):
-        fileExist = os.path.exists(f"{self.location}/DBCatalog")
-        if not fileExist:
-            print("No catalog file in path: " + self.location)
-            return 1
-
-        f = open(f"{self.location}/DBCatalog")
-        data = json.load(f)
+        data = self.read_from_file()
 
         for i in data["tables"]:
 
             if i["name"] == table_name:
                 data["tables"].remove(i)
                 dumped_json = json.dumps(data)
-                bytes_data = bytes(dumped_json, encoding='utf-8')
 
-                # Open a binary file for writing
-                with open(f"{self.location}/DBCatalog", "wb") as write_file:
-                    # Write the bytes data to the binary file
-                    write_file.write(bytes_data)
-                f.close()
+                self.write_to_file(dumped_json)
                 return 0
 
         print("Table - " + table_name + " not found in catalog")
@@ -111,20 +117,12 @@ class Catalog:
     Returns 1 if yes, 0 if no, 2 if no catalog file
     """
     def table_exists(self, table_name):
-        fileExist = os.path.exists(f"{self.location}/DBCatalog")
-        if not fileExist:
-            print("No catalog file in path: " + self.location)
-            return 2
-
-        f = open(f"{self.location}/DBCatalog")
-        data = json.load(f)
+        data = self.read_from_file()
 
         for i in data["tables"]:
 
             if i["name"] == table_name:
-                f.close()
                 return 1
-        f.close()
         return 0
 
     """
@@ -145,24 +143,13 @@ class Catalog:
     }
     """
     def add_table(self, table): #didn't have attributes but was sent attributes in query_processor
-        fileExist = os.path.exists(f"{self.location}/DBCatalog")
-        if not fileExist:
-            print("No catalog file in path: " + self.location)
-            return 1
-
-        f = open(f"{self.location}/DBCatalog")
-        data = json.load(f)
+        data = self.read_from_file()
 
         data["tables"].append(table)
 
         dumped_json = json.dumps(data)
-        bytes_data = bytes(dumped_json, encoding='utf-8')
+        self.write_to_file(dumped_json)
 
-        # Open a binary file for writing
-        with open(f"{self.location}/DBCatalog", "wb") as write_file:
-            # Write the bytes data to the binary file
-            write_file.write(bytes_data)
-        f.close()
         return 0
 
     """
@@ -186,37 +173,22 @@ class Catalog:
     for page/record updates
     """
     def update_count(self, table_name, val, type):
-        fileExist = os.path.exists(f"{self.location}/DBCatalog")
-        if not fileExist:
-            print("No catalog file in path: " + self.location)
-            return 1
-
-        f = open(f"{self.location}/DBCatalog")
-        data = json.load(f)
+        data = self.read_from_file()
 
         for i in data["tables"]:
             if i["name"] == table_name:
                 i[type] += val
                 dumped_json = json.dumps(data)
-                bytes_data = bytes(dumped_json, encoding='utf-8')
-                with open(f"{self.location}/DBCatalog", "wb") as write_file:
-                    # Write the bytes data to the binary file
-                    write_file.write(bytes_data)
-                f.close()
+                self.write_to_file(dumped_json)
+
                 return 0
 
         print("Table " + table_name + " not found")
-        f.close()
+
         return 1
 
     def print_catalog(self):
-        fileExist = os.path.exists(f"{self.location}/DBCatalog")
-        if not fileExist:
-            print("No catalog file in path: " + self.location)
-            return 1
-
-        f = open(f"{self.location}/DBCatalog")
-        data = json.load(f)
+        data = self.read_from_file()
 
         print("\nPrinting database information: ")
         for i in data["db"]:
@@ -241,17 +213,11 @@ class Catalog:
         if not tableFlag:
             print("There are no tables to display")
 
-        f.close()
+
         return 0
 
     def print_table(self, table_name):
-        fileExist = os.path.exists(f"{self.location}/DBCatalog")
-        if not fileExist:
-            print("No catalog file in path: " + self.location)
-            return 1
-
-        f = open(f"{self.location}/DBCatalog")
-        data = json.load(f)
+        data = self.read_from_file()
 
         for i in data["tables"]:
 
@@ -265,11 +231,11 @@ class Catalog:
                         print("\t" + x["name"] + ":" + x["type"])
                 print("Pages: " + str(i["pageCount"]))
                 print("Records: " + str(i["recordCount"]))
-                f.close()
+
                 return 0
 
         print("No such table " + table_name)
-        f.close()
+
         return 1
 
     """
@@ -278,19 +244,13 @@ class Catalog:
     Returns the type if table/attribute names exists
     """
     def get_attribute_type(self, table_name, attribute_name):
-        fileExist = os.path.exists(f"{self.location}/DBCatalog")
-        if not fileExist:
-            print("No catalog file in path: " + self.location)
-            return 1
-
-        f = open(f"{self.location}/DBCatalog")
-        data = json.load(f)
+        data = self.read_from_file()
 
         for i in data["tables"]:
             if i["name"] == table_name:
                 for x in i["attributes"]:
                     if x["name"] == attribute_name:
-                        f.close()
+
                         return x["type"]
                 print("No attribute " + attribute_name + " in table " + table_name)
                 return 1
@@ -303,19 +263,13 @@ class Catalog:
     Returns the bool: True if it is a prim key, False otherwise
     """
     def determine_attribute_key(self, table_name, attribute_name):
-        fileExist = os.path.exists(f"{self.location}/DBCatalog")
-        if not fileExist:
-            print("No catalog file in path: " + self.location)
-            return 1
-
-        f = open(f"{self.location}/DBCatalog")
-        data = json.load(f)
+        data = self.read_from_file()
 
         for i in data["tables"]:
             if i["name"] == table_name:
                 for x in i["attributes"]:
                     if x["name"] == attribute_name:
-                        f.close()
+
                         return x["primary_key"]
                 print("No attribute " + attribute_name + " in table " + table_name)
                 return 1
@@ -329,17 +283,11 @@ class Catalog:
     primary_key: bool whether or not its a primary key
     """
     def table_attributes(self, table_name):
-        fileExist = os.path.exists(f"{self.location}/DBCatalog")
-        if not fileExist:
-            print("No catalog file in path: " + self.location)
-            return 1
-
-        f = open(f"{self.location}/DBCatalog")
-        data = json.load(f)
+        data = self.read_from_file()
 
         for i in data["tables"]:
             if i["name"] == table_name:
-                f.close()
+
                 return i["attributes"]
 
         # Do we want this to return 1?
@@ -349,13 +297,7 @@ class Catalog:
     Returns the entire catalog as a json
     """
     def get_catalog(self):
-        fileExist = os.path.exists(f"{self.location}/DBCatalog")
-        if not fileExist:
-            print("No catalog file in path: " + self.location)
-            return 1
-
-        f = open(f"{self.location}/DBCatalog")
-        data = json.load(f)
+        data = self.read_from_file()
 
         return data
 
