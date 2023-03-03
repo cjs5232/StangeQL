@@ -24,6 +24,7 @@ class Catalog:
         self.page_size = page_size
         self.buffer_size = buffer_size
 
+    @property
     def create_catalog(self):
         dictionary = {
             "db": {
@@ -37,12 +38,24 @@ class Catalog:
 
         dumped_json = json.dumps(dictionary)
 
-        bytes_data = bytes(dumped_json, encoding='utf-8')
+        #bytes_data = list(bytes(dumped_json, 'utf-8'))
+        bytes_data = bytearray(dumped_json, 'utf-8')
+        for index in range(len(bytes_data)):
+            bytes_data[index] ^= 0b11111111
 
+        #bytes_data = bytes_data.decode('utf-8')
+        #bytes_data = bytes(bytes_data, 'utf-8')
+        bytes_data = bytes(bytes_data)
         # Open a binary file for writing
-        with open(f"{self.location}/DBCatalog", "wb+") as write_file:
+        with open(f"{self.location}/DBCatalog.bin", "wb+") as write_file:
             # Write the bytes data to the binary file
             write_file.write(bytes_data)
+        arr = bytearray(bytes_data)
+        for index in range(len(arr)):
+            arr[index] ^= 0b11111111
+        arr = bytes(arr)
+        print(str(arr))
+
         return 0
 
 
