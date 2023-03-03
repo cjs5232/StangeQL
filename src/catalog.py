@@ -116,6 +116,7 @@ class Catalog:
         print("Table - " + table_name + " not found in catalog")
         return 1
 
+    # TODO need to test
     def alter_table_add(self, table_name, attribute):
         data = self.read_from_file()
         for i in data["tables"]:
