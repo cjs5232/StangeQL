@@ -97,6 +97,10 @@ class Catalog:
 
         return self
 
+    """
+    This method is what we will use for drop table commands
+    Removes all data associated with a specific table
+    """
     def delete_table(self, table_name):
         data = self.read_from_file()
 
@@ -110,6 +114,34 @@ class Catalog:
                 return 0
 
         print("Table - " + table_name + " not found in catalog")
+        return 1
+
+    def alter_table_add(self, table_name, attribute):
+        data = self.read_from_file()
+        for i in data["tables"]:
+            if i["name"] == table_name:
+                i["attributes"].append(attribute)
+                dumped_json = json.dumps(data)
+                self.write_to_file(dumped_json)
+                return 0
+
+        print("Table " + table_name + " not found")
+        return 1
+
+    def alter_table_delete(self, table_name, attribute):
+        data = self.read_from_file()
+        for i in data["tables"]:
+            if i["name"] == table_name:
+                for x in i["attributes"]:
+                    if x["name"] == attribute["name"]:
+                        i["attributes"].remove(x)
+                        dumped_json = json.dumps(data)
+                        self.write_to_file(dumped_json)
+                        return 0
+                print("No attribute " + attribute["name"] + " + found")
+                return 1
+
+        print("Table " + table_name + " not found")
         return 1
 
     """
