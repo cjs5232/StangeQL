@@ -204,7 +204,8 @@ class QueryProcessor:
         status = self.process_complex_cmds()
         if status == 1:
             return BAD_STATUS
-
+        print(self.command_args)
+        
         table_name = self.command_prefix[2]
 
         if not ' '.join(self.command_prefix[:2]) == 'create table':
@@ -226,6 +227,7 @@ class QueryProcessor:
 
         tableAttribNames = [] #For easier lookup
         foundPrimaryKey = False
+        primaryKeyCount = 0
         for attrib in self.command_args[0]: # Only the first element as there shouldn't be multiple tuples passed
             attrib_components = attrib.split(" ") # 'placeofbirth char(10)'
             if len(attrib_components) < 2:
@@ -244,6 +246,11 @@ class QueryProcessor:
             
             if "primarykey" in attrib_components:
                 foundPrimaryKey = True
+                primaryKeyCount += 1
+
+            if primaryKeyCount > 1:
+                print("Too many primarykey")
+                return BAD_STATUS
 
             #add to table thing
             temp_Attrib = {
@@ -261,6 +268,7 @@ class QueryProcessor:
             return BAD_STATUS
         
         status = self.cat.add_table(table)
+
         return status
     
     def select_cmd(self):
@@ -281,6 +289,7 @@ class QueryProcessor:
         if status == 1:
             return BAD_STATUS
 
+        print(self.command_args)
 
 
         return GOOD_STATUS
@@ -404,6 +413,8 @@ class QueryProcessor:
             # if status == 1:
                 # return BAD_STATUS
             print(f"Inserting {attribute_to_insert} into {self.command_prefix[2]}")
+
+        print(self.command_args)
 
         return status
     
@@ -644,14 +655,14 @@ class QueryProcessor:
         if status == 1:
             return BAD_STATUS
         
-        print(len(self.command_args))
+        # print(len(self.command_args))
         if len(self.command_args) < 2:
             print(f"Incorrect format: More values expected for {self.command_args}")
             return BAD_STATUS
         if self.command_args[1] == "schema":
             return self.display_schema_cmd()
         elif self.command_args[1] == "info":
-            return self.display_info_cmd()
+            return self.display_info_cmd(self.command_args[2])
         else:
             return BAD_STATUS
     
@@ -754,21 +765,19 @@ class QueryProcessor:
             array: array of attributes to be processed.
         """
 
-        firstPass = re.compile('(\\d+\\.\\d+)|([(])|([)])|([a-zA-Z0-9. ]+)')
+        firstPass = re.compile('(\\d+\\.\\d+)|([(])|([)])|([a-zA-Z ]+|[0-9.]+)')
         processed_attribs = []
         rawRegex = firstPass.findall(self.inputString)
         for tup in rawRegex:
             for element in tup:
                 if element != "":
                     processed_attribs.append(element)
-
-        index = 0
+        processed_attribs = self.remove_blank_entries(processed_attribs)
         processed_attribs = self.clean_array(processed_attribs)
-        
 
-        self.command_args = processed_attribs
+        self.command_args = self.condense_attributes(processed_attribs)[1:]
+        # print(self.command_args)
         # self.command_args = self.condense_array(processed_attribs[1:], "(", ")")
-        print(self.command_args)
         return GOOD_STATUS
 
     def process_simple_cmds(self):
@@ -858,9 +867,6 @@ class QueryProcessor:
         Returns:
             array : updated array after replacement.
         """
-        # if index >= len(arr):
-        #     print("Index to replace larger than allowed")
-        #     return []
         left = arr[:index]
         right = arr[index:]
         return [*left, *arr_to_insert, *right]
@@ -868,10 +874,8 @@ class QueryProcessor:
     def condense_elements(self, arr, index):
 
         toInsert = [''.join([*arr[index:index+4]])]
-        arr[index] = ""
 
-        for count in range(1,4):
-            arr.append("")
+        for count in range(4):
             arr[count+index] = ""
         arr = self.remove_blank_entries(arr)
         arr = self.insert_into_array(arr, index, toInsert)
@@ -881,7 +885,11 @@ class QueryProcessor:
     def clean_array(self, arr):
         index = 0
         while index < len(arr):
+            # arr = self.remove_blank_entries(arr)
             temp = arr[index]
+            if temp == "":
+                index += 1
+                continue
             if temp[0] == " ":
                 arr[index] = temp[1:]
             if temp[:-1] == " ":
@@ -893,7 +901,8 @@ class QueryProcessor:
             if '"' == temp:
                 temp = ''.join([*arr[index:index+4]])
                 arr = self.condense_elements(arr, index)
-            index = arr.index(temp) + 1
+            index += 1
+        arr = self.remove_blank_entries(arr)
         return arr
 
     def remove_blank_entries(self, passedArray):
@@ -906,7 +915,46 @@ class QueryProcessor:
         Returns:
             array: cleaned input list
         """
-        return [element for element in passedArray if element != ""]
+        return [element for element in passedArray if element != "" if element != " "]
+
+    def remove_parens(self, arr):
+        for i in range(len(arr)-1):
+                if arr[i:i+2] == ["(",")"]:
+                    arr[i] = ""
+                    arr[i+1] = ""
+                    arr = self.remove_blank_entries(arr)
+        return arr
+
+    def condense_attributes(self, arr):
+        index = 0
+        # toInsert = []
+        while index < len(arr)-2:
+            arr = self.remove_parens(arr)
+            curr = arr[index]
+            if curr == "(":
+                if index + 1 >= len(arr):
+                    print("Error, no closing parentheses")
+                    return BAD_STATUS
+                tempIndex = index
+                combinedArr = []
+                while arr[tempIndex] != ")":
+                    if arr[tempIndex] == "(":
+                        tempIndex += 1
+                        curr = arr[tempIndex]
+                        continue
+                    combinedArr.append(arr[tempIndex])
+                    arr[tempIndex] = ""
+                    tempIndex += 1
+                arr = self.insert_into_array(arr, index, [combinedArr])
+                
+                # toInsert.append((index, combinedArr))
+            if curr == ")":
+                arr[index] = ""
+                index -= 1
+            arr = self.remove_blank_entries(arr)
+            index += 1
+        arr = self.remove_parens(arr)
+        return arr
 
     def main(self):
         """
@@ -958,5 +1006,14 @@ class QueryProcessor:
 
 if __name__ == '__main__':
     QP = QueryProcessor("testDB", "1024", "64")
-    QP.main()
-    print(f"Exit Code: {QP.main()}")
+    # QP.main()
+    inputString = [
+                'insert into foo values ();',
+                'insert into foo values (1 "foo bar" true 2.1), (3 "baz" true 4.14),(2 "bar" false 5.2), (5 "true" true null);', 
+                'insert into foo values (1 "foo bar" "fubar up" varchar(7) 2.1)'
+                ]
+    for i in inputString:
+        QP.inputString = i
+        QP.process_complex_cmds()
+        print(f"Input String: {i}\n--> {QP.command_args}\n")
+    # print(f"Exit Code: {QP.main()}")
