@@ -76,13 +76,11 @@ class QueryProcessor:
             elif command == "insert":
                 return self.process_insert(str_manipulate)
             elif command == "create":
-                create_commands = self.process_create(str_manipulate)
-                return create_commands
+                return self.process_create(str_manipulate)
             elif command == "display":
-                display = self.display(str_manipulate)
-                return display
+                return self.process_display(str_manipulate)
             elif command == "drop":
-                pass
+                return self.process_drop(str_manipulate)
             elif command == "alter":
                 pass
             elif command == "delete":
@@ -189,7 +187,7 @@ class QueryProcessor:
 
         return GOOD_STATUS
     
-    def process_select(str_manipulate):
+    def process_select(self, str_manipulate):
         select_commands = {
             "name": "",
             "select": [],
@@ -208,35 +206,78 @@ class QueryProcessor:
                 return BAD_STATUS
         
         str_manipulate = str_manipulate[str_manipulate.index("from ") + len("from "):]
+        name = ""
+        where = ""
+        orderby = ""
         if "where" not in str_manipulate and "orderby" not in str_manipulate:
-            select_commands["name"] = str_manipulate.replace(" ", "") # Should just be the table name left, but make sure no trailing spaces
+            name = str_manipulate.replace(" ", "") # Should just be the table name left, but make sure no trailing spaces
         elif "where" in str_manipulate and "orderby" not in str_manipulate:
-            select_commands["name"] = str_manipulate[:str_manipulate.index("where")].replace(" ", "")
+            name = str_manipulate[:str_manipulate.index("where")].replace(" ", "")
             str_manipulate = str_manipulate[str_manipulate.index("where ") + len("where "):]
-            select_commands["where"] = str_manipulate.strip()
+            where = str_manipulate.strip()
         elif "where" not in str_manipulate and "orderby" in str_manipulate:
-            select_commands["name"] = str_manipulate[:str_manipulate.index("orderby")].replace(" ", "")
+            name = str_manipulate[:str_manipulate.index("orderby")].replace(" ", "")
             str_manipulate = str_manipulate[str_manipulate.index("orderby ") + len("orderby "):]
-            select_commands["orderby"] = str_manipulate.strip()
+            orderby = str_manipulate.strip()
         elif "where" in str_manipulate and "orderby" in str_manipulate:
-            select_commands["name"] = str_manipulate[:str_manipulate.index("where")].replace(" ", "")
+            name = str_manipulate[:str_manipulate.index("where")].replace(" ", "")
             str_manipulate = str_manipulate[str_manipulate.index("where ") + len("where "):]
-            select_commands["where"] = str_manipulate[:str_manipulate.index("orderby")]
+            where = str_manipulate[:str_manipulate.index("orderby")]
             str_manipulate = str_manipulate[str_manipulate.index("orderby ") + len("orderby "):]
-            select_commands["orderby"] = str_manipulate.strip()
+            orderby = str_manipulate.strip()
         else:
             print("Formatting error")
             return BAD_STATUS
-
         
-        # TODO: test for table name
-        # TODO: test for column names
+        select_commands["name"] = name
+        select_commands["where"] = where
+        select_commands["orderby"] = orderby
+        
+        table_exists = self.does_table_exist(name)
+        if table_exists != 0:
+            return BAD_STATUS
+        
+        data = self.StorageM.get_records(name)
+        if data == 1:
+            return BAD_STATUS
+        
+        # TODO: test for column names <-- Do i have to or will this error be handled in the SM?
 
-        # TODO: actually call select
+        # Get column names from catalog
+        columns = []
+        attributes = self.cat.table_attributes(name)
 
+        if attributes == 1:
+            return BAD_STATUS
+        
+        for i in attributes:
+            columns.append(i['name'])
+
+        # Find necessary padding for columns and store in column_width
+        length_list = [len(str(element)) for row in data for element in row]
+        for i in columns:
+            length_list.append(len(i))
+        column_width = max(length_list)
+
+        # Format columns and barriers
+        columns_formatted = "|".join(str(element).center(column_width +2) for element in columns)
+        columns_formatted = "|" + columns_formatted + "|"
+        horizontal_lines = "-" * (len(columns_formatted))
+
+        # Print column section
+        print(horizontal_lines)
+        print(columns_formatted)
+        print(horizontal_lines)
+
+        # Print rows
+        for row in data:
+            row = "|".join(str(element).center(column_width + 2) for element in row)
+            row = "|" + row + "|"
+            print(row)
+        print("\n")
         return GOOD_STATUS
     
-    def display(self, str_manipulate):
+    def process_display(self, str_manipulate):
         """
         Usage display [info/schema];
 
@@ -268,14 +309,15 @@ class QueryProcessor:
             print(f"Incorrect format: More values expected for {command_args}")
             return BAD_STATUS
         if command_args[1] == "schema":
-            return self.display_schema_cmd()
+            return self.display_schema()
         elif command_args[1] == "info":
-            return self.display_info_cmd(command_args[2])
+            if self.cat.print_table(command_args[2]) == 1:
+                return BAD_STATUS # FAILURE
         else:
             print("Incorrect format")
             return BAD_STATUS
     
-    def display_schema_cmd(self) -> int:
+    def display_schema(self) -> int:
         """
         Displays the catalog of the database in an easy to read format.
         Including: Database location, page size, buffer size, table schema.
@@ -304,16 +346,16 @@ class QueryProcessor:
         
         return GOOD_STATUS
 
-    def display_info_cmd(self, table_name:str) -> int:
-        """
-        Calls print_table from Catalog to print given Table Names information.
-        Including: Table name, table schema, number of pages, number of records.
-        All output comes from Catalog.print_table.
-        """
-        if self.cat.print_table(table_name) == 1:
-            return BAD_STATUS # FAILURE
-
-        return GOOD_STATUS # SUCCESS
+    def process_drop(self, str_manipulate):
+        is_next_table = str_manipulate[:str_manipulate.index(" ")] == "table"
+        if not is_next_table:
+            print("Error: drop <table>")
+            return BAD_STATUS
+        table_name = str_manipulate[str_manipulate.index("table") + len("table "):]
+        if self.does_table_exist(table_name) != 0:
+            return BAD_STATUS
+        # TODO call drop on table
+        return GOOD_STATUS
 
     def check_data_type(self, d_type:str) -> int:
         """
@@ -338,7 +380,7 @@ class QueryProcessor:
         else:
             return BAD_STATUS
 
-    # def select_cmd(self, query:list) -> int:
+    def select_cmd_deprecated(self, query:list) -> int:
     #     """
     #     Parse select query and use storage manager to access data.
     #     Once data is returned from storage manager, get the table column
@@ -387,9 +429,9 @@ class QueryProcessor:
     #     else:
     #         for i in attributes:
     #             columns.append(i['name'])
-    #     return GOOD_STATUS
+        return GOOD_STATUS
     
-    def print_select_query(arrayPassed):
+    def print_select_query_deprecated(arrayPassed):
         #     # Find necessary padding for columns and store in column_width
         #     length_list = [len(str(element)) for row in data for element in row]
         #     for i in columns:
@@ -413,28 +455,6 @@ class QueryProcessor:
         #         print(row)
         #     print("\n")
         pass
-
-    def drop_cmd(self):
-        """
-        These statement will look very similar to SQL, but format is going to be changed to help
-        reduce parsing complexity. This will remove the table from the system. This includes the
-        data and schema.
-
-        The typical format:
-        drop table <name>;
-        Lets look at each part:
-            • drop table: All DDL statements that start with this will be considered to be trying
-            to drop a table. Both are considered to be keywords.
-            • <name>: is the name of the table to drop. All table names are unique.
-
-        Returns:
-            status: GOOD_STATUS or BAD_STATUS
-        """
-        status = self.process_simple_cmds()
-        if status == 1:
-            return BAD_STATUS
-
-        return GOOD_STATUS
 
     def alter_cmd(self):
         """
@@ -575,8 +595,6 @@ class QueryProcessor:
             Status: GOOD_STATUS or BAD_STATUS
         """
         return GOOD_STATUS
-    
-
 
     def process_attributes(self, str_manipulate):
         #All thats left is (hopefully) the tuples for inserting statments.
@@ -634,6 +652,15 @@ class QueryProcessor:
             array: cleaned input list
         """
         return [element for element in passedArray if element != "" if element != " "]
+
+    def does_table_exist(self, table_name):
+        does_exist = self.cat.table_exists(table_name)
+        if does_exist == 1: # 1 meaning table does NOT exist
+            print(f"No such table {table_name}")
+            return BAD_STATUS
+        elif does_exist == 2: # 2 meaning no catalog found
+            return BAD_STATUS
+        return GOOD_STATUS
 
     def help(self) -> int:
         """
