@@ -206,28 +206,11 @@ class QueryProcessor:
                 return BAD_STATUS
         
         str_manipulate = str_manipulate[str_manipulate.index("from ") + len("from "):]
-        name = ""
-        where = ""
-        orderby = ""
-        if "where" not in str_manipulate and "orderby" not in str_manipulate:
-            name = str_manipulate.replace(" ", "") # Should just be the table name left, but make sure no trailing spaces
-        elif "where" in str_manipulate and "orderby" not in str_manipulate:
-            name = str_manipulate[:str_manipulate.index("where")].replace(" ", "")
-            str_manipulate = str_manipulate[str_manipulate.index("where ") + len("where "):]
-            where = str_manipulate.strip()
-        elif "where" not in str_manipulate and "orderby" in str_manipulate:
-            name = str_manipulate[:str_manipulate.index("orderby")].replace(" ", "")
-            str_manipulate = str_manipulate[str_manipulate.index("orderby ") + len("orderby "):]
-            orderby = str_manipulate.strip()
-        elif "where" in str_manipulate and "orderby" in str_manipulate:
-            name = str_manipulate[:str_manipulate.index("where")].replace(" ", "")
-            str_manipulate = str_manipulate[str_manipulate.index("where ") + len("where "):]
-            where = str_manipulate[:str_manipulate.index("orderby")]
-            str_manipulate = str_manipulate[str_manipulate.index("orderby ") + len("orderby "):]
-            orderby = str_manipulate.strip()
-        else:
-            print("Formatting error")
+        where_and_orderby = self.process_where_orderby(str_manipulate)
+        if where_and_orderby == 1:
             return BAD_STATUS
+        
+        name, where, orderby = where_and_orderby
         
         select_commands["name"] = name
         select_commands["where"] = where
@@ -661,6 +644,31 @@ class QueryProcessor:
         elif does_exist == 2: # 2 meaning no catalog found
             return BAD_STATUS
         return GOOD_STATUS
+
+    def process_where_orderby(self, str_manipulate):
+        name = ""
+        where = ""
+        orderby = ""
+        if "where" not in str_manipulate and "orderby" not in str_manipulate:
+            name = str_manipulate.replace(" ", "") # Should just be the table name left, but make sure no trailing spaces
+        elif "where" in str_manipulate and "orderby" not in str_manipulate:
+            name = str_manipulate[:str_manipulate.index("where")].replace(" ", "")
+            str_manipulate = str_manipulate[str_manipulate.index("where ") + len("where "):]
+            where = str_manipulate.strip()
+        elif "where" not in str_manipulate and "orderby" in str_manipulate:
+            name = str_manipulate[:str_manipulate.index("orderby")].replace(" ", "")
+            str_manipulate = str_manipulate[str_manipulate.index("orderby ") + len("orderby "):]
+            orderby = str_manipulate.strip()
+        elif "where" in str_manipulate and "orderby" in str_manipulate:
+            name = str_manipulate[:str_manipulate.index("where")].replace(" ", "")
+            str_manipulate = str_manipulate[str_manipulate.index("where ") + len("where "):]
+            where = str_manipulate[:str_manipulate.index("orderby")]
+            str_manipulate = str_manipulate[str_manipulate.index("orderby ") + len("orderby "):]
+            orderby = str_manipulate.strip()
+        else:
+            print("Formatting error")
+            return BAD_STATUS
+        return name,where,orderby
 
     def help(self) -> int:
         """
