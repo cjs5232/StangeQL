@@ -82,7 +82,17 @@ class QueryProcessor:
             elif command == "drop":
                 return self.process_drop(str_manipulate)
             elif command == "alter":
-                pass
+                is_next_table = str_manipulate[:str_manipulate.index(" ")] == "table"
+                if not is_next_table:
+                    print("Error: Alter <table>")
+                    return BAD_STATUS
+                str_manipulate = str_manipulate[str_manipulate.index("table") + len("table "):]
+                table_name = str_manipulate[:str_manipulate.index(" ")]
+                if self.does_table_exist(table_name) == 1:
+                    return BAD_STATUS
+                str_manipulate = str_manipulate[str_manipulate.index(table_name) + len(table_name) + 1:]
+                # drop attrib_name
+                # add a_name a_type default value
             elif command == "delete":
                 pass
             elif command == "update":
