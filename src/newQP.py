@@ -59,6 +59,17 @@ def process_insert(strManipulate):
     insertCommands["name"] = strManipulate[:strManipulate.index("values")]
     strManipulate = strManipulate[strManipulate.index("values ") + len("values "):]
 
+    attributes = process_attributes(strManipulate)
+
+    for i in attributes:
+        insertCommands["values"].append(i)
+
+    #TODO check table valid
+    #TODO check values in attributes match catalog and evaluate
+
+    return insertCommands
+
+def process_attributes(strManipulate):
     #All thats left is (hopefully) the tuples for inserting statments.
     insertValues = strManipulate.split(",")
     attributes = []
@@ -78,20 +89,65 @@ def process_insert(strManipulate):
                 processedInsertVal = insert_into_array(processedInsertVal, i, tempVal)
                 processedInsertVal = remove_blank_entries(processedInsertVal)
         attributes.append(processedInsertVal)
+    return attributes
 
-    for i in attributes:
-        insertCommands["values"].append(i)
+def process_create(strManipulate):
+    create_commands = {
+        "name" : "",
+        "pageCount" : 0,
+        "recordCount" : 0,
+        "attributes" : []
+    }
+    isNextCommandTable = strManipulate[:strManipulate.index(" ")] == "table"
+    if not isNextCommandTable:
+        print("Error: Create <table>")
+        return BAD_STATUS
+    if "()" in strManipulate:
+        print("Empty Attributes")
+        return BAD_STATUS
+    
+    strManipulate = strManipulate[strManipulate.index("table") + len("table "):]
+    tableName = strManipulate[:strManipulate.index("(")].replace(" ","") #foo ( or foo(
+    create_commands["name"] = tableName
 
-    #TODO check table valid
-    #TODO check values in attributes match catalog and evaluate
+    strManipulate = strManipulate[strManipulate.index('(') + len("("):]
+    attributes = process_attributes(strManipulate) # Never gonna be more than one tuple.
 
-    return insertCommands
+    pkCount = 0
+    attributes_found = []
+    for attribute in attributes:
+        # attribute = attribute.split(" ")
+        attribute = remove_blank_entries(attribute)
+        temp_Attrib = {
+            "name" : attribute[0],
+            "type" : attribute[1],
+            "primary_key" : "primarykey" in attribute, #Technically could be in position 3, 4, or 5
+            "unique" : "unique" in attribute,
+            "notnull" : "notnull" in attribute
+        }
+        create_commands["attributes"].append(temp_Attrib)
+        if attribute[0] not in attributes_found:
+            attributes_found.append(attribute[0])
+        else:
+            print("Duplicate keys")
+            return BAD_STATUS
+        if "primarykey" in attribute:
+            pkCount += 1
+
+    if pkCount == 0:
+        print("No Primarykey found")
+        return BAD_STATUS
+    if pkCount > 1:
+        print("Too many primary keys")
+        return BAD_STATUS
+    
+    return create_commands
 
 def processInput(readInput):
     try:
         readInput = readInput[:-1] #Remove ;
         command = readInput.split(" ")[0] # Get the command
-
+        strManipulate = readInput[readInput.index(command) + len(command+" ")]
         if " " not in readInput:
             print("Incorrect formatting for statement")
             return BAD_STATUS
@@ -101,7 +157,8 @@ def processInput(readInput):
         elif command == "insert":
             return process_insert(strManipulate)
         elif command == "create":
-            pass
+            create_commands = process_create(strManipulate)
+            return create_commands
         elif command == "display":
             pass
         elif command == "drop":
