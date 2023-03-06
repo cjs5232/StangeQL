@@ -36,3 +36,6 @@ class Page:
 
     def get_id(self):
         return self.id
+    
+    def get_page_records(self):
+        return self.records
