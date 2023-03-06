@@ -13,6 +13,5 @@ Authors:
 
 class Record:
 
-    def __init__(self, id, table_name):
-        self.id = id
+    def __init__(self, table_name):
         self.table_name = table_name
