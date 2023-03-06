@@ -143,7 +143,7 @@ class QueryProcessor:
             temp_Attrib = {
                 "name" : attribute[0],
                 "type" : attribute[1],
-                "primary_key" : "primarykey" in attribute, #Technically could be in position 3, 4, or 5
+                "primarykey" : "primarykey" in attribute, #Technically could be in position 3, 4, or 5
                 "unique" : "unique" in attribute,
                 "notnull" : "notnull" in attribute
             }
@@ -177,15 +177,19 @@ class QueryProcessor:
         if "values" not in str_manipulate:
             print("No values keyword found")
             return BAD_STATUS
-        insert_commands["name"] = str_manipulate[:str_manipulate.index("values")]
+        table_name = str_manipulate[:str_manipulate.index("values")]
         str_manipulate = str_manipulate[str_manipulate.index("values ") + len("values "):]
 
-        attributes = self.process_attributes(str_manipulate)
+        insert_commands["name"] = table_name
 
+        attributes = self.process_attributes(str_manipulate)
         for i in attributes:
             insert_commands["values"].append(i)
 
-        #TODO check table valid
+        does_table_exist = self.cat.table_exists(table_name)
+        if does_table_exist == 1:
+            print(f"Table of name {table_name} already exists")
+            return BAD_STATUS
         #TODO check values in attributes match catalog and evaluate
 
         # attributes = self.cat.table_attributes(table_name)
@@ -593,11 +597,11 @@ class QueryProcessor:
         #All thats left is (hopefully) the tuples for inserting statments.
         insertValues = str_manipulate.split(",")
         attributes = []
+        if insertValues[0][0] == "(":
+            insertValues[0] = insertValues[0][1:]
+        if insertValues[-1][-1] == ")":
+            insertValues[-1] = insertValues[-1][:-1]
         for value in insertValues:
-            if "(" in value:
-                value = value.replace("(","")
-            if ")" in value:
-                value = value.replace(")","")
             processed_insert_values = value.split(" ")
             for i in range(len(value)):
                 if i+2 > len(processed_insert_values):
