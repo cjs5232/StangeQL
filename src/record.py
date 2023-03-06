@@ -11,7 +11,9 @@ Authors:
     - Connor Stange (cjs5232)
 """
 
-class Record:
+class Record: #TODO
 
-    def __init__(self, table_name):
-        self.table_name = table_name
+    def __init__(self, table, record):
+        self.table = table
+        self.content = record
+        

@@ -14,9 +14,10 @@ Authors:
 
 class Page:
 
-    def __init__(self, id, table_name):
+    def __init__(self, id, table):
         self.id = id
-        self.table_name = table_name
+        self.table = table
+        self.records = []
         self.pinCount = 0
         self.modified = False
         self.state = -1
