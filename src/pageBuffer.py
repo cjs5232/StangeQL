@@ -34,7 +34,6 @@ class PageBuffer:
         p.incr_pin()
         return p
 
-
     def get_page(self, p_id):
         for p in self.buffer:
             if p == p_id:
@@ -46,7 +45,6 @@ class PageBuffer:
 
         return self.read_page(p_id)
 
-    # TODO:
     def read_page(self, page):
         pass
 
@@ -73,7 +71,6 @@ class PageBuffer:
         for page in self.buffer:
             self.write_page(page)
 
-    # TODO:
     def write_page(self, page):
         pass
 
@@ -85,7 +82,6 @@ class PageBuffer:
                 else:
                     return ValueError("Page isn't pinned")
 
-    # TODO:
     def deallocate_page(self, page):
         pass
 
