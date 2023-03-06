@@ -116,7 +116,10 @@ class Catalog:
         print("Table - " + table_name + " not found in catalog")
         return 1
 
-    # TODO need to test
+    """
+    Finds the attribute based off of table name
+    Adds the given attribute to the table's list of attributes
+    """
     def alter_table_add(self, table_name, attribute):
         data = self.read_from_file()
         for i in data["tables"]:
@@ -129,17 +132,22 @@ class Catalog:
         print("Table " + table_name + " not found")
         return 1
 
-    def alter_table_delete(self, table_name, attribute):
+    """
+    Finds the attribute based off of table name/att name
+    Deletes the given attribute from the table's list of attributes
+    if the the names are equal
+    """
+    def alter_table_delete(self, table_name, attribute_name):
         data = self.read_from_file()
         for i in data["tables"]:
             if i["name"] == table_name:
                 for x in i["attributes"]:
-                    if x["name"] == attribute["name"]:
+                    if x["name"] == attribute_name:
                         i["attributes"].remove(x)
                         dumped_json = json.dumps(data)
                         self.write_to_file(dumped_json)
                         return 0
-                print("No attribute " + attribute["name"] + " + found")
+                print("No attribute " + attribute_name + " + found")
                 return 1
 
         print("Table " + table_name + " not found")
@@ -168,7 +176,7 @@ class Catalog:
         {
             "name": "x",
             "type": "x",
-            "primary_key": bool
+            "primarykey": bool
 
         },
         ...
@@ -235,7 +243,7 @@ class Catalog:
             print("Table name: " + i["name"])
             print("Table Schema:")
             for x in i["attributes"]:
-                if x["primary_key"] is True:
+                if x["primarykey"] is True:
                     print("\t" + x["name"] + ":" + x["type"] + " primarykey")
                 else:
                     print("\t" + x["name"] + ":" + x["type"])
@@ -257,7 +265,7 @@ class Catalog:
                 print("Table name: " + table_name)
                 print("Table Schema:")
                 for x in i["attributes"]:
-                    if x["primary_key"] is True:
+                    if x["primarykey"] is True:
                         print("\t" + x["name"] + ":" + x["type"] + " primarykey")
                     else:
                         print("\t" + x["name"] + ":" + x["type"])
@@ -302,17 +310,75 @@ class Catalog:
                 for x in i["attributes"]:
                     if x["name"] == attribute_name:
 
-                        return x["primary_key"]
+                        return x["primarykey"]
                 print("No attribute " + attribute_name + " in table " + table_name)
                 return 1
         print("No table of name " + table_name)
         return 1
 
     """
+    Helper function to determine if an attribute is unique
+    Returns 1 if there is no table/attribute name
+    Returns the bool: True if it is unique, False otherwise
+    """
+    def get_att_unique(self, table_name, attribute_name):
+        data = self.read_from_file()
+
+        for i in data["tables"]:
+            if i["name"] == table_name:
+                for x in i["attributes"]:
+                    if x["name"] == attribute_name:
+
+                        return x["unique"]
+                print("No attribute " + attribute_name + " in table " + table_name)
+                return 1
+        print("No table of name " + table_name)
+        return 1
+
+    """
+    Helper function to determine if an attribute is not null
+    Returns 1 if there is no table/attribute name
+    Returns the bool: True if it is not null, False otherwise
+    """
+    def get_att_notnull(self, table_name, attribute_name):
+        data = self.read_from_file()
+
+        for i in data["tables"]:
+            if i["name"] == table_name:
+                for x in i["attributes"]:
+                    if x["name"] == attribute_name:
+
+                        return x["notnull"]
+                print("No attribute " + attribute_name + " in table " + table_name)
+                return 1
+        print("No table of name " + table_name)
+        return 1
+
+    """
+    Helper function to get default value 
+    Returns 1 if there is no table/attribute name
+    Returns the bool: True if it is not null, False otherwise
+    """
+    def get_att_default(self, table_name, attribute_name):
+        data = self.read_from_file()
+
+        for i in data["tables"]:
+            if i["name"] == table_name:
+                for x in i["attributes"]:
+                    if x["name"] == attribute_name:
+
+                        return x["default"]
+                print("No attribute " + attribute_name + " in table " + table_name)
+                return 1
+        print("No table of name " + table_name)
+        return 1
+
+
+    """
     Returns a dictionary of the attributes in the form of
     name: att_name
     type: att_type
-    primary_key: bool whether or not its a primary key
+    primarykey: bool whether or not its a primary key
     """
     def table_attributes(self, table_name):
         data = self.read_from_file()
@@ -347,14 +413,18 @@ class Catalog:
         {
             "name": "att5",
             "type": "varchar(10)",
-            "primary_key": False
+            "default": "memes!",
+            "primarykey": False,
+            "notnull": True,
+            "unique": False
 
         },
         {
             "name": "att6",
             "type": "char(20)",
-            "primary_key": False
-
+            "primarykey": False
+            "notnull": True,
+            "unique": False
         }
     ]
     }
