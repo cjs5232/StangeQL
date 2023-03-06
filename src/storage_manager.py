@@ -71,7 +71,17 @@ class StorageManager:
         return 0
     
 
-    def check_primarykey(self, table, primary_key): #TODO
+    def check_primarykey(self, table_name, attributes, record): #TODO
+        pk_index = None
+        for i in range(len(attributes)):
+            if attributes[i]["primary_key"] == True:
+                pk_index = i
+        new_pk_val = record[pk_index]
+        print(new_pk_val)
+        # Check current primary key values in the table to see if new_pk_val already exists
+            # if it doesn't exist -- passes
+            # If it does exist -- fails
+
         return
 
 
@@ -93,6 +103,18 @@ class StorageManager:
             if table["name"] == table_name:
                 table_info = table
                 break
+        
+        attributes = table_info['attributes']
+        
+        # Check record types against schema and if primary key exists
+        for record in records:
+            type_result = self.check_record_types(attributes, record)
+            if type_result == 1:
+                return 1
+            pk_result = self.check_primarykey(table_name, attributes, record)
+            if pk_result == 1:
+                return 1
+            
 
         # If there are no pages for this table
         if table_info["pageCount"] == 0:
@@ -212,6 +234,7 @@ if __name__ == '__main__':
             ]
 
     for record in records:
-        SM.check_record_types(attributes, record)
+        # SM.check_record_types(attributes, record)
+        SM.check_primarykey("foo", attributes, record)
 
     print(f"Exit Code: ")
