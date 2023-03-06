@@ -96,7 +96,6 @@ class StorageManager:
             - How do we know table filename?
             - Where are we storing list/ordering of pages // free pages?
         """
-        table_filename = f"{table_name}.bin"
         # Get table information from catalog
         catalog_tables = self.cat.get_catalog()["tables"]
         for table in catalog_tables:
@@ -104,6 +103,7 @@ class StorageManager:
                 table_info = table
                 break
         
+        table_filename = f"{table_info['table_number']}.bin"
         attributes = table_info['attributes']
         
         # Check record types against schema and if primary key exists
