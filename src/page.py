@@ -13,9 +13,12 @@ Authors:
 
 
 class Page:
-
-    def __init__(self, id):
+    
+    def __init__(self, id, table_num, attributes):
         self.id = id
+        self.table_num = table_num
+        self.attributes = attributes
+        self.records = []
         self.pinCount = 0
         self.modified = False
         self.state = -1
@@ -34,3 +37,6 @@ class Page:
 
     def get_id(self):
         return self.id
+    
+    def get_page_records(self):
+        return self.records
