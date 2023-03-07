@@ -256,6 +256,9 @@ class PageBuffer:
             
         return page
 
+    def write_page_to_file(self, page): #TODO
+        return
+
 def main():
     ############################
     # SETUP
