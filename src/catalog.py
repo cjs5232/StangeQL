@@ -157,7 +157,19 @@ class Catalog:
         print("Table " + table_name + " not found")
         return 1
 
-    
+    def get_page_order(self, table_name):
+        """
+        Gets the page order, may need to refactor depending on what is needed
+        """
+        data = self.read_from_file()
+        for i in data["tables"]:
+
+            if i["name"] == table_name:
+                return i["page_order"]
+
+        print("Table " + table_name + " not found")
+        return 1
+
     def table_exists(self, table_name):
         """
         Helper function to determine if a table exists or not
