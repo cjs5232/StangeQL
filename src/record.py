@@ -13,7 +13,9 @@ Authors:
 
 class Record: #TODO
 
-    def __init__(self, table, record):
-        self.table = table
-        self.content = record
+    def __init__(self, table_num:int, page_id, record_values:list, encoded_values=[]):
+        self.table_num = table_num
+        self.page_id = page_id
+        self.values = record_values
+        self.encoded_values = encoded_values
         
