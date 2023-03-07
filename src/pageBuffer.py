@@ -240,7 +240,11 @@ class PageBuffer:
         
         return position
 
-    def load_page_from_file(self, page):
+    def load_page_from_file(self, page): #TODO
+        """
+        Purpose:
+            Load a page object with all records from a specific page
+        """
         # Get start of the page
         position = self.pageSize * page.id # Assumming page.id is page number
         print("Position:", position)
