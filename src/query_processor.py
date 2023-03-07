@@ -30,8 +30,6 @@ class QueryProcessor:
         self.command_prefix = []
 
         self.keywords = ["select", "create", "insert", "delete", "update", "display", "where", "set", "from", "orderby", "and", "or", "table", "notnull", "unique", "primarykey", "alter", "drop", "add", "default"]
-        # self.conditionalKeywords = ["!=", ">=", "<=", ">", "<", "="] #TODO pending deletion of old format code
-
 
     def check_data_type(self, d_type:str) -> int:
         """
@@ -186,52 +184,6 @@ class QueryProcessor:
     #         #no paren around tab_name, extra parameters in the parens that arent primarykey
     #         return BAD_STATUS
 
-
-    # def insert_cmd(self, query:list) -> int:
-    #     """
-    #     Parse the insert into query and store attributes. Use the
-    #     buffer manager to physically add the tuples of data into the table.
-
-    #     Insert tuple(s) of information into a table.
-    #     """
-    #     values = []
-    #     table_name = query[2]
-    #     query = query[4:]
-
-    #     query_str = ' '.join(query)
-
-    #     loop = True
-    #     while loop: # Each loop builds a tuple of row values and adds tuple to values list
-    #         vals = [] # list to hold each element in a row
-    #         cur_val = "" # Current value being built
-    #         for i in range(len(query_str)):
-    #             if query_str[i] == "(" or query_str[i] == ',':
-    #                 pass
-    #             elif query_str[i] == ")":
-    #                 if i == len(query_str) - 1:
-    #                     vals.append(cur_val)
-    #                     loop = False
-    #                     query_str = query_str[i+1:]
-    #                     break
-    #                 else:
-    #                     vals.append(cur_val)
-    #                     query_str = query_str[i+1:]
-    #                     break
-    #             elif query_str[i] == ' ':
-    #                 vals.append(cur_val)
-    #                 cur_val = ""
-    #             else:
-    #                 cur_val += query_str[i]
-                    
-    #         values.append(tuple(vals))
-        
-    #     attributes = self.cat.table_attributes(table_name)
-    #     if attributes == 1:
-    #         return BAD_STATUS
-        
-    #     result = self.StorageM.insert_record(table_name, attributes, values)
-    #     return result # update return based off storage manager
-
     def create_table_cmd(self):
         """
         Create a table in the catalog via a few steps:
@@ -274,33 +226,32 @@ class QueryProcessor:
 
         tableAttribNames = [] #For easier lookup
         foundPrimaryKey = False
-
-        #Loop through attributes
-        for attrib in self.command_args:
-            if len(attrib) < 2:
-                print(f"Less than expected number of values <{attrib}>")
+        for attrib in self.command_args[0]: # Only the first element as there shouldn't be multiple tuples passed
+            attrib_components = attrib.split(" ") # 'placeofbirth char(10)'
+            if len(attrib_components) < 2:
+                print(f"Less than expected number of values <{attrib_components}>")
                 return BAD_STATUS
-            if len(attrib) > 5:
-                print(f"Passed attributes more than expected values <{attrib}>")
+            if len(attrib_components) > 5:
+                print(f"Passed attributes more than expected values <{attrib_components}>")
                 return BAD_STATUS
-            if self.check_data_type(attrib[1]) == BAD_STATUS:
-                print(f"Invalid datatype: <{attrib[1]}>")
-                return BAD_STATUS
-            
-            if attrib[0] in tableAttribNames:
-                print(f"Duplicate attribute {attrib[0]}")
+            if self.check_data_type(attrib_components[1]) == BAD_STATUS:
+                print(f"Invalid datatype: <{attrib_components[1]}>")
                 return BAD_STATUS
             
-            if "primarykey" in attrib:
+            if attrib_components[0] in tableAttribNames:
+                print(f"Duplicate attribute {attrib_components[0]}")
+                return BAD_STATUS
+            
+            if "primarykey" in attrib_components:
                 foundPrimaryKey = True
 
             #add to table thing
             temp_Attrib = {
-                "name" : attrib[0],
-                "type" : attrib[1],
-                "primary_key" : "primarykey" in attrib, #Technically could be in position 3, 4, or 5
-                "unique" : "unique" in attrib,
-                "notnull" : "notnull" in attrib
+                "name" : attrib_components[0],
+                "type" : attrib_components[1],
+                "primary_key" : "primarykey" in attrib_components, #Technically could be in position 3, 4, or 5
+                "unique" : "unique" in attrib_components,
+                "notnull" : "notnull" in attrib_components
             }
 
             table["attributes"].append(temp_Attrib)
@@ -310,7 +261,6 @@ class QueryProcessor:
             return BAD_STATUS
         
         status = self.cat.add_table(table)
-
         return status
     
     def select_cmd(self):
@@ -330,7 +280,8 @@ class QueryProcessor:
         status = self.process_simple_cmds()
         if status == 1:
             return BAD_STATUS
-        
+
+
 
         return GOOD_STATUS
     
@@ -433,7 +384,73 @@ class QueryProcessor:
             status: GOOD_STATUS or BAD_STATUS
         """
         status = self.process_complex_cmds()
+        if status == 1:
+            return BAD_STATUS
+        if len(self.command_prefix) != 4:
+            print(f"Incorrect number of arguments for {' '.join(self.command_prefix)}")
+            return BAD_STATUS
+        joinedPrefix = ' '.join([*self.command_prefix[:2], self.command_prefix[3]]) # insert into values
+        if joinedPrefix != "insert into values":
+            print(f"incorrect formatting: {' '.join(self.command_prefix)}")
+            return BAD_STATUS
+        #Needs to fit scheme of insert into <valid table> values (array of values)
+
+        if self.command_args == [[]]:
+            print("Cannot insert empty attributes")
+            return BAD_STATUS
+
+        for attribute_to_insert in self.command_args:
+            # status = SM.insert(self.command_prefix[2], attribute_to_insert)
+            # if status == 1:
+                # return BAD_STATUS
+            print(f"Inserting {attribute_to_insert} into {self.command_prefix[2]}")
+
         return status
+    
+    # def insert_cmd(self, query:list) -> int:
+    #     """
+    #     Parse the insert into query and store attributes. Use the
+    #     buffer manager to physically add the tuples of data into the table.
+
+    #     Insert tuple(s) of information into a table.
+    #     """
+    #     values = []
+    #     table_name = query[2]
+    #     query = query[4:]
+
+    #     query_str = ' '.join(query)
+
+    #     loop = True
+    #     while loop: # Each loop builds a tuple of row values and adds tuple to values list
+    #         vals = [] # list to hold each element in a row
+    #         cur_val = "" # Current value being built
+    #         for i in range(len(query_str)):
+    #             if query_str[i] == "(" or query_str[i] == ',':
+    #                 pass
+    #             elif query_str[i] == ")":
+    #                 if i == len(query_str) - 1:
+    #                     vals.append(cur_val)
+    #                     loop = False
+    #                     query_str = query_str[i+1:]
+    #                     break
+    #                 else:
+    #                     vals.append(cur_val)
+    #                     query_str = query_str[i+1:]
+    #                     break
+    #             elif query_str[i] == ' ':
+    #                 vals.append(cur_val)
+    #                 cur_val = ""
+    #             else:
+    #                 cur_val += query_str[i]
+                    
+    #         values.append(tuple(vals))
+        
+    #     attributes = self.cat.table_attributes(table_name)
+    #     if attributes == 1:
+    #         return BAD_STATUS
+        
+    #     result = self.StorageM.insert_record(table_name, attributes, values)
+    #     return result # update return based off storage manager
     
     def drop_cmd(self):
         """
@@ -736,27 +753,22 @@ class QueryProcessor:
         Returns:
             array: array of attributes to be processed.
         """
-        attribs = self.inputString.split("(")[1:]
-        attribs = self.remove_blank_entries(attribs)
-        attribs = ' '.join(str(x) for x in attribs).replace("char ", "char(")
-        attribs = attribs.split(",")
-        temp_attribs = []
+
+        firstPass = re.compile('(\\d+\\.\\d+)|([(])|([)])|([a-zA-Z0-9. ]+)')
         processed_attribs = []
+        rawRegex = firstPass.findall(self.inputString)
+        for tup in rawRegex:
+            for element in tup:
+                if element != "":
+                    processed_attribs.append(element)
+
+        index = 0
+        processed_attribs = self.clean_array(processed_attribs)
         
-        for i in attribs:
-            if i == '' or i == ')':
-                print(f"Error in formatting <{self.inputString}>")
-                return BAD_STATUS
-            if i[-1] == ")":
-                i = i[:-1]
-            if i[0] == " ":
-                i = i[1:]
-            temp_attribs.append(i)
-        for processed_attrib in temp_attribs:
-            processed_attrib = self.remove_blank_entries(processed_attrib.split(" "))
-            processed_attribs.append(processed_attrib)
 
         self.command_args = processed_attribs
+        # self.command_args = self.condense_array(processed_attribs[1:], "(", ")")
+        print(self.command_args)
         return GOOD_STATUS
 
     def process_simple_cmds(self):
@@ -795,32 +807,36 @@ class QueryProcessor:
         Returns:
             _type_: _description_
         """
+
+        regex = re.compile('([a-zA-Z0-9. ]+)')
+        argument_split = re.split(regex, self.inputString)
+        argument_split = self.remove_blank_entries(argument_split)
+        argument_split = [*argument_split[0].split(" "), *argument_split[1:]]
+
+        self.command_args = self.clean_array(argument_split)
         
-        argumentsSplit = re.split(r' |,', self.inputString) # Split on spaces or commas
-        argumentsSplit = self.remove_blank_entries(argumentsSplit)
+        # argumentsSplit = re.split(r' |,', self.inputString) # Split on spaces or commas
+        # argumentsSplit = self.remove_blank_entries(argumentsSplit)
 
-        statmentWithNoSpacing = r'[a-z0-9]*[<=*|>=*|!=|=][a-z0-9.]*'
-        keywordConditional = r'[<=*|>=*|!=|=]+'
+        # statmentWithNoSpacing = r'[a-z0-9]*[<=*|>=*|!=|=][a-z0-9.]*'
+        # keywordConditional = r'[<=*|>=*|!=|=]+'
 
-        regexSpacing = re.compile(statmentWithNoSpacing)
+        # regexSpacing = re.compile(statmentWithNoSpacing)
+        # regexKeyword = re.compile(keywordConditional)
 
-        regexKeyword = re.compile(keywordConditional)
-        for i in argumentsSplit: #Fix formatting where conditionals may not have spacing (ie baz<=3.2)
-            index = argumentsSplit.index(i)
-            matched = regexSpacing.match(i)
-            if matched == None:
-                continue
-            searched = regexKeyword.search(i)
-            keywordFound = searched.group()
-            splitAtribs = i.split(keywordFound)
+        # for i in argumentsSplit: #Fix formatting where conditionals may not have spacing (ie baz<=3.2)
+        #     index = argumentsSplit.index(i)
+        #     matched = regexSpacing.match(i)
+        #     if matched == None:
+        #         continue
+        #     searched = regexKeyword.search(i)
+        #     keywordFound = searched.group()
+        #     splitAtribs = i.split(keywordFound)
 
-            argumentsSplit.remove(i)
-            argumentsSplit = self.insert_into_array(argumentsSplit, index, [splitAtribs[0], keywordFound, splitAtribs[1]])
+        #     argumentsSplit.remove(i)
+        #     argumentsSplit = self.insert_into_array(argumentsSplit, index, [splitAtribs[0], keywordFound, splitAtribs[1]])
 
-            # for cond in self.conditionalKeywords:
-            #     if cond in i:
-            #         argumentsSplit = self.format_conditional_statement(argumentsSplit)
-        self.command_args = argumentsSplit
+        print(self.command_args)
         return GOOD_STATUS
     
     def insert_into_array(self, arr, index, arr_to_insert):
@@ -842,50 +858,43 @@ class QueryProcessor:
         Returns:
             array : updated array after replacement.
         """
-        if index >= len(arr):
-            print("Index to replace larger than allowed")
-            return []
+        # if index >= len(arr):
+        #     print("Index to replace larger than allowed")
+        #     return []
         left = arr[:index]
         right = arr[index:]
         return [*left, *arr_to_insert, *right]
     
-    # def format_conditional_statement(self, argumentsSplit):
-    #     print(argumentsSplit)
-    #     temp = []
-    #     index = 0
-    #     for arg in argumentsSplit:
-    #         for cond in self.conditionalKeywords:
-    #             if index+1 >= len(argumentsSplit):
-    #                 break
-    #             if cond in arg and ''.join([cond,argumentsSplit[index+1]]) not in self.conditionalKeywords:
-    #                 argSplit = arg.split(cond)
-    #                 argSplit = self.remove_blank_entries(argSplit)
-    #                 if len(argSplit) == 2:
-    #                     argumentsSplit.remove(arg)
-    #                     temp.append([index, [argSplit[0], cond, argSplit[1]]])
-    #                     index += 1
-    #                     continue
-    #         # index += 1
+    def condense_elements(self, arr, index):
 
-    #     for indexOfInsert, insert_arr in temp:
-    #         argumentsSplit = self.insert_into_array(argumentsSplit, indexOfInsert, insert_arr)
+        toInsert = [''.join([*arr[index:index+4]])]
+        arr[index] = ""
 
-    #     for i in range(len(argumentsSplit)):
-    #         if i >= len(argumentsSplit)-1:
-    #             break
-    #         checkConditionalKeyword = argumentsSplit[i]
-    #         mayNeedCombining = "! = < >"
-    #         if checkConditionalKeyword in mayNeedCombining:
-    #             if argumentsSplit[i+1] in mayNeedCombining:
-    #                 combined = [f"{argumentsSplit[i]}{argumentsSplit[i+1]}"]
-    #                 argumentsSplit[i] = ''
-    #                 argumentsSplit[i+1] = ''
-    #                 argumentsSplit = self.remove_blank_entries(argumentsSplit)
-    #                 argumentsSplit = self.insert_into_array(argumentsSplit, i, combined)
-    #                 # i+=1
+        for count in range(1,4):
+            arr.append("")
+            arr[count+index] = ""
+        arr = self.remove_blank_entries(arr)
+        arr = self.insert_into_array(arr, index, toInsert)
 
-    #     # print(argumentsSplit)
-    #     return argumentsSplit
+        return arr
+    
+    def clean_array(self, arr):
+        index = 0
+        while index < len(arr):
+            temp = arr[index]
+            if temp[0] == " ":
+                arr[index] = temp[1:]
+            if temp[:-1] == " ":
+                arr[index] = temp[:-1]
+            temp = arr[index]
+            if "char" in temp: # Varchar and char are split on parens with the regex
+                temp = ''.join([*arr[index:index+4]])
+                arr = self.condense_elements(arr, index)
+            if '"' == temp:
+                temp = ''.join([*arr[index:index+4]])
+                arr = self.condense_elements(arr, index)
+            index = arr.index(temp) + 1
+        return arr
 
     def remove_blank_entries(self, passedArray):
         """
@@ -927,7 +936,7 @@ class QueryProcessor:
                 print(f"Incorrect format <{''.join(str(x) for x in readInput)}>")
                 status = 1
             specificCommand = command_prefix[0]
-            self.command_prefix = command_prefix
+            self.command_prefix = self.remove_blank_entries(command_prefix)
             commands = {
                 "create" : lambda: self.create_table_cmd(),
                 "select": lambda: self.select_cmd(),
@@ -941,7 +950,6 @@ class QueryProcessor:
             if status != 1:
                 status = commands.get(specificCommand, lambda: "invalid")()
 
-            # status = self.process_input(inputString)
             if status == 0:
                 print("SUCCESS\n")
             else:
