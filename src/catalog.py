@@ -23,7 +23,7 @@ class Catalog:
         self.buffer_size = buffer_size
         self.filename = "DBCatalog.bin"
 
-    @property
+
     def create_catalog(self):
         dictionary = {
             "db": {

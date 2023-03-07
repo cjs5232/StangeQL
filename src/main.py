@@ -45,7 +45,7 @@ class Driver:
             cat.create_catalog()
             print(f"New db created successfully\nPage size: {self.pageSize}\nBuffer size: {self.bufferSize}")
             # PB = pb.PageBuffer(self.bufferSize, self.pageSize)
-        elif not os.path.exists(self.dbloc+"/DBCatalog"):
+        elif not os.path.exists(self.dbloc+"/DBCatalog.bin"):
             print("Directory already exists, but no catalog. Creating now.")
             cat.create_catalog()
 
