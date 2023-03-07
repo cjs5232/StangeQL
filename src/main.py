@@ -49,8 +49,6 @@ class Driver:
             print("Directory already exists, but no catalog. Creating now.")
             cat.create_catalog()
 
-        cat.table_attributes("tab3")
-
     """
     Hand off program to the query processor for user input handling.
     TODO: Refactor after QP has been implemented to spit back error messages and exit gracefully (most likely includes backing up 
