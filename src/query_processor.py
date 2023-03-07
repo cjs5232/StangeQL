@@ -82,17 +82,7 @@ class QueryProcessor:
             elif command == "drop":
                 return self.process_drop(str_manipulate)
             elif command == "alter":
-                is_next_table = str_manipulate[:str_manipulate.index(" ")] == "table"
-                if not is_next_table:
-                    print("Error: Alter <table>")
-                    return BAD_STATUS
-                str_manipulate = str_manipulate[str_manipulate.index("table") + len("table "):]
-                table_name = str_manipulate[:str_manipulate.index(" ")]
-                if self.does_table_exist(table_name) == 1:
-                    return BAD_STATUS
-                str_manipulate = str_manipulate[str_manipulate.index(table_name) + len(table_name) + 1:]
-                # drop attrib_name
-                # add a_name a_type default value
+                
             elif command == "delete":
                 pass
             elif command == "update":
@@ -353,6 +343,38 @@ class QueryProcessor:
             return BAD_STATUS
         # TODO call drop on table
         return GOOD_STATUS
+
+    def process_alter(self, str_manipulate):
+        is_next_table = str_manipulate[:str_manipulate.index(" ")] == "table"
+        if not is_next_table:
+            print("Error: Alter <table>")
+            return BAD_STATUS
+        str_manipulate = str_manipulate[str_manipulate.index("table") + len("table "):]
+        table_name = str_manipulate[:str_manipulate.index(" ")]
+        if self.does_table_exist(table_name) == 1:
+            return BAD_STATUS
+        str_manipulate = str_manipulate[str_manipulate.index(table_name) + len(table_name) + 1:]
+        drop_or_add = str_manipulate[:str_manipulate.index(" ")]
+        if drop_or_add != "drop" and drop_or_add != "add":
+            print("No drop or add")
+            return BAD_STATUS
+        is_drop = drop_or_add == "drop" #If true, drop, else add
+        str_manipulate = str_manipulate[str_manipulate.index(drop_or_add) + len(drop_or_add + " "):]
+        if is_drop:
+            to_drop = str_manipulate
+            # status = SM.drop_attribute(table_name, to_drop)
+            # return status
+        a_name = str_manipulate[:str_manipulate.index(" ")]
+        str_manipulate = str_manipulate[str_manipulate.index(a_name) + len(a_name+" "):]
+        a_type = str_manipulate[:str_manipulate.index(" ")]
+        str_manipulate = str_manipulate[str_manipulate.index(a_type) + len(a_type+" "):]
+        if not "default" in str_manipulate:
+            status = 1 #TODO remove
+            # status = SM.add_addattribToTable(table_name, a_name, a_type, default=False)
+            # return status
+        default_value = str_manipulate[str_manipulate.index("default") + len("default "):]
+        # status = SM.add_attribToTable(table_name, a_name, a_type, default_value)
+        return status
 
     def check_data_type(self, d_type:str) -> int:
         """
