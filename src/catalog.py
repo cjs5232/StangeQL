@@ -92,7 +92,8 @@ class Catalog:
         """
         data = self.read_from_file()
 
-        self.location = data["db"]["location"]
+        #Doesnt need to update location since its already looking there
+        #self.location = data["db"]["location"]
         self.page_size = data["db"]["page_size"]
         self.buffer_size = data["db"]["buffer_size"]
 
