@@ -13,10 +13,11 @@ Authors:
 
 
 class Page:
-
-    def __init__(self, id, table):
+    
+    def __init__(self, id, table_num, attributes):
         self.id = id
-        self.table = table
+        self.table_num = table_num
+        self.attributes = attributes
         self.records = []
         self.pinCount = 0
         self.modified = False
