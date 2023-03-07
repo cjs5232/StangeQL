@@ -82,7 +82,7 @@ class QueryProcessor:
             elif command == "drop":
                 return self.process_drop(str_manipulate)
             elif command == "alter":
-                
+                return self.process_alter(str_manipulate)
             elif command == "delete":
                 pass
             elif command == "update":
