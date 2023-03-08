@@ -13,6 +13,9 @@ import re
 import catalog
 import storage_manager
 
+BAD_STATUS = 1
+GOOD_STATUS = 0
+
 class QueryProcessor:
 
     def __init__(self, dbloc, pageSize, bufferSize) -> None:
@@ -22,212 +25,220 @@ class QueryProcessor:
         self.cat = catalog.Catalog(dbloc, pageSize, bufferSize)
         self.StorageM = storage_manager.StorageManager(dbloc, pageSize, bufferSize)
 
+        self.inputString = ""
+        self.command_args = []
+        self.command_prefix = []
 
-    def check_data_type(self, d_type:str) -> int:
-        """
-        Helper function for create_table_cmd().
-        Checks if an attributes data type is valid or not and
-        returns the status code.
-        """
-        if "," in d_type: d_type = d_type.rstrip(',')
-        valid_types = ['integer', 'double', 'boolean'] # 'char(n)', 'varchar(n)'
-        if "varchar" in d_type:
-            n = re.findall("^varchar\(\d+\)$", d_type)
-            if len(n) == 1: 
-                return 0
-            else: 
-                return 1
-        elif "char" in d_type:
-            n = re.findall("^char\(\d+\)$", d_type)
-            if len(n) == 1: return 0
-            else: return 1
-        elif d_type in valid_types:
-            return 0
-        else:
-            return 1
+        self.keywords = ["select", "create", "insert", "delete", "update", "display", "where", "set", "from", "orderby", "and", "or", "table", "notnull", "unique", "primarykey", "alter", "drop", "add", "default"]
 
-
-    def create_table_cmd(self, query:list) -> int:
+    def main(self):
         """
-        Parse create table query and collect table name and attributes.
-        Use storage manager for creating the actual table file.
+        Kick start main text processing loop (while loop) that awaits for a ; to end a statement or an exit command.
+        NOTE: Carriage returns are ignored.
 
-        Creates the schema for a table. The schema is added to the catalog.
-        The schema will be used by the system to store/access/update/delete
-        data in the table.
+        Good status = 0 (Prints SUCCESS)
+        Bad status = !0 (Prints ERROR)
         """
+        print("\nPlease enter commands, enter <quit> to shutdown the db\n")
+
+        while True:
+            status = 0 
+            readInput = input("JottQL> ").lower()
+            if readInput == "<quit>":
+                return status
+            if readInput == "<help>":
+                self.help()
+                continue
+            while not ";" in readInput:
+                readInput += " " + input().lower()
+
+            processed_args = self.processInput(readInput)
+            if processed_args == BAD_STATUS:
+                print("ERROR")
+                continue
+
+            if status == 0:
+                print("SUCCESS\n")
+            else:
+                print("ERROR\n")
+
+    def processInput(self, readInput):
         try:
-            start_idx = 3
-            attributes = {} # Initialize dictionary to hold attributes (name, type) NOTE if key=primarykey value=column name
-            table_name = query[2]
+            readInput = readInput[:-1] #Remove ;
+            command = readInput.split(" ")[0] # Get the command
+            str_manipulate = readInput[readInput.index(command) + len(command+" ")]
+            if " " not in readInput:
+                print("Incorrect formatting for statement")
+                return BAD_STATUS
+            str_manipulate = readInput[readInput.index(" ")+1:] # start from after the next space
+            if command == "select":
+                return self.process_select(str_manipulate)
+            elif command == "insert":
+                return self.process_insert(str_manipulate)
+            elif command == "create":
+                return self.process_create(str_manipulate)
+            elif command == "display":
+                return self.process_display(str_manipulate)
+            elif command == "drop":
+                return self.process_drop(str_manipulate)
+            elif command == "alter":
+                return self.process_alter(str_manipulate)
+            elif command == "delete":
+                pass
+            elif command == "update":
+                pass
+            else:
+                print(f"Bad command passed {command}")
+                return BAD_STATUS
+        except ValueError:
+            print(f"Error with formatting {readInput}")
+            return BAD_STATUS
+        except Exception as e:
+            print("Undiagnosed error caught.")
+            print(e)
+            return BAD_STATUS
 
-            # Steup
-
-            if "()" in table_name:
-                print("Table with no attributes")
-                return 1
-            elif "(" in table_name:
-                split_string = table_name.split('(')
-                query.remove(table_name)
-
-                # there was a "(" + split
-                table_name = split_string[0]
-                query.insert(2, table_name)
-                attr_split = split_string[1]
-                if attr_split != '':
-                    query.insert(3, attr_split)
-
-                #table_name = table_name[:-1]
-
-            elif query[start_idx] == "(":
-                start_idx = 4
-
-
-            # Check catalog
-            does_table_exist = self.cat.table_exists(table_name)
-            if does_table_exist == 1: # 1 meaning table does exist
-                print(f"Table of name {table_name} already exists")
-                return 1
-            elif does_table_exist == 2: # 2 meaning no catalog found
-                return 1
-
-            # Loop through attributes
-            i = start_idx
-            while i < len(query):
-                if query[i] == ")":
-                    break
-
-                name = query[i]
-                if "(" in name:
-                    name = name.strip("(")
-
-                d_type = query[i+1]
-
-                if "))" in d_type:
-                    d_type = d_type[:-1]
-                elif "char" not in d_type and "varchar" not in d_type and ")" in d_type:
-                    d_type = d_type[:-1]
-
-                if name in attributes.keys():
-                    print(f'Duplicate attribute name "{name}"')
-                    return 1
-
-                if self.check_data_type(d_type) == 1:
-                    print(f'Invalid data type "{d_type}"')
-                    return 1
-
-                if "," in d_type:
-                    d_type = d_type.rstrip(',')
-                    attributes[name] = d_type
-                    i += 2
-                    continue
-                elif len(query) <= i+2:
-                    attributes[name] = d_type
-                    break
-
-                if "primarykey" in query[i+2] and "primarykey" not in attributes.keys():
-                    query[i+2].rstrip(',')
-                    attributes[name] = d_type
-                    attributes["primarykey"] = name
-                    i += 3
-                elif "primarykey" in query[i+2] and "primarykey" in attributes.keys():
-                    print("More than 1 primary key")
-                    return 1
-                else:
-                    attributes[name] = d_type
-                    i += 2
-
-            if "primarykey" not in attributes.keys():
-                print("No primary key defined")
-                return 1
-
-
-            # {
-            # "name" : "num",
-            # "type" : "integer",
-            # "primary_key" : False
-            # }
-            table = {
-                    "name" : table_name,
-                    "pageCount" : 0,
-                    "recordCount" : 0,
-                    "attributes" : []
-            }
-
-            for i in attributes:
-                if not i == "primarykey": # Add all non primary keys to array of attributes in table dict
-                    table["attributes"].append({"name" : i, "type": attributes[i], "primary_key" : False})
-
-
-            for i in range(len(table["attributes"])):
-                #Iterate through and find the primary key fugger
-                if attributes["primarykey"] == table["attributes"][i]["name"]:
-                    table["attributes"][i].update({"primary_key" : True}) # Updating to little T true in the catalog?
-
-            returnCode = self.cat.add_table(table)
-            if returnCode == 1:
-                return 1
-
-            status = self.StorageM.create_table(table_name)
-
-            return status
-        except:
-            #TODO actual checks for things below
-            #no paren around tab_name, extra parameters in the parens that arent primarykey
-            return 1
-
-
-
-
-    def select_cmd(self, query:list) -> int:
-        """
-        Parse select query and use storage manager to access data.
-        Once data is returned from storage manager, get the table column
-        names from the catalog and output the table in a clean/formatted
-        way.
-
-        Access data in tables. Will display all of the data in the table in
-        an easy to read format, including column names.
-        """
-        attributes = []
-
-        if "from" not in query:
-            print('"from" keyword missing in select query')
-            return 1
-
-        for i in range(len(query)):
-            if query[i] == "from":
-                table_name = query[i+1]
+    def process_create(self, str_manipulate):
+        create_commands = {
+            "name" : "",
+            "pageCount" : 0,
+            "recordCount" : 0,
+            "attributes" : []
+        }
+        is_next_table = str_manipulate[:str_manipulate.index(" ")] == "table"
+        if not is_next_table:
+            print("Error: Create <table>")
+            return BAD_STATUS
+        if "()" in str_manipulate:
+            print("Empty Attributes")
+            return BAD_STATUS
         
-        # Check catalog
+        str_manipulate = str_manipulate[str_manipulate.index("table") + len("table "):]
+        table_name = str_manipulate[:str_manipulate.index("(")].replace(" ","") #foo ( or foo(
+        create_commands["name"] = table_name
+
         does_table_exist = self.cat.table_exists(table_name)
-        if does_table_exist == 0: # 0 meaning table does NOT exist
-            print(f"No such table {table_name}")
-            return 1
-        elif does_table_exist == 2: # 2 meaning no catalog found
-            return 1
+        if does_table_exist == 1:
+            print(f"Table of name {table_name} already exists")
+            return BAD_STATUS
+
+        str_manipulate = str_manipulate[str_manipulate.index('(') + len("("):]
+        attributes = self.process_attributes(str_manipulate) # Never gonna be more than one tuple.
+
+        primary_key_count = 0
+        attributes_found = []
+        for attribute in attributes:
+            # attribute = attribute.split(" ")
+            attribute = self.remove_blank_entries(attribute)
+            temp_Attrib = {
+                "name" : attribute[0],
+                "type" : attribute[1],
+                "primarykey" : "primarykey" in attribute, #Technically could be in position 3, 4, or 5
+                "unique" : "unique" in attribute,
+                "notnull" : "notnull" in attribute
+            }
+            create_commands["attributes"].append(temp_Attrib)
+            if attribute[0] not in attributes_found:
+                attributes_found.append(attribute[0])
+            else:
+                print("Duplicate keys")
+                return BAD_STATUS
+            if "primarykey" in attribute:
+                primary_key_count += 1
+
+        if primary_key_count == 0:
+            print("No Primarykey found")
+            return BAD_STATUS
+        if primary_key_count > 1:
+            print("Too many primary keys")
+            return BAD_STATUS
         
-        if query[1] == "*":
-            attributes.append(query[1])
-        else: # Assume single primary key select 
-            attributes.append(query[1]) # TODO: fix this to check for non-primary key?
-            # print(f"Invalid selection: {query[1]}")
-            # return 1
+        status = self.cat.add_table(create_commands)
+        return status
+    
+    def process_insert(self, str_manipulate):
+        insert_commands = {
+                "name": "",
+                "values": []
+            }
+        if str_manipulate[:str_manipulate.index(" ")] != "into":
+            print("Second argument must be into")
+        str_manipulate = str_manipulate[str_manipulate.index("into ") + len("into "):] # drop "into"
+        if "values" not in str_manipulate:
+            print("No values keyword found")
+            return BAD_STATUS
+        table_name = str_manipulate[:str_manipulate.index("values")]
+        str_manipulate = str_manipulate[str_manipulate.index("values ") + len("values "):]
+
+        insert_commands["name"] = table_name
+
+        attributes = self.process_attributes(str_manipulate)
+        for i in attributes:
+            insert_commands["values"].append(i)
+
+        does_table_exist = self.cat.table_exists(table_name)
+        if does_table_exist == 1:
+            print(f"Table of name {table_name} already exists")
+            return BAD_STATUS
+        #TODO check values in attributes match catalog and evaluate
+
+        # attributes = self.cat.table_attributes(table_name)
+        # if attributes == 1:
+            # return BAD_STATUS
+
+        #result = self.StorageM.insert_record(table_name, attributes, values)
+        #return result # update return based off storage manager
+
+        return GOOD_STATUS
+    
+    def process_select(self, str_manipulate):
+        select_commands = {
+            "name": "",
+            "select": [],
+            "where": [],
+            "orderby": ""
+        }
+        if "from" not in str_manipulate:
+                print(f"No FROM in command")
+                return BAD_STATUS
+
+        select_args = str_manipulate[:str_manipulate.index("from")]
+        select_commands["select"] = select_args.replace(" ", "").split(",") #Remove whitespace from select_args and split on commas
+
+        if len(str_manipulate) < str_manipulate.index("from " + len("from ")):
+                print("Bad formatting")
+                return BAD_STATUS
         
-        # Get Data from Storage Manager: Expecting return: data = [(), (), ...]
-        data = self.StorageM.get_records(table_name)
+        str_manipulate = str_manipulate[str_manipulate.index("from ") + len("from "):]
+        where_and_orderby = self.process_where_orderby(str_manipulate)
+        if where_and_orderby == 1:
+            return BAD_STATUS
+        
+        name, where, orderby = where_and_orderby
+        
+        select_commands["name"] = name
+        select_commands["where"] = where
+        select_commands["orderby"] = orderby
+        
+        table_exists = self.does_table_exist(name)
+        if table_exists != 0:
+            return BAD_STATUS
+        
+        data = self.StorageM.get_records(name)
         if data == 1:
-            return 1
+            return BAD_STATUS
+        
+        # TODO: test for column names <-- Do i have to or will this error be handled in the SM?
 
         # Get column names from catalog
         columns = []
-        attributes = self.cat.table_attributes(table_name)
+        attributes = self.cat.table_attributes(name)
 
         if attributes == 1:
-            return 1
-        else:
-            for i in attributes:
-                columns.append(i['name'])
+            return BAD_STATUS
+        
+        for i in attributes:
+            columns.append(i['name'])
 
         # Find necessary padding for columns and store in column_width
         length_list = [len(str(element)) for row in data for element in row]
@@ -251,57 +262,49 @@ class QueryProcessor:
             row = "|" + row + "|"
             print(row)
         print("\n")
-        
-        return 0
-
-
-    def insert_cmd(self, query:list) -> int:
+        return GOOD_STATUS
+    
+    def process_display(self, str_manipulate):
         """
-        Parse the insert into query and store attributes. Use the
-        buffer manager to physically add the tuples of data into the table.
+        Usage display [info/schema];
 
-        Insert tuple(s) of information into a table.
+        Display schema
+            This command will display the catalog of the database in an easy to read format. For this
+            phase it will just display:
+            • database location
+            • page size
+            • buffer size
+            • table schema
+
+        Display Info
+            This command will display the information about a table in an easy to read format. Tt will
+            display:
+            • table name
+            • table schema
+            • number of pages
+            • number of records
+            The command will be display info <name>;
+        
+
+        Returns:
+            status: GOOD_STATUS or BAD_STATUS
         """
-        values = []
-        table_name = query[2]
-        query = query[4:]
-
-        query_str = ' '.join(query)
-
-        loop = True
-        while loop: # Each loop builds a tuple of row values and adds tuple to values list
-            vals = [] # list to hold each element in a row
-            cur_val = "" # Current value being built
-            for i in range(len(query_str)):
-                if query_str[i] == "(" or query_str[i] == ',':
-                    pass
-                elif query_str[i] == ")":
-                    if i == len(query_str) - 1:
-                        vals.append(cur_val)
-                        loop = False
-                        query_str = query_str[i+1:]
-                        break
-                    else:
-                        vals.append(cur_val)
-                        query_str = query_str[i+1:]
-                        break
-                elif query_str[i] == ' ':
-                    vals.append(cur_val)
-                    cur_val = ""
-                else:
-                    cur_val += query_str[i]
-                    
-            values.append(tuple(vals))
         
-        attributes = self.cat.table_attributes(table_name)
-        if attributes == 1:
-            return 1
-        
-        result = self.StorageM.insert_record(table_name, attributes, values)
-        return result # update return based off storage manager
+        command_args = str_manipulate.split(" ")
 
-
-    def display_schema_cmd(self) -> int:
+        if len(command_args) < 2:
+            print(f"Incorrect format: More values expected for {command_args}")
+            return BAD_STATUS
+        if command_args[1] == "schema":
+            return self.display_schema()
+        elif command_args[1] == "info":
+            if self.cat.print_table(command_args[2]) == 1:
+                return BAD_STATUS # FAILURE
+        else:
+            print("Incorrect format")
+            return BAD_STATUS
+    
+    def display_schema(self) -> int:
         """
         Displays the catalog of the database in an easy to read format.
         Including: Database location, page size, buffer size, table schema.
@@ -312,14 +315,14 @@ class QueryProcessor:
         catalog = self.cat.get_catalog()
 
         if catalog == 1:
-            return 1
+            return BAD_STATUS
         
         for i in catalog['tables']:
             tables.append(i['name'])
         
         if len(tables) == 0:
             print("\nNo tables to display")
-            return 0
+            return GOOD_STATUS
         
         print("\nTables:\n")
         
@@ -328,20 +331,380 @@ class QueryProcessor:
             if i < len(tables) - 1:
                 print("\n")
         
-        return 0
+        return GOOD_STATUS
 
+    def process_drop(self, str_manipulate):
+        is_next_table = str_manipulate[:str_manipulate.index(" ")] == "table"
+        if not is_next_table:
+            print("Error: drop <table>")
+            return BAD_STATUS
+        table_name = str_manipulate[str_manipulate.index("table") + len("table "):]
+        if self.does_table_exist(table_name) != 0:
+            return BAD_STATUS
+        # TODO call drop on table
+        return GOOD_STATUS
 
-    def display_info_cmd(self, table_name:str) -> int:
+    def process_alter(self, str_manipulate):
+        is_next_table = str_manipulate[:str_manipulate.index(" ")] == "table"
+        if not is_next_table:
+            print("Error: Alter <table>")
+            return BAD_STATUS
+        str_manipulate = str_manipulate[str_manipulate.index("table") + len("table "):]
+        table_name = str_manipulate[:str_manipulate.index(" ")]
+        if self.does_table_exist(table_name) == 1:
+            return BAD_STATUS
+        str_manipulate = str_manipulate[str_manipulate.index(table_name) + len(table_name) + 1:]
+        drop_or_add = str_manipulate[:str_manipulate.index(" ")]
+        if drop_or_add != "drop" and drop_or_add != "add":
+            print("No drop or add")
+            return BAD_STATUS
+        is_drop = drop_or_add == "drop" #If true, drop, else add
+        str_manipulate = str_manipulate[str_manipulate.index(drop_or_add) + len(drop_or_add + " "):]
+        if is_drop:
+            to_drop = str_manipulate
+            # status = SM.drop_attribute(table_name, to_drop)
+            # return status
+        a_name = str_manipulate[:str_manipulate.index(" ")]
+        str_manipulate = str_manipulate[str_manipulate.index(a_name) + len(a_name+" "):]
+        a_type = str_manipulate[:str_manipulate.index(" ")]
+        str_manipulate = str_manipulate[str_manipulate.index(a_type) + len(a_type+" "):]
+        if not "default" in str_manipulate:
+            status = 1 #TODO remove
+            # status = SM.add_addattribToTable(table_name, a_name, a_type, default=False)
+            # return status
+        default_value = str_manipulate[str_manipulate.index("default") + len("default "):]
+        # status = SM.add_attribToTable(table_name, a_name, a_type, default_value)
+        return status
+
+    def check_data_type(self, d_type:str) -> int:
         """
-        Calls print_table from Catalog to print given Table Names information.
-        Including: Table name, table schema, number of pages, number of records.
-        All output comes from Catalog.print_table.
+        Helper function for create_table_cmd().
+        Checks if an attributes data type is valid or not and
+        returns the status code.
         """
-        if self.cat.print_table(table_name) == 1:
-            return 1 # FAILURE
+        if "," in d_type: d_type = d_type.rstrip(',')
+        valid_types = ['integer', 'double', 'boolean'] # 'char(n)', 'varchar(n)'
+        if "varchar" in d_type:
+            n = re.findall("^varchar\(\d+\)$", d_type)
+            if len(n) == 1: 
+                return GOOD_STATUS
+            else: 
+                return BAD_STATUS
+        elif "char" in d_type:
+            n = re.findall("^char\(\d+\)$", d_type)
+            if len(n) == 1: return GOOD_STATUS
+            else: return BAD_STATUS
+        elif d_type in valid_types:
+            return GOOD_STATUS
+        else:
+            return BAD_STATUS
 
-        return 0 # SUCCESS
+    def select_cmd_deprecated(self, query:list) -> int:
+    #     """
+    #     Parse select query and use storage manager to access data.
+    #     Once data is returned from storage manager, get the table column
+    #     names from the catalog and output the table in a clean/formatted
+    #     way.
 
+    #     Access data in tables. Will display all of the data in the table in
+    #     an easy to read format, including column names.
+    #     """
+    #     attributes = []
+
+    #     if "from" not in query:
+    #         print('"from" keyword missing in select query')
+    #         return BAD_STATUS
+
+    #     for i in range(len(query)):
+    #         if query[i] == "from":
+    #             table_name = query[i+1]
+        
+    #     # Check catalog
+    #     does_table_exist = self.cat.table_exists(table_name)
+    #     if does_table_exist == 0: # 0 meaning table does NOT exist
+    #         print(f"No such table {table_name}")
+    #         return BAD_STATUS
+    #     elif does_table_exist == 2: # 2 meaning no catalog found
+    #         return BAD_STATUS
+        
+    #     if query[1] == "*":
+    #         attributes.append(query[1])
+    #     else: # Assume single primary key select 
+    #         attributes.append(query[1]) # TODO: fix this to check for non-primary key?
+    #         # print(f"Invalid selection: {query[1]}")
+    #         # return BAD_STATUS
+        
+    #     # Get Data from Storage Manager: Expecting return: data = [(), (), ...]
+    #     data = self.StorageM.get_records(table_name)
+    #     if data == 1:
+    #         return BAD_STATUS
+
+    #     # Get column names from catalog
+    #     columns = []
+    #     attributes = self.cat.table_attributes(table_name)
+
+    #     if attributes == 1:
+    #         return BAD_STATUS
+    #     else:
+    #         for i in attributes:
+    #             columns.append(i['name'])
+        return GOOD_STATUS
+    
+    def print_select_query_deprecated(arrayPassed):
+        #     # Find necessary padding for columns and store in column_width
+        #     length_list = [len(str(element)) for row in data for element in row]
+        #     for i in columns:
+        #         length_list.append(len(i))
+        #     column_width = max(length_list)
+
+        #     # Format columns and barriers
+        #     columns_formatted = "|".join(str(element).center(column_width +2) for element in columns)
+        #     columns_formatted = "|" + columns_formatted + "|"
+        #     horizontal_lines = "-" * (len(columns_formatted))
+
+        #     # Print column section
+        #     print(horizontal_lines)
+        #     print(columns_formatted)
+        #     print(horizontal_lines)
+
+        #     # Print rows
+        #     for row in data:
+        #         row = "|".join(str(element).center(column_width + 2) for element in row)
+        #         row = "|" + row + "|"
+        #         print(row)
+        #     print("\n")
+        pass
+
+    def alter_cmd(self):
+        """
+        
+        These statement will look very similar to SQL, but format is going to be changed to help
+        reduce parsing complexity.
+        The typical formats:
+            alter table <name> drop <a_name>;
+            alter table <name> add <a_name> <a_type>;
+            alter table <name> add <a_name> <a_type> default <value>;
+        
+        Lets look at each part:
+            • alter table: All DDL statements that start with this will be considered to be trying
+            to alter a table. Both are considered to be keys words.
+            • <name>: is the name of the table to alter. All table names are unique.
+            • drop <a name> version: will remove the attribute with the given name from the table;
+            including its data. drop is a keyword.
+            • <name> add <a name> <a type> version: will add an attribute with the given name
+            and data type to the table; as long as an attribute with that name does not exist
+            already. It will then will add a null value for that attribute to all existing tuples in the
+            database. add is a keyword.
+            • <name> add <a name> <a type> default <value>: version: will add an attribute
+            with the given name and data type to the table; as long as an attribute with that name
+            does not exist already. It will then will add the default value for that attribute to all
+            existing tuples in the database. The data type of the value must match that of the
+            attribute, or its an error. default is a keyword.
+        Any attribute being dropped cannot be the primary key.
+        Examples:
+        alter table foo drop bar;
+        alter table foo add gar double;
+        alter table foo add far double default 10.1;
+        alter table foo add zar varchar(20) default "hello world";
+        Note: altering a table is not just as easy as removing/adding an attribute. For example,
+        things like number of records per page need to be modified.
+
+        Returns:
+            status: GOOD_STATUS or BAD_STATUS
+        """
+
+        status = self.process_simple_cmds()
+        if status == 1:
+            return BAD_STATUS
+
+        return GOOD_STATUS
+
+    def delete_cmd(self):
+        """
+        These statements will look very similar to SQL, but the format is going to be changed to
+        help reduce parsing complexity.
+        The typical format:
+        delete from <name> where <condition>;
+        Lets look at each part:
+            • delete from: All DML statements that start with this will be considered to be trying
+            to delete data from a table. They both are to be considered keywords.
+            • <name>: is the name of the table to delete from. All table names are unique.
+            • where <condition>: A condition where a tuple should deleted. If this evaluates to
+            true the tuple is remove; otherwise it remains. See below for evaluating conditionals. If
+            there is no where clause it is considered to be a where true and all tuples get deleted.
+            where is considered a keyword.
+        Example:
+            delete from foo;
+            delete from foo where bar = 10;
+            delete from foo where bar > 10 and foo = "baz";
+            delete from foo where bar != bazzle;
+        If a value being deleted is referred to by another table via a foreign key the delete will not
+        happen and an error will be reported.
+        Upon error the deletion process will stop. Any items deleted before the error will still be
+        deleted
+
+        Returns:
+            status: GOOD_STATUS or BAD_STATUS
+        """
+
+        status = self.process_simple_cmds()
+        if status == 1:
+            return BAD_STATUS
+        
+        return GOOD_STATUS
+
+    def update_cmd(self):
+        """
+        These statements will look very similar to SQL, but the format is going to be changed to
+        help reduce parsing complexity.
+        The typical format:
+        update <name>
+        set <column_1> = <value>
+        where <condition>;
+        Lets look at each part:
+            • update: All DML statements that start with this will be considered to be trying to
+            update data in a table. Keyword.
+            • <name>: is the name of the table to update in. All table names are unique.
+            • set <column 1> = <value> Sets the column to the provided values. set is a key-
+            word.
+            • <value>: a constant value.
+            • where <condition>: A condition where a tuple should updated. If this evaluates to
+            true the tuple is updated; otherwise it remains the same. See below for evaluating
+            conditionals. If there is no where clause it is considered to be a where true and all
+            tuples get updated.
+        Example:
+        update foo set bar = 5 where baz < 3.2;
+        update foo set bar = 1.1 where a = "foo" and bar > 2;
+        Records should be changed one at a time. If an error occurs with a tuple update then the
+        update stops. All changes prior to the error are still valid.
+
+        Returns:
+            status: GOOD_STATUS or BAD_STATUS
+        """
+
+        status = self.process_simple_cmds()
+        if status == 1:
+            return BAD_STATUS
+        
+        return GOOD_STATUS
+
+    def conditional(self):
+        """
+        Conditionals can be a single relational operation or a list of relational operators separated
+        by and / or operators. and / or follow standard computer science definitions:
+        • <a> and <b>: only true if both a and b are true.
+        • <a> or <b>: only true if either a or b are true.
+        and has a higher precedence than or. Items of the same precedence will be evaluated from
+        left to right.
+
+        This project will only support a subset of the relational operators of SQL:
+        • = : if the two values are equal.
+        • > : greater than.
+        • < : less than.
+        • >= : greater than or equal to.
+        • <= : less than or equal to.
+        • != : if the two values are not equal.
+
+        Relational operators will return true / false values. The left side of a relational operator
+        must be an attribute name; it will be replaced with its actual value at evaluation. The right
+        side must be an attribute name or a constant value; no mathematics. The data types must
+        be the same on both sides on the comparison.
+
+        Returns:
+            Status: GOOD_STATUS or BAD_STATUS
+        """
+        return GOOD_STATUS
+
+    def process_attributes(self, str_manipulate):
+        #All thats left is (hopefully) the tuples for inserting statments.
+        insertValues = str_manipulate.split(",")
+        attributes = []
+        if insertValues[0][0] == "(":
+            insertValues[0] = insertValues[0][1:]
+        if insertValues[-1][-1] == ")":
+            insertValues[-1] = insertValues[-1][:-1]
+        for value in insertValues:
+            processed_insert_values = value.split(" ")
+            for i in range(len(value)):
+                if i+2 > len(processed_insert_values):
+                    break
+                if processed_insert_values[i].count('"') == 1:
+                    tempVal = [' '.join([processed_insert_values[i], processed_insert_values[i+1]])]
+                    processed_insert_values[i+1] = ""
+                    processed_insert_values[i] = ""
+                    processed_insert_values = self.insert_into_array(processed_insert_values, i, tempVal)
+                    processed_insert_values = self.remove_blank_entries(processed_insert_values)
+            attributes.append(processed_insert_values)
+        return attributes
+
+    def insert_into_array(self, arr, index, arr_to_insert):
+            """
+            Insert a given array  of characters (typically the same characters but split on a different delimeter) into an index
+            Example:
+                ['select', 'one', 'two', 'three', 'from', 'foo', 'where', 'x', '=', '1', 'and', ** 'orderby', 'x;']
+                (In this example the given index was the y=2, but the program assumes that it has been removed)
+                --> 
+                ['select', 'one', 'two', 'three', 'from', 'foo', 'where', 'x', '=', '1', 'and', *'y', '=', '2'*, 'orderby', 'x;']
+
+            NOTE: This can easily be updated to simply insert without removing the element from the list by removing the index+1 on the right var
+
+            Args:
+                arr (array): original array containing element to replace
+                index (int): index of element to be replaced
+                arr_to_insert (array): the array to be inserted
+
+            Returns:
+                array : updated array after replacement.
+            """
+            left = arr[:index]
+            right = arr[index:]
+            return [*left, *arr_to_insert, *right]
+
+    def remove_blank_entries(self, passedArray):
+        """
+        Remove blank strings from array entry
+
+        Args:
+            passedArray (arr): input list of commands
+
+        Returns:
+            array: cleaned input list
+        """
+        return [element for element in passedArray if element != "" if element != " "]
+
+    def does_table_exist(self, table_name):
+        does_exist = self.cat.table_exists(table_name)
+        if does_exist == 1: # 1 meaning table does NOT exist
+            print(f"No such table {table_name}")
+            return BAD_STATUS
+        elif does_exist == 2: # 2 meaning no catalog found
+            return BAD_STATUS
+        return GOOD_STATUS
+
+    def process_where_orderby(self, str_manipulate):
+        name = ""
+        where = ""
+        orderby = ""
+        if "where" not in str_manipulate and "orderby" not in str_manipulate:
+            name = str_manipulate.replace(" ", "") # Should just be the table name left, but make sure no trailing spaces
+        elif "where" in str_manipulate and "orderby" not in str_manipulate:
+            name = str_manipulate[:str_manipulate.index("where")].replace(" ", "")
+            str_manipulate = str_manipulate[str_manipulate.index("where ") + len("where "):]
+            where = str_manipulate.strip()
+        elif "where" not in str_manipulate and "orderby" in str_manipulate:
+            name = str_manipulate[:str_manipulate.index("orderby")].replace(" ", "")
+            str_manipulate = str_manipulate[str_manipulate.index("orderby ") + len("orderby "):]
+            orderby = str_manipulate.strip()
+        elif "where" in str_manipulate and "orderby" in str_manipulate:
+            name = str_manipulate[:str_manipulate.index("where")].replace(" ", "")
+            str_manipulate = str_manipulate[str_manipulate.index("where ") + len("where "):]
+            where = str_manipulate[:str_manipulate.index("orderby")]
+            str_manipulate = str_manipulate[str_manipulate.index("orderby ") + len("orderby "):]
+            orderby = str_manipulate.strip()
+        else:
+            print("Formatting error")
+            return BAD_STATUS
+        return name,where,orderby
 
     def help(self) -> int:
         """
@@ -384,77 +747,18 @@ class QueryProcessor:
                     
                     ]"""
         print(helpMsg)
-        return 0
-
-
-    def process_input(self, query:list) -> int:
-        """
-        Process query. Depending on the command entered, call the 
-        necessary function to execute the query and then return.
-        Returns 0 if success and 1 if failure.
-        """
-        status = 0 # Default good status
-        if query[0] == "help":
-            return help()
-        elif query[0] == "display":
-            if query[1] == "schema":
-                status = self.display_schema_cmd()
-                return  status
-            elif query[1] == "info":
-                try:
-                    status = self.display_info_cmd(query[2])
-                    return  status
-                except IndexError:
-                    return 1
-            else:
-                return 1
-        elif query[0] == "select":
-            status = self.select_cmd(query)
-            return status
-        elif query[0] == "insert" and query[1] == "into" and query[3] == "values":
-            status = self.insert_cmd(query)
-            return status
-        elif query[0] == "create" and query[1] == "table":
-            status = self.create_table_cmd(query)
-            return  status
-        
-        status = 1 #Bad status
-        return status
-
-
-    def main(self):
-        """
-        Kick start main text processing loop (while loop) that awaits for a ; to end a statement or an exit command.
-        NOTE: Carriage returns are ignored.
-
-        Good status = 0 (Prints SUCCESS)
-        Bad status = !0 (Prints ERROR)
-        """
-        print("\nPlease enter commands, enter <quit> to shutdown the db\n")
-
-        blankString = ''
-
-        while True:
-            status = 0 
-            readInput = input("JottQL> ").lower()
-            if readInput == "<quit>":
-                return status
-            if readInput == "<help>": #This is a placeholder
-                self.help()
-                continue
-            while not ";" in readInput:
-                readInput += " " + input().lower()
-
-            inputList = readInput.split(';')[0].split(" ")
-            inputList = [input for input in inputList if input != blankString]
-            print("\n")
-            status = self.process_input(inputList)
-            if status == 0:
-                print("SUCCESS\n")
-            else:
-                print("ERROR\n")
-
+        return GOOD_STATUS
 
 if __name__ == '__main__':
     QP = QueryProcessor("testDB", "1024", "64")
-    print(f"Exit Code: {QP.main()}")
+    # QP.main()
+    inputString = [
+                'insert into foo values ();',
+                'insert into foo values (1 "foo bar" true 2.1), (3 "baz" true 4.14),(2 "bar" false 5.2), (5 "true" true null);', 
+                'insert into foo values (1 "foo bar" "fubar up" varchar(7) 2.1)'
+                ]
+    for i in inputString:
+        QP.inputString = i
+        QP.process_complex_cmds()
+        print(f"Input String: {i}\n--> {QP.command_args}\n")
+    # print(f"Exit Code: {QP.main()}")

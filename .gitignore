@@ -1,5 +1,8 @@
 .idea
 .vscode
+temp/
+testDb/
+temp2.py
 testDb/
 temp/
 
