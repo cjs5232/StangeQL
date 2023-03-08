@@ -447,6 +447,18 @@ class Catalog:
         print("No table of name " + table_name)
         return 1
 
+    def get_table(self, table_name):
+        """
+        Just returns the dictionary of a table
+        """
+        data = self.catalog
+
+        for i in data["tables"]:
+            if i["name"] == table_name:
+                return i
+
+        print("No table of name " + table_name)
+        return 1
 
     def get_catalog(self):
         """
