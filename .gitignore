@@ -1,6 +1,6 @@
 .idea
 .vscode
-tmp.py
+temp/
 testDb/
 temp2.py
 temp/
