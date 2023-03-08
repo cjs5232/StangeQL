@@ -42,13 +42,12 @@ class Driver:
             os.mkdir(self.dbloc)
             # cat.add_table()
             # cat.print_catalog()
-            cat.create_catalog()
+            #cat.create_catalog()
             print(f"New db created successfully\nPage size: {self.pageSize}\nBuffer size: {self.bufferSize}")
             # PB = pb.PageBuffer(self.bufferSize, self.pageSize)
         elif not os.path.exists(self.dbloc+"/DBCatalog.bin"):
             print("Directory already exists, but no catalog. Creating now.")
-            cat.create_catalog()
-
+            #cat.create_catalog()
     """
     Hand off program to the query processor for user input handling.
     TODO: Refactor after QP has been implemented to spit back error messages and exit gracefully (most likely includes backing up 
