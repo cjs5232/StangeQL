@@ -63,6 +63,15 @@ class QueryProcessor:
                 print("ERROR\n")
 
     def processInput(self, readInput):
+        """
+        Ad-hoc processing of a users input. Do not allow bad formatting or edge cases to break code.
+
+        Args:
+            readInput (_type_): _description_
+
+        Returns:
+            int status: GOOD_STATUS or BAD_STATUS
+        """
         try:
             readInput = readInput[:-1] #Remove ;
             command = readInput.split(" ")[0] # Get the command
@@ -99,6 +108,15 @@ class QueryProcessor:
             return BAD_STATUS
 
     def process_create(self, str_manipulate):
+        """
+        Handle user input with Create cases
+
+        Args:
+            str_manipulate (str): raw User input (minus some pre-processed words)
+
+        Returns:
+            _type_: _description_
+        """
         create_commands = {
             "name" : "",
             "pageCount" : 0,
@@ -192,6 +210,15 @@ class QueryProcessor:
         return GOOD_STATUS
     
     def process_select(self, str_manipulate):
+        """
+        Process select input
+
+        Args:
+            str_manipulate (str): user input
+
+        Returns:
+            status: GOOD_STATUS or BAD_STATUS
+        """
         select_commands = {
             "name": "",
             "select": [],
@@ -334,6 +361,15 @@ class QueryProcessor:
         return GOOD_STATUS
 
     def process_drop(self, str_manipulate):
+        """
+        Process drop keywords
+
+        Args:
+            str_manipulate (str): user input
+
+        Returns:
+            int: GOOD_STATUS or BAD_STATUS
+        """
         is_next_table = str_manipulate[:str_manipulate.index(" ")] == "table"
         if not is_next_table:
             print("Error: drop <table>")
@@ -345,6 +381,15 @@ class QueryProcessor:
         return GOOD_STATUS
 
     def process_alter(self, str_manipulate):
+        """
+        Process alter keyword and call Storage manager
+
+        Args:
+            str_manipulate (_type_): _description_
+
+        Returns:
+            int: GOOD_STATUS or BAD_STATUS
+        """
         is_next_table = str_manipulate[:str_manipulate.index(" ")] == "table"
         if not is_next_table:
             print("Error: Alter <table>")
@@ -473,119 +518,6 @@ class QueryProcessor:
         #         row = "|" + row + "|"
         #         print(row)
         #     print("\n")
-        pass
-
-    def alter_cmd(self):
-        """
-        
-        These statement will look very similar to SQL, but format is going to be changed to help
-        reduce parsing complexity.
-        The typical formats:
-            alter table <name> drop <a_name>;
-            alter table <name> add <a_name> <a_type>;
-            alter table <name> add <a_name> <a_type> default <value>;
-        
-        Lets look at each part:
-            • alter table: All DDL statements that start with this will be considered to be trying
-            to alter a table. Both are considered to be keys words.
-            • <name>: is the name of the table to alter. All table names are unique.
-            • drop <a name> version: will remove the attribute with the given name from the table;
-            including its data. drop is a keyword.
-            • <name> add <a name> <a type> version: will add an attribute with the given name
-            and data type to the table; as long as an attribute with that name does not exist
-            already. It will then will add a null value for that attribute to all existing tuples in the
-            database. add is a keyword.
-            • <name> add <a name> <a type> default <value>: version: will add an attribute
-            with the given name and data type to the table; as long as an attribute with that name
-            does not exist already. It will then will add the default value for that attribute to all
-            existing tuples in the database. The data type of the value must match that of the
-            attribute, or its an error. default is a keyword.
-        Any attribute being dropped cannot be the primary key.
-        Examples:
-        alter table foo drop bar;
-        alter table foo add gar double;
-        alter table foo add far double default 10.1;
-        alter table foo add zar varchar(20) default "hello world";
-        Note: altering a table is not just as easy as removing/adding an attribute. For example,
-        things like number of records per page need to be modified.
-
-        Returns:
-            status: GOOD_STATUS or BAD_STATUS
-        """
-
-        status = self.process_simple_cmds()
-        if status == 1:
-            return BAD_STATUS
-
-        return GOOD_STATUS
-
-    def delete_cmd(self):
-        """
-        These statements will look very similar to SQL, but the format is going to be changed to
-        help reduce parsing complexity.
-        The typical format:
-        delete from <name> where <condition>;
-        Lets look at each part:
-            • delete from: All DML statements that start with this will be considered to be trying
-            to delete data from a table. They both are to be considered keywords.
-            • <name>: is the name of the table to delete from. All table names are unique.
-            • where <condition>: A condition where a tuple should deleted. If this evaluates to
-            true the tuple is remove; otherwise it remains. See below for evaluating conditionals. If
-            there is no where clause it is considered to be a where true and all tuples get deleted.
-            where is considered a keyword.
-        Example:
-            delete from foo;
-            delete from foo where bar = 10;
-            delete from foo where bar > 10 and foo = "baz";
-            delete from foo where bar != bazzle;
-        If a value being deleted is referred to by another table via a foreign key the delete will not
-        happen and an error will be reported.
-        Upon error the deletion process will stop. Any items deleted before the error will still be
-        deleted
-
-        Returns:
-            status: GOOD_STATUS or BAD_STATUS
-        """
-
-        status = self.process_simple_cmds()
-        if status == 1:
-            return BAD_STATUS
-        
-        return GOOD_STATUS
-
-    def update_cmd(self):
-        """
-        These statements will look very similar to SQL, but the format is going to be changed to
-        help reduce parsing complexity.
-        The typical format:
-        update <name>
-        set <column_1> = <value>
-        where <condition>;
-        Lets look at each part:
-            • update: All DML statements that start with this will be considered to be trying to
-            update data in a table. Keyword.
-            • <name>: is the name of the table to update in. All table names are unique.
-            • set <column 1> = <value> Sets the column to the provided values. set is a key-
-            word.
-            • <value>: a constant value.
-            • where <condition>: A condition where a tuple should updated. If this evaluates to
-            true the tuple is updated; otherwise it remains the same. See below for evaluating
-            conditionals. If there is no where clause it is considered to be a where true and all
-            tuples get updated.
-        Example:
-        update foo set bar = 5 where baz < 3.2;
-        update foo set bar = 1.1 where a = "foo" and bar > 2;
-        Records should be changed one at a time. If an error occurs with a tuple update then the
-        update stops. All changes prior to the error are still valid.
-
-        Returns:
-            status: GOOD_STATUS or BAD_STATUS
-        """
-
-        status = self.process_simple_cmds()
-        if status == 1:
-            return BAD_STATUS
-        
         return GOOD_STATUS
 
     def conditional(self):
@@ -673,6 +605,15 @@ class QueryProcessor:
         return [element for element in passedArray if element != "" if element != " "]
 
     def does_table_exist(self, table_name):
+        """
+        Does table already exist in catalog
+
+        Args:
+            table_name (str): table_name to check
+
+        Returns:
+            int: GOOD_STATUS or BAD_STATUS
+        """
         does_exist = self.cat.table_exists(table_name)
         if does_exist == 1: # 1 meaning table does NOT exist
             print(f"No such table {table_name}")
@@ -682,6 +623,15 @@ class QueryProcessor:
         return GOOD_STATUS
 
     def process_where_orderby(self, str_manipulate):
+        """
+        Where and orderby are used in a couple functions, avoiding code duplication with this.
+
+        Args:
+            str_manipulate (str): user_input
+
+        Returns:
+            int: GOOD_STATUS or BAD_STATUS
+        """
         name = ""
         where = ""
         orderby = ""
