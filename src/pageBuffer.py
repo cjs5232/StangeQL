@@ -20,13 +20,14 @@ import re
 
 class PageBuffer:
 
-    def __init__(self, bufferSize, pageSize, dbloc):
+    def __init__(self, bufferSize, pageSize, dbloc, cat):
         self.INT_MAX_LEN = 4
         self.INT_BYTE_TYPE = "big"
         self.STRING_ENCODING = "utf-8"
         self.bufferSize = bufferSize
         self.pageSize = pageSize
         self.dbloc = dbloc
+        self.cat = cat
         # self.buffer = []
         # for i in range(bufferSize):
         #     self.buffer[i] = page(i)
