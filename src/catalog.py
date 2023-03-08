@@ -15,6 +15,8 @@ import io
 import os
 import codecs
 
+GOOD_STATUS = 0
+BAD_STATUS = 1
 
 class Catalog:
     def __init__(self, location, page_size, buffer_size):
@@ -44,12 +46,12 @@ class Catalog:
         dumped_json = json.dumps(dictionary)
         self.write_to_file(dumped_json)
 
-        return 0
+        return GOOD_STATUS
     
     def shutdown_catalog(self):
         dumped_json = json.dumps(self.catalog)
         self.write_to_file(dumped_json)
-        return 0
+        return GOOD_STATUS
 
     
     def write_to_file(self, dumped_json):
@@ -79,7 +81,7 @@ class Catalog:
         fileExist = os.path.exists(f"{self.location}/{self.filename}")
         if not fileExist:
             print("No catalog file in path: " + self.location + "/DBCatalog.bin")
-            return 1
+            return BAD_STATUS
 
         f = open(f"{self.location}/DBCatalog.bin", 'rb')
 
@@ -123,10 +125,10 @@ class Catalog:
                 # dumped_json = json.dumps(data)
                 # self.write_to_file(dumped_json)
                 self.catalog = data
-                return 0
+                return GOOD_STATUS
 
         print("Table - " + table_name + " not found in catalog")
-        return 1
+        return BAD_STATUS
 
     
     def alter_table_add(self, table_name, attribute):
@@ -141,10 +143,10 @@ class Catalog:
                 # dumped_json = json.dumps(data)
                 # self.write_to_file(dumped_json)
                 self.catalog = data
-                return 0
+                return GOOD_STATUS
 
         print("Table " + table_name + " not found")
-        return 1
+        return BAD_STATUS
 
     
     def alter_table_delete(self, table_name, attribute_name):
@@ -162,12 +164,12 @@ class Catalog:
                         self.catalog = data
                         # dumped_json = json.dumps(data)
                         # self.write_to_file(dumped_json)
-                        return 0
+                        return GOOD_STATUS
                 print("No attribute " + attribute_name + " + found")
-                return 1
+                return BAD_STATUS
 
         print("Table " + table_name + " not found")
-        return 1
+        return BAD_STATUS
 
     def get_page_order(self, table_name):
         """
@@ -180,7 +182,7 @@ class Catalog:
                 return i["page_order"]
 
         print("Table " + table_name + " not found")
-        return 1
+        return BAD_STATUS
 
     def table_exists(self, table_name):
         """
@@ -192,8 +194,8 @@ class Catalog:
         for i in data["tables"]:
 
             if i["name"] == table_name:
-                return 1
-        return 0
+                return BAD_STATUS
+        return GOOD_STATUS
 
     
     def add_table(self, table): # didn't have attributes but was sent attributes in query_processor
@@ -222,7 +224,7 @@ class Catalog:
         # self.write_to_file(dumped_json)
 
 
-        return 0
+        return GOOD_STATUS
 
     
     def update_record_count(self, table_name, val):
@@ -257,11 +259,11 @@ class Catalog:
                 # dumped_json = json.dumps(data)
                 # self.write_to_file(dumped_json)
 
-                return 0
+                return GOOD_STATUS
 
         print("Table " + table_name + " not found")
 
-        return 1
+        return BAD_STATUS
 
 
     def print_catalog(self):
@@ -290,7 +292,7 @@ class Catalog:
         if not tableFlag:
             print("There are no tables to display")
 
-        return 0
+        return GOOD_STATUS
 
 
     def print_table(self, table_name):
@@ -309,11 +311,11 @@ class Catalog:
                 print("Pages: " + str(i["pageCount"]))
                 print("Records: " + str(i["recordCount"]))
 
-                return 0
+                return GOOD_STATUS
 
         print("No such table " + table_name)
 
-        return 1
+        return BAD_STATUS
 
     
     def get_attribute_type(self, table_name, attribute_name):
@@ -331,9 +333,9 @@ class Catalog:
 
                         return x["type"]
                 print("No attribute " + attribute_name + " in table " + table_name)
-                return 1
+                return BAD_STATUS
         print("No table of name " + table_name)
-        return 1
+        return BAD_STATUS
 
     
     def determine_attribute_key(self, table_name, attribute_name):
@@ -351,9 +353,9 @@ class Catalog:
 
                         return x["primarykey"]
                 print("No attribute " + attribute_name + " in table " + table_name)
-                return 1
+                return BAD_STATUS
         print("No table of name " + table_name)
-        return 1
+        return BAD_STATUS
 
     
     def get_att_unique(self, table_name, attribute_name):
@@ -371,9 +373,9 @@ class Catalog:
 
                         return x["unique"]
                 print("No attribute " + attribute_name + " in table " + table_name)
-                return 1
+                return BAD_STATUS
         print("No table of name " + table_name)
-        return 1
+        return BAD_STATUS
 
     
     def get_att_notnull(self, table_name, attribute_name):
@@ -391,9 +393,9 @@ class Catalog:
 
                         return x["notnull"]
                 print("No attribute " + attribute_name + " in table " + table_name)
-                return 1
+                return BAD_STATUS
         print("No table of name " + table_name)
-        return 1
+        return BAD_STATUS
 
     
     def get_att_default(self, table_name, attribute_name):
@@ -411,9 +413,9 @@ class Catalog:
 
                         return x["default"]
                 print("No attribute " + attribute_name + " in table " + table_name)
-                return 1
+                return BAD_STATUS
         print("No table of name " + table_name)
-        return 1
+        return BAD_STATUS
 
 
     def table_attributes(self, table_name):
@@ -430,8 +432,8 @@ class Catalog:
 
                 return i["attributes"]
 
-        # Do we want this to return 1?
-        return 1
+        # Do we want this to return BAD_STATUS?
+        return BAD_STATUS
 
     
     def get_catalog(self):
