@@ -259,7 +259,7 @@ class PageBuffer:
     def write_page_to_file(self, page): #TODO
         return
 
-def main():
+def test():
     ############################
     # SETUP
     ############################
@@ -354,4 +354,4 @@ def main():
         print(page1.records[i].values)
     print("--")
 
-main()
+test()
