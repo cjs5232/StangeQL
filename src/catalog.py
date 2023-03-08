@@ -23,6 +23,11 @@ class Catalog:
         self.buffer_size = buffer_size
         self.filename = "DBCatalog.bin"
 
+        fileExist = os.path.exists(f"{self.location}/{self.filename}")
+        if not fileExist:
+            self.create_catalog()
+        self.catalog = self.read_from_file()
+
 
     def create_catalog(self):
         dictionary = {
@@ -37,9 +42,13 @@ class Catalog:
         }
 
         dumped_json = json.dumps(dictionary)
-
         self.write_to_file(dumped_json)
 
+        return 0
+    
+    def shutdown_catalog(self):
+        dumped_json = json.dumps(self.catalog)
+        self.write_to_file(dumped_json)
         return 0
 
     
@@ -90,7 +99,7 @@ class Catalog:
         Might not need
         What if path is the same, but page and buffer sizes are different?
         """
-        data = self.read_from_file()
+        data = self.catalog
 
         #Doesnt need to update location since its already looking there
         #self.location = data["db"]["location"]
@@ -105,15 +114,15 @@ class Catalog:
         This method is what we will use for drop table commands
         Removes all data associated with a specific table
         """
-        data = self.read_from_file()
+        data = self.catalog
 
         for i in data["tables"]:
 
             if i["name"] == table_name:
                 data["tables"].remove(i)
-                dumped_json = json.dumps(data)
-
-                self.write_to_file(dumped_json)
+                # dumped_json = json.dumps(data)
+                # self.write_to_file(dumped_json)
+                self.catalog = data
                 return 0
 
         print("Table - " + table_name + " not found in catalog")
@@ -125,12 +134,13 @@ class Catalog:
         Finds the attribute based off of table name
         Adds the given attribute to the table's list of attributes
         """
-        data = self.read_from_file()
+        data = self.catalog
         for i in data["tables"]:
             if i["name"] == table_name:
                 i["attributes"].append(attribute)
-                dumped_json = json.dumps(data)
-                self.write_to_file(dumped_json)
+                # dumped_json = json.dumps(data)
+                # self.write_to_file(dumped_json)
+                self.catalog = data
                 return 0
 
         print("Table " + table_name + " not found")
@@ -143,14 +153,15 @@ class Catalog:
         Deletes the given attribute from the table's list of attributes
         if the the names are equal
         """
-        data = self.read_from_file()
+        data = self.catalog
         for i in data["tables"]:
             if i["name"] == table_name:
                 for x in i["attributes"]:
                     if x["name"] == attribute_name:
                         i["attributes"].remove(x)
-                        dumped_json = json.dumps(data)
-                        self.write_to_file(dumped_json)
+                        self.catalog = data
+                        # dumped_json = json.dumps(data)
+                        # self.write_to_file(dumped_json)
                         return 0
                 print("No attribute " + attribute_name + " + found")
                 return 1
@@ -162,7 +173,7 @@ class Catalog:
         """
         Gets the page order, may need to refactor depending on what is needed
         """
-        data = self.read_from_file()
+        data = self.catalog
         for i in data["tables"]:
 
             if i["name"] == table_name:
@@ -176,7 +187,7 @@ class Catalog:
         Helper function to determine if a table exists or not
         Returns 1 if yes, 0 if no, 2 if no catalog file
         """
-        data = self.read_from_file()
+        data = self.catalog
 
         for i in data["tables"]:
 
@@ -203,12 +214,13 @@ class Catalog:
             ]
         }
         """
-        data = self.read_from_file()
 
-        data["tables"].append(table)
+        
+        self.catalog["tables"].append(table)
 
-        dumped_json = json.dumps(data)
-        self.write_to_file(dumped_json)
+        # dumped_json = json.dumps(data)
+        # self.write_to_file(dumped_json)
+
 
         return 0
 
@@ -236,13 +248,14 @@ class Catalog:
         I wanted to save some space but keep it easy so I made this function more generic
         for page/record updates
         """
-        data = self.read_from_file()
+        data = self.catalog
 
         for i in data["tables"]:
             if i["name"] == table_name:
                 i[type] += val
-                dumped_json = json.dumps(data)
-                self.write_to_file(dumped_json)
+                self.catalog = data
+                # dumped_json = json.dumps(data)
+                # self.write_to_file(dumped_json)
 
                 return 0
 
@@ -252,7 +265,7 @@ class Catalog:
 
 
     def print_catalog(self):
-        data = self.read_from_file()
+        data = self.catalog
 
         print("\nPrinting database information: ")
         for i in data["db"]:
@@ -281,7 +294,7 @@ class Catalog:
 
 
     def print_table(self, table_name):
-        data = self.read_from_file()
+        data = self.catalog
 
         for i in data["tables"]:
 
@@ -309,7 +322,7 @@ class Catalog:
         Returns 1 if there is no table/attribute name
         Returns the type if table/attribute names exists
         """
-        data = self.read_from_file()
+        data = self.catalog
 
         for i in data["tables"]:
             if i["name"] == table_name:
@@ -329,7 +342,7 @@ class Catalog:
         Returns 1 if there is no table/attribute name
         Returns the bool: True if it is a prim key, False otherwise
         """
-        data = self.read_from_file()
+        data = self.catalog
 
         for i in data["tables"]:
             if i["name"] == table_name:
@@ -349,7 +362,7 @@ class Catalog:
         Returns 1 if there is no table/attribute name
         Returns the bool: True if it is unique, False otherwise
         """
-        data = self.read_from_file()
+        data = self.catalog
 
         for i in data["tables"]:
             if i["name"] == table_name:
@@ -369,7 +382,7 @@ class Catalog:
         Returns 1 if there is no table/attribute name
         Returns the bool: True if it is not null, False otherwise
         """
-        data = self.read_from_file()
+        data = self.catalog
 
         for i in data["tables"]:
             if i["name"] == table_name:
@@ -389,7 +402,7 @@ class Catalog:
         Returns 1 if there is no table/attribute name
         Returns the bool: True if it is not null, False otherwise
         """
-        data = self.read_from_file()
+        data = self.catalog
 
         for i in data["tables"]:
             if i["name"] == table_name:
@@ -410,7 +423,7 @@ class Catalog:
         type: att_type
         primarykey: bool whether or not its a primary key
         """
-        data = self.read_from_file()
+        data = self.catalog
 
         for i in data["tables"]:
             if i["name"] == table_name:
@@ -426,8 +439,8 @@ class Catalog:
         Returns the entire catalog as a json
         """
         data = self.read_from_file()
-
-        return data
+        self.catalog = data
+        # return data
 
 
 
