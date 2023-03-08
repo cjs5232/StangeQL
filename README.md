@@ -30,17 +30,12 @@ a file on the file system. These files will be made up of pages.
 JottQL> help;
 ```
 
-## Notes
-We do not have all the functionality for this phase and will pick up the pieces for phase 2
-
 Functionality:
   Catalog creation is good
   Only integer types added this far
   Table creation is solid
   insert with a single parameter is good but not multiple parameters
   Select * from table with a single value
-  
-  I think we deserve a crisp 100. Thank you. (also I am so sorry, we will do better)
 
 Talking point:
   Storing json as a dumped string and byte encoding with utf-8
