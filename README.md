@@ -1,4 +1,4 @@
-# CSCI.421 - Database System Implementation - Group Project
+# Database System Implementation - Group Project
 ## Overview
 - Project: Implement a database management system.
 - Language:
