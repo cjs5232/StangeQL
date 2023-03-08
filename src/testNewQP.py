@@ -25,7 +25,9 @@ def test_processing():
         "1", # Error duplicate table
         
         "1", # Error no table found
+        #THERE WAS A MERGE CONFLICT HERE SO IDK IF THIS VAL IS GOOD
         "1", # No column fakeCol found in tableTest? is this right expected val?
+        
         "{'name': 'tableTest', 'select': ['*'], 'where': [], 'orderby': ''}",
         "{'name': 'tableTest', 'select': ['units', 'baz', 'bar'], 'where': [], 'orderby': ''}",
         "{'name': 'tableTest', 'select': ['*'], 'where': 'x = 1', 'orderby': ''}",
